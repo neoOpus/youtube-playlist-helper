@@ -5,9 +5,35 @@
     faFileImport,
     faTriangleExclamation,
   } from "@fortawesome/free-solid-svg-icons";
+  import { onMount } from "svelte";
   import LargeButton from "../components/LargeButton.svelte";
   import Sidebar from "../components/Sidebar.svelte";
   import type { PlaylistExport } from "../types/model.js";
+  import { syncService, type SyncConfig } from "../services/sync-service";
+
+  let syncConfig: SyncConfig = { enabled: false, type: "webdav" };
+  let syncing = false;
+
+  onMount(async () => {
+    syncConfig = await syncService.getSyncConfig();
+  });
+
+  async function saveSync() {
+    await syncService.saveSyncConfig(syncConfig);
+    window.success("Sync settings saved");
+  }
+
+  async function syncNow() {
+    syncing = true;
+    try {
+      await syncService.syncNow();
+      window.success("Sync complete");
+    } catch (e) {
+      window.error(e.message);
+    } finally {
+      syncing = false;
+    }
+  }
 
   function exportFile(content: string, filename?: string) {
     var textToSaveAsBlob = new Blob([content], { type: "application/json" });
@@ -80,6 +106,26 @@
     Import saved playlists
   </LargeButton>
 
+  <div class="sync-settings">
+    <h3>Cloud Sync (WebDAV)</h3>
+    <label>
+        <input type="checkbox" bind:checked={syncConfig.enabled} /> Enable Cloud Sync
+    </label>
+    {#if syncConfig.enabled}
+        <div class="sync-fields">
+            <input type="text" placeholder="WebDAV URL" bind:value={syncConfig.url} />
+            <input type="text" placeholder="Username" bind:value={syncConfig.username} />
+            <input type="password" placeholder="Password" bind:value={syncConfig.password} />
+        </div>
+    {/if}
+    <div class="sync-actions">
+        <button on:click={saveSync}>Save Sync Settings</button>
+        <button on:click={syncNow} disabled={syncing || !syncConfig.enabled}>
+            {syncing ? 'Syncing...' : 'Sync Now'}
+        </button>
+    </div>
+  </div>
+
   <div class="spacer" />
 
   <LargeButton
@@ -95,12 +141,38 @@
 
 <style>
   main {
-    height: 50%;
+    height: auto;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: flex-start;
+    gap: 2rem;
   }
   .spacer {
     flex-grow: 1;
+    min-height: 2rem;
+  }
+
+  .sync-settings {
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .sync-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  .sync-actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .sync-actions button {
+      padding: 8px 16px;
+      cursor: pointer;
   }
 </style>

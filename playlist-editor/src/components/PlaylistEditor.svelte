@@ -18,6 +18,8 @@
   import PlaylistVideo from "./PlaylistVideo.svelte";
   import Sidebar from "./Sidebar.svelte";
   import SimpleButton from "./SimpleButton.svelte";
+  import SuperCheckbox from "./SuperCheckbox.svelte";
+  import SuperButton from "./SuperButton.svelte";
   import { paginate } from "svelte-paginate";
   import RemoveDuplicates from "./icons/RemoveDuplicates.svelte";
   import type { Playlist, Video } from "../types/model";
@@ -502,14 +504,11 @@
     </div>
     {#if videos.length > 0 && view === "list"}
       <div class="batch-controls">
-        <label>
-          <input
-            type="checkbox"
-            checked={allSelected}
-            on:change={toggleSelectAll}
-          />
-          Select All
-        </label>
+        <SuperCheckbox
+          checked={allSelected}
+          on:change={toggleSelectAll}
+          label="Select All"
+        />
       </div>
     {/if}
     {#if view === "timeline"}
@@ -637,18 +636,6 @@
     align-items: center;
   }
 
-  .batch-controls label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  .batch-controls input {
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-  }
 
   .list {
     width: 100%;

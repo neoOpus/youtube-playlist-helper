@@ -4,10 +4,11 @@
   import InfoIcon from "./icons/InfoIcon.svelte";
   import SearchIcon from "./icons/SearchIcon.svelte";
   import CheckIcon from "./icons/CheckIcon.svelte";
-  import SimpleButton from "./SimpleButton.svelte";
   import type { Video } from "../types/model";
   import VideoIdCard from "./VideoIdCard.svelte";
   import SmartElement from "./SmartElement.svelte";
+  import SuperButton from "./SuperButton.svelte";
+  import SuperCheckbox from "./SuperCheckbox.svelte";
   import { metadataService } from "../services/metadata-service";
   import { alternativesService } from "../services/alternatives-service";
 
@@ -51,12 +52,8 @@
   {active}
   selected={video.selected}
 >
-  <div class="video-selection">
-    <input
-      type="checkbox"
-      bind:checked={video.selected}
-      on:click|stopPropagation
-    />
+  <div class="video-selection" on:click|stopPropagation>
+    <SuperCheckbox bind:checked={video.selected} />
   </div>
   {#if !disableThumbnails}
     <img
@@ -70,13 +67,15 @@
     <span>{video.channel}</span>
   </div>
   <div class="video-btns">
-    <SimpleButton on:click={trackDown} title="Track down alternatives"
-      ><SearchIcon /></SimpleButton
+    <SuperButton on:click={trackDown} title="Track down alternatives" circle bgcolor="transparent" className="video-action-btn"
+      ><SearchIcon /></SuperButton
     >
-    <SimpleButton on:click={openIdCard} title="Video ID Card"
-      ><InfoIcon /></SimpleButton
+    <SuperButton on:click={openIdCard} title="Video ID Card" circle bgcolor="transparent" className="video-action-btn"
+      ><InfoIcon /></SuperButton
     >
-    <SimpleButton on:click={deleteVideo}><DeleteIcon /></SimpleButton>
+    <SuperButton on:click={deleteVideo} title="Delete video" circle bgcolor="transparent" className="video-action-btn"
+      ><DeleteIcon /></SuperButton
+    >
   </div>
 </SmartElement>
 
@@ -94,10 +93,14 @@
     align-items: center;
   }
 
-  .video-selection input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
+  :global(.video-action-btn) {
+    color: var(--text-color) !important;
+    box-shadow: none !important;
+  }
+
+  :global(.video-action-btn:hover) {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    transform: none !important;
   }
 
   :global(.playlist-video.is-watched) {

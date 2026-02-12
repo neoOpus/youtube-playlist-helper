@@ -27,6 +27,7 @@
   <a href="#/saved" class:active={isActive("saved")}>Saved playlists</a>
   <a href="#/new" class:active={isActive("new")}>New playlist</a>
   <a href="#/manage" class:active={isActive("manage")}>Manage playlists</a>
+  <a href="#/compare" class:active={isActive("compare")}>Merge Tool</a>
   <a href="#/support" class:active={isActive("support")}>Support</a>
 
   <div class="sidebar-footer">

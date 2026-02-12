@@ -3,12 +3,25 @@
   import Modal from "./Modal.svelte";
   import FloatingButton from "./FloatingButton.svelte";
   import SaveIcon from "./icons/SaveIcon.svelte";
+  import SearchIcon from "./icons/SearchIcon.svelte";
   import { createEventDispatcher } from "svelte";
+  import { aiService } from "../services/ai-service";
 
   export let video: Video;
   export let display = false;
+  let loadingAi = false;
 
   const dispatch = createEventDispatcher();
+
+  async function analyze() {
+    loadingAi = true;
+    try {
+      const enrichment = await aiService.analyzeVideo(video);
+      video = { ...video, ...enrichment };
+    } finally {
+      loadingAi = false;
+    }
+  }
 
   function save() {
     dispatch("save", video);
@@ -36,6 +49,22 @@
             <input type="checkbox" bind:checked={video.watched} />
             Mark as Watched
         </label>
+    </div>
+    <div class="field ai-section">
+        <label>AI Enrichment</label>
+        {#if video.aiSummary}
+            <div class="ai-summary">
+                <p>{video.aiSummary}</p>
+                <div class="tags">
+                    {#each video.aiTags || [] as tag}
+                        <span class="tag">{tag}</span>
+                    {/each}
+                </div>
+            </div>
+        {/if}
+        <button on:click={analyze} disabled={loadingAi} class="ai-btn">
+            {loadingAi ? 'Analyzing...' : 'Analyze with AI Agent'}
+        </button>
     </div>
     <div class="actions">
       <FloatingButton on:click={save} title="Save Metadata" bgcolor="#28a745">
@@ -75,6 +104,47 @@
     height: 100px;
     resize: vertical;
   }
+  .ai-section {
+    border: 1px dashed var(--sidebar-bg-color);
+    padding: 10px;
+    border-radius: 4px;
+    background: rgba(255, 82, 82, 0.05);
+  }
+
+  .ai-summary {
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-bottom: 10px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .tag {
+    background: var(--sidebar-bg-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+  }
+
+  .ai-btn {
+    margin-top: 5px;
+    background: var(--sidebar-bg-color);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .ai-btn:disabled {
+    opacity: 0.6;
+  }
+
   .actions {
     display: flex;
     justify-content: flex-end;

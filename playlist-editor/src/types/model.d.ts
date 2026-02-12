@@ -10,6 +10,8 @@ export interface Video {
   notes?: string;
   rating?: number;
   dateAdded?: number;
+  aiSummary?: string;
+  aiTags?: string[];
 }
 
 export interface PlaylistExport {
