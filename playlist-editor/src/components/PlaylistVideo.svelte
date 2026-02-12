@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte";
   import DeleteIcon from "./icons/DeleteIcon.svelte";
   import SimpleButton from "./SimpleButton.svelte";
+  import type { Video } from "../types/model.js";
 
   export let video: Video;
   export let active: boolean;
@@ -19,6 +20,9 @@
 </script>
 
 <div class="playlist-video" class:is-active={active}>
+  <div class="video-selection">
+    <input type="checkbox" bind:checked={video.selected} on:click|stopPropagation />
+  </div>
   {#if !disableThumbnails}
     <img
       alt={video.title}
@@ -39,6 +43,19 @@
   .playlist-video {
     display: flex;
     padding: 0.5em 1em;
+    cursor: pointer;
+    align-items: center;
+  }
+
+  .video-selection {
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+  }
+
+  .video-selection input {
+    width: 18px;
+    height: 18px;
     cursor: pointer;
   }
 

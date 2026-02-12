@@ -1,6 +1,7 @@
 /// <reference path="../../node_modules/@types/firefox-webext-browser/index.d.ts" />
 
 import type { Playlist, PlaylistExport, Settings } from "../types/model.js";
+import { backupService } from "./backup-service.js";
 
 function playlistToDto(playlist: Playlist) {
   const dto = { ...playlist };
@@ -22,6 +23,7 @@ window.savePlaylist = async (playlist: Playlist) => {
   };
   await window.storeObject(PLAYLIST_KEY_PREFIX + id, playlistToDto(playlist));
   savedPlaylistsChanged();
+  backupService.performAutoBackup();
   return id;
 };
 
@@ -79,8 +81,24 @@ window.getPlaylist = async (id) => {
 };
 
 if (typeof browser != "undefined") {
+  const migrateSyncToLocal = async () => {
+    const localMigrationFlag = await browser.storage.local.get(
+      "migration_complete"
+    );
+    if (!localMigrationFlag.migration_complete) {
+      const syncData = await browser.storage.sync.get(null);
+      if (Object.keys(syncData).length > 0) {
+        await browser.storage.local.set(syncData);
+      }
+      await browser.storage.local.set({ migration_complete: true });
+      console.log("Migration from sync to local storage complete.");
+    }
+  };
+
+  migrateSyncToLocal();
+
   window.fetchObject = async (id, defaultValue) => {
-    const result = await browser.storage.sync.get(id);
+    const result = await browser.storage.local.get(id);
     if (result && result[id] != null) {
       if (typeof defaultValue === "number") {
         return +result[id];
@@ -91,7 +109,7 @@ if (typeof browser != "undefined") {
   };
 
   window.fetchAllObjects = async () => {
-    return browser.storage.sync.get(null);
+    return browser.storage.local.get(null);
   };
 
   window.storeObject = async (id, obj) => {
@@ -101,30 +119,30 @@ if (typeof browser != "undefined") {
         ? obj
         : JSON.stringify(obj)
       : null;
-    return browser.storage.sync.set(items);
+    return browser.storage.local.set(items);
   };
 
   window.removeObject = async (id) => {
-    return browser.storage.sync.remove(id);
+    return browser.storage.local.remove(id);
   };
 
   const ID_COUNTER_KEY = "PlaylistIdCounter";
   window.generatePlaylistId = async () => {
-    const obj = await browser.storage.sync.get(ID_COUNTER_KEY);
+    const obj = await browser.storage.local.get(ID_COUNTER_KEY);
     let count = obj[ID_COUNTER_KEY] || 0;
     count++;
     obj[ID_COUNTER_KEY] = count;
-    browser.storage.sync.set(obj);
+    browser.storage.local.set(obj);
     return count;
   };
 
   window.generatePlaylistIds = async (size: number) => {
-    const obj = await browser.storage.sync.get(ID_COUNTER_KEY);
+    const obj = await browser.storage.local.get(ID_COUNTER_KEY);
     let count = obj[ID_COUNTER_KEY] || 0;
     count++;
     const ids = [...Array(size).keys()].map((i) => i + count);
     obj[ID_COUNTER_KEY] = ids[ids.length - 1];
-    browser.storage.sync.set(obj);
+    browser.storage.local.set(obj);
     return ids;
   };
 } else if (window.location.protocol.startsWith("http")) {
@@ -195,13 +213,13 @@ window.getSettings = async () => {
 async function migrateSettings(settings) {
   if (settings.createdPlaylistStorage == "saved") {
     settings.saveCreatedPlaylists = true;
-    await browser.storage.sync.set({
+    await browser.storage.local.set({
       saveCreatedPlaylists: settings.saveCreatedPlaylists,
     });
   }
   if (settings.defaultEditorPage == "/recent") {
     settings.defaultEditorPage = "/saved";
-    await browser.storage.sync.set({
+    await browser.storage.local.set({
       defaultEditorPage: settings.defaultEditorPage,
     });
   }

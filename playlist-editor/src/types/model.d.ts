@@ -5,6 +5,7 @@ export interface Video {
   title: string;
   channel: string;
   thumbnailUrl: string;
+  selected?: boolean;
 }
 
 export interface PlaylistExport {

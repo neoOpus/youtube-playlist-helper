@@ -3,6 +3,7 @@
   import { flip } from "svelte/animate";
   import { expoOut } from "svelte/easing";
   import FloatingButton from "./FloatingButton.svelte";
+  import DeleteIcon from "./icons/DeleteIcon.svelte";
   import CheckIcon from "./icons/CheckIcon.svelte";
   import ClipboardMultiple from "./icons/ClipboardMultiple.svelte";
   import CloseIcon from "./icons/CloseIcon.svelte";
@@ -21,6 +22,7 @@
   import RemoveDuplicates from "./icons/RemoveDuplicates.svelte";
   import type { Playlist, Video } from "../types/model.js";
   import PaginationNav from "./PaginationNav.svelte";
+  import { playlistService } from "../services/playlist-service.js";
 
   const videoService = window.videoService;
 
@@ -37,6 +39,37 @@
   let loading = true;
   let dataLoaded = false;
   let videos = [] as Video[];
+
+  let allSelected = false;
+  $: {
+    if (videos.length > 0) {
+      allSelected = videos.every((v) => v.selected);
+    } else {
+      allSelected = false;
+    }
+  }
+
+  function toggleSelectAll() {
+    const targetValue = !allSelected;
+    videos = videos.map((v) => {
+      v.selected = targetValue;
+      return v;
+    });
+  }
+
+  async function deleteSelected() {
+    const selectedCount = videos.filter((v) => v.selected).length;
+    if (selectedCount === 0) return;
+    if (confirm(`Delete ${selectedCount} selected videos?`)) {
+      videos = videos.filter((v) => !v.selected);
+      if (paginatedVideos.length === 0 && currentPage > 1) {
+        currentPage = Math.max(1, currentPage - 1);
+      }
+      loadPageVideos(currentPage);
+      await savePlaylistBuilder();
+      window.success(`Deleted ${selectedCount} videos`);
+    }
+  }
 
   async function loadPageVideos(page) {
     loading = true;
@@ -166,7 +199,7 @@
 
   async function deleteVideo(event: CustomEvent<Video>) {
     videos = videos.filter((video) => video.id !== event.detail.id);
-    if (paginatedVideos.length == 1 && currentPage > 1) {
+    if (paginatedVideos.length == 0 && currentPage > 1) {
       currentPage = currentPage - 1;
     }
     loadPageVideos(currentPage);
@@ -238,16 +271,9 @@
   }
 
   async function removeDuplicates() {
-    const videosMap = videos.reduce((acc, video) => {
-      const videoId = video.videoId.toString();
-      if (!acc[videoId]) {
-        acc[videoId] = video;
-      }
-      return acc;
-    }, {} as Video[]);
-    const uniqueVideos = Object.values(videosMap);
+    const { uniqueVideos, duplicatesCount } =
+      playlistService.removeDuplicates(videos);
 
-    const duplicatesCount = videos.length - uniqueVideos.length;
     if (duplicatesCount > 0) {
       videos = uniqueVideos;
       loadPageVideos(currentPage);
@@ -344,6 +370,13 @@
   </h2>
   {#if dataLoaded || !loading}
     <div class="platlist-btns">
+      {#if videos.some((v) => v.selected)}
+        <FloatingButton
+          on:click={deleteSelected}
+          title="Delete selected"
+          bgcolor="#dc3545"><DeleteIcon /></FloatingButton
+        >
+      {/if}
       {#if videos.length > 0}
         <FloatingButton on:click={play} title="Play all videos"
           ><PlaylistPlayIcon /></FloatingButton
@@ -388,6 +421,18 @@
         >
       {/if}
     </div>
+    {#if videos.length > 0}
+      <div class="batch-controls">
+        <label>
+          <input
+            type="checkbox"
+            checked={allSelected}
+            on:change={toggleSelectAll}
+          />
+          Select All
+        </label>
+      </div>
+    {/if}
     <div class="list">
       {#each paginatedVideos as video, index (video.id)}
         <div
@@ -483,6 +528,25 @@
 
   .platlist-btns > :global(*) {
     margin-left: 10px;
+  }
+
+  .batch-controls {
+    padding: 0 20px 10px;
+    display: flex;
+    align-items: center;
+  }
+
+  .batch-controls label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .batch-controls input {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
   }
 
   .list {
