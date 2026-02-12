@@ -1,7 +1,16 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
   import DeleteIcon from "./icons/DeleteIcon.svelte";
-  import SimpleButton from "./SimpleButton.svelte";
+  import InfoIcon from "./icons/InfoIcon.svelte";
+  import SearchIcon from "./icons/SearchIcon.svelte";
+  import CheckIcon from "./icons/CheckIcon.svelte";
+  import type { Video } from "../types/model";
+  import VideoIdCard from "./VideoIdCard.svelte";
+  import SmartElement from "./SmartElement.svelte";
+  import SuperButton from "./SuperButton.svelte";
+  import SuperCheckbox from "./SuperCheckbox.svelte";
+  import { metadataService } from "../services/metadata-service";
+  import { alternativesService } from "../services/alternatives-service";
 
   export let video: Video;
   export let active: boolean;
@@ -16,9 +25,36 @@
   function deleteVideo(_: Event) {
     dispatch("delete", video);
   }
+
+  let showIdCard = false;
+  function openIdCard() {
+    showIdCard = true;
+  }
+
+  function trackDown() {
+    const urls = alternativesService.getSearchUrls(video.title, video.videoId);
+    // For now, just open Wayback Machine as a default or first choice
+    window.open(urls[0].url, "_blank");
+  }
+
+  async function handleSave() {
+    await metadataService.saveVideoMetadata(video.videoId, {
+      watched: video.watched,
+      notes: video.notes,
+      rating: video.rating,
+    });
+    dispatch("save", video);
+  }
 </script>
 
-<div class="playlist-video" class:is-active={active}>
+<SmartElement
+  className="playlist-video {video.watched ? 'is-watched' : ''}"
+  {active}
+  selected={video.selected}
+>
+  <div class="video-selection" on:click|stopPropagation>
+    <SuperCheckbox bind:checked={video.selected} />
+  </div>
   {#if !disableThumbnails}
     <img
       alt={video.title}
@@ -31,24 +67,48 @@
     <span>{video.channel}</span>
   </div>
   <div class="video-btns">
-    <SimpleButton on:click={deleteVideo}><DeleteIcon /></SimpleButton>
+    <SuperButton on:click={trackDown} title="Track down alternatives" circle bgcolor="transparent" className="video-action-btn"
+      ><SearchIcon /></SuperButton
+    >
+    <SuperButton on:click={openIdCard} title="Video ID Card" circle bgcolor="transparent" className="video-action-btn"
+      ><InfoIcon /></SuperButton
+    >
+    <SuperButton on:click={deleteVideo} title="Delete video" circle bgcolor="transparent" className="video-action-btn"
+      ><DeleteIcon /></SuperButton
+    >
   </div>
-</div>
+</SmartElement>
+
+<VideoIdCard bind:display={showIdCard} bind:video on:save={handleSave} />
 
 <style>
-  .playlist-video {
-    display: flex;
+  :global(.playlist-video) {
     padding: 0.5em 1em;
-    cursor: pointer;
+    align-items: center;
   }
 
-  .playlist-video:hover {
-    background-color: var(--hover-color);
+  .video-selection {
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
   }
 
-  .playlist-video.is-active {
-    background-color: #3273dc;
-    color: #fff;
+  :global(.video-action-btn) {
+    color: var(--text-color) !important;
+    box-shadow: none !important;
+  }
+
+  :global(.video-action-btn:hover) {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    transform: none !important;
+  }
+
+  :global(.playlist-video.is-watched) {
+    opacity: 0.6;
+  }
+
+  :global(.playlist-video.is-watched) .video-title {
+    text-decoration: line-through;
   }
 
   img {

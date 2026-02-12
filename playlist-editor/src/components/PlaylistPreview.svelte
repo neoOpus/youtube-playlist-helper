@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Playlist } from "../types/model.js";
   import PlaylistCount from "./PlaylistCount.svelte";
+  import SmartElement from "./SmartElement.svelte";
 
   const videoService = window.videoService;
 
@@ -13,7 +14,7 @@
   }
 </script>
 
-<div class="preview" on:click|preventDefault={previewClicked}>
+<SmartElement className="preview" on:click={previewClicked}>
   {#if !disableThumbnails}
     <div class="preview-row">
       <img
@@ -39,18 +40,12 @@
     <PlaylistCount {playlist} className="preview-count" />
   {/if}
   <span class="preview-title">{playlist.title}</span>
-</div>
+</SmartElement>
 
 <style>
-  .preview {
-    display: flex;
+  :global(.preview) {
     flex-direction: column;
-    cursor: pointer;
     padding: 10px;
-  }
-
-  .preview:hover {
-    background-color: var(--hover-color);
   }
 
   :global(.preview-img) {

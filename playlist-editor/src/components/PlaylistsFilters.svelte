@@ -1,11 +1,11 @@
 <script lang="ts">
   import { get } from "svelte/store";
-  import { getPlaylistsSorter } from "../services/playlists-sorter.js";
+  import { getPlaylistsSorter } from "../services/playlists-sorter";
   import {
     playlistsSearch,
     playlistsSorting,
-  } from "../stores/playlists-filters.js";
-  import type { Playlist, PlaylistsSorting } from "../types/model.js";
+  } from "../stores/playlists-filters";
+  import type { Playlist, PlaylistsSorting } from "../types/model";
   import { onMount } from "svelte";
 
   export let playlists: Playlist[];
@@ -13,8 +13,14 @@
 
   let sortBy = get(playlistsSorting);
   let search = get(playlistsSearch);
-  $: sortBy, filtersUpdated();
-  $: search, filtersUpdated();
+  let selectedGroup = "All";
+
+  $: groups = [
+    "All",
+    ...new Set(playlists.flatMap((p) => p.groups || []).filter(Boolean)),
+  ];
+
+  $: sortBy, search, selectedGroup, filtersUpdated();
   filtersUpdated();
 
   const sortOptions: Record<PlaylistsSorting, string> = {
@@ -34,6 +40,13 @@
 
   function filtersUpdated() {
     filteredPlaylists = playlists.sort(getPlaylistsSorter(sortBy));
+
+    if (selectedGroup !== "All") {
+      filteredPlaylists = filteredPlaylists.filter((p) =>
+        p.groups?.includes(selectedGroup)
+      );
+    }
+
     const keywords = search
       .split(/\s+/)
       .filter((k) => k.length)
@@ -58,6 +71,14 @@
       on:input={searchChanged}
       style="width: 70%"
     />
+  </label>
+  <label style="min-width: fit-content;">
+    <span>Group</span>
+    <select bind:value={selectedGroup}>
+      {#each groups as group}
+        <option value={group}>{group}</option>
+      {/each}
+    </select>
   </label>
   <label style="min-width: fit-content;">
     <span>Sort by</span>

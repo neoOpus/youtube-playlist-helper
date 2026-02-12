@@ -5,6 +5,8 @@
   import Saved from "./views/Saved.svelte";
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
+  import PlaylistComparison from "./components/PlaylistComparison.svelte";
+  import UndoNotification from "./components/UndoNotification.svelte";
 
   const routes = {
     "/new": New,
@@ -12,9 +14,13 @@
     "/editor": PlaylistEditor,
     "/playlist-builder": PlaylistEditor,
     "/manage": Manage,
+    "/compare": PlaylistComparison,
     "/support": Support,
     "*": Saved,
   };
 </script>
 
-<Router {routes} />
+<div class="app-container">
+  <Router {routes} />
+  <UndoNotification />
+</div>
