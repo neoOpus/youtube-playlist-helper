@@ -20,9 +20,12 @@
   import SimpleButton from "./SimpleButton.svelte";
   import { paginate } from "svelte-paginate";
   import RemoveDuplicates from "./icons/RemoveDuplicates.svelte";
-  import type { Playlist, Video } from "../types/model.js";
+  import type { Playlist, Video } from "../types/model";
   import PaginationNav from "./PaginationNav.svelte";
-  import { playlistService } from "../services/playlist-service.js";
+  import PlaylistTimeline from "./PlaylistTimeline.svelte";
+  import { playlistService } from "../services/playlist-service";
+  import { actionLogger } from "../services/action-logger";
+  import { metadataService } from "../services/metadata-service";
 
   const videoService = window.videoService;
 
@@ -39,6 +42,7 @@
   let loading = true;
   let dataLoaded = false;
   let videos = [] as Video[];
+  let view: "list" | "timeline" = "list";
 
   let allSelected = false;
   $: {
@@ -61,6 +65,13 @@
     const selectedCount = videos.filter((v) => v.selected).length;
     if (selectedCount === 0) return;
     if (confirm(`Delete ${selectedCount} selected videos?`)) {
+      const previousVideos = [...videos];
+      actionLogger.log(`Delete ${selectedCount} videos`, () => {
+        videos = previousVideos;
+        loadPageVideos(currentPage);
+        savePlaylistBuilder();
+      });
+
       videos = videos.filter((v) => !v.selected);
       if (paginatedVideos.length === 0 && currentPage > 1) {
         currentPage = Math.max(1, currentPage - 1);
@@ -160,6 +171,19 @@
 
   let hovering = -1;
   let originalTitle: string;
+  let groupsString = "";
+  $: {
+    if (playlist) {
+      groupsString = playlist.groups?.join(", ") || "";
+    }
+  }
+
+  function handleGroupsChange() {
+    playlist.groups = groupsString
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
 
   let displayModal = false;
   let modalType: ModalType;
@@ -198,6 +222,13 @@
   };
 
   async function deleteVideo(event: CustomEvent<Video>) {
+    const previousVideos = [...videos];
+    actionLogger.log(`Delete video`, () => {
+      videos = previousVideos;
+      loadPageVideos(currentPage);
+      savePlaylistBuilder();
+    });
+
     videos = videos.filter((video) => video.id !== event.detail.id);
     if (paginatedVideos.length == 0 && currentPage > 1) {
       currentPage = currentPage - 1;
@@ -214,6 +245,12 @@
     const videoId = videoService.parseYoutubeId(url);
     if (videoId) {
       const video = await videoService.fetchVideo(videoId);
+      if (!video.dateAdded) {
+        video.dateAdded = Date.now();
+        await metadataService.saveVideoMetadata(video.videoId, {
+          dateAdded: video.dateAdded,
+        });
+      }
       videos = [...videos, video];
       await savePlaylistBuilder();
     } else {
@@ -229,6 +266,14 @@
         .map((id) => videoService.fetchVideo(id))
     );
     importedVideos = importedVideos.filter((v) => v != null);
+    for (const v of importedVideos) {
+      if (!v.dateAdded) {
+        v.dateAdded = Date.now();
+        await metadataService.saveVideoMetadata(v.videoId, {
+          dateAdded: v.dateAdded,
+        });
+      }
+    }
     videos = [...videos, ...importedVideos];
     await savePlaylistBuilder();
     importText = "";
@@ -260,6 +305,13 @@
   }
 
   async function reversePlaylist() {
+    const previousVideos = [...videos];
+    actionLogger.log("Reverse playlist", () => {
+      videos = previousVideos;
+      loadPageVideos(currentPage);
+      savePlaylistBuilder();
+    });
+
     let reversed = new Array(videos.length);
     for (let i = 0; i < videos.length; i++) {
       let r = videos.length - i - 1;
@@ -275,6 +327,13 @@
       playlistService.removeDuplicates(videos);
 
     if (duplicatesCount > 0) {
+      const previousVideos = [...videos];
+      actionLogger.log(`Remove ${duplicatesCount} duplicates`, () => {
+        videos = previousVideos;
+        loadPageVideos(currentPage);
+        savePlaylistBuilder();
+      });
+
       videos = uniqueVideos;
       loadPageVideos(currentPage);
       await savePlaylistBuilder();
@@ -356,19 +415,34 @@
 <Sidebar />
 
 <main>
-  <h2>
-    {#if !editingTitle}
-      <div style="line-height: 40px;">{playlist?.title}</div>
-      <SimpleButton className="edit-title-btn" on:click={startTitleEdit}>
-        <PencilIcon />
-      </SimpleButton>
-    {:else}
-      <input class="edit-title-input" type="text" bind:value={playlist.title} />
-      <SimpleButton on:click={endTitleEdit}><CheckIcon /></SimpleButton>
-      <SimpleButton on:click={resetTitle}><CloseIcon /></SimpleButton>
-    {/if}
-  </h2>
-  {#if dataLoaded || !loading}
+  {#if playlist}
+    <h2>
+      {#if !editingTitle}
+        <div style="line-height: 40px;">{playlist.title}</div>
+        <SimpleButton className="edit-title-btn" on:click={startTitleEdit}>
+          <PencilIcon />
+        </SimpleButton>
+      {:else}
+        <input
+          class="edit-title-input"
+          type="text"
+          bind:value={playlist.title}
+        />
+        <SimpleButton on:click={endTitleEdit}><CheckIcon /></SimpleButton>
+        <SimpleButton on:click={resetTitle}><CloseIcon /></SimpleButton>
+      {/if}
+    </h2>
+    <div class="groups-container">
+      <span>Groups:</span>
+      <input
+        type="text"
+        placeholder="Category1, Category2..."
+        bind:value={groupsString}
+        on:change={handleGroupsChange}
+      />
+    </div>
+  {/if}
+  {#if (dataLoaded || !loading) && playlist}
     <div class="platlist-btns">
       {#if videos.some((v) => v.selected)}
         <FloatingButton
@@ -387,6 +461,11 @@
       >
       <FloatingButton on:click={displayImport} title="Import videos"
         ><PlusMultiple /></FloatingButton
+      >
+      <FloatingButton
+        on:click={() => (view = view === "list" ? "timeline" : "list")}
+        title={view === "list" ? "View timeline" : "View list"}
+        ><ReverseIcon /></FloatingButton
       >
       {#if videos.length > 0}
         <FloatingButton on:click={displayExport} title="Export videos"
@@ -421,7 +500,7 @@
         >
       {/if}
     </div>
-    {#if videos.length > 0}
+    {#if videos.length > 0 && view === "list"}
       <div class="batch-controls">
         <label>
           <input
@@ -433,8 +512,11 @@
         </label>
       </div>
     {/if}
-    <div class="list">
-      {#each paginatedVideos as video, index (video.id)}
+    {#if view === "timeline"}
+      <PlaylistTimeline {videos} />
+    {:else}
+      <div class="list">
+        {#each paginatedVideos as video, index (video.id)}
         <div
           animate:customFlip
           draggable={true}
@@ -445,6 +527,7 @@
         >
           <PlaylistVideo
             on:delete={deleteVideo}
+            on:save={savePlaylistBuilder}
             {video}
             {disableThumbnails}
             active={hovering === index}
@@ -452,8 +535,9 @@
         </div>
       {:else}
         <p style="text-align: center">The playlist is empty</p>
-      {/each}
-    </div>
+        {/each}
+      </div>
+    {/if}
     <div class="pagination">
       {#if videos.length > pageSize}
         <PaginationNav
@@ -519,6 +603,23 @@
 
   :global(.edit-title-btn) {
     margin-left: 20px;
+  }
+
+  .groups-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .groups-container input {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    width: 300px;
+    background: transparent;
+    color: inherit;
   }
 
   .platlist-btns {

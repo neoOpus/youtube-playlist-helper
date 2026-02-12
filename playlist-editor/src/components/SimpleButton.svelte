@@ -1,8 +1,9 @@
 <script lang="ts">
   export let className = "";
+  export let title = "";
 </script>
 
-<div class="btn {className}" on:click>
+<div class="btn {className}" {title} on:click>
   <slot />
 </div>
 

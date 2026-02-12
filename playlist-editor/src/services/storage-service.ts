@@ -198,6 +198,7 @@ window.getSettings = async () => {
     disableContextBuilder: false,
     disableContextSaved: false,
     themeChoice: "device",
+    viewMode: "simple",
   };
   const settings = { ...DEFAULT_SETTINGS };
   await Promise.all(

@@ -1,6 +1,7 @@
 /// <reference path="../types/services.d.ts" />
 
 import type { Playlist } from "../types/model.js";
+import { metadataService } from "./metadata-service.js";
 
 window.videoIdCount = 100;
 
@@ -37,6 +38,7 @@ class VideoService {
       title = "";
       channel = "";
     }
+    const metadata = await metadataService.getVideoMetadata(videoId);
     return {
       id: window.videoIdCount++,
       videoId,
@@ -44,6 +46,7 @@ class VideoService {
       title,
       channel,
       thumbnailUrl: this.getVideoThumbnailUrl(videoId),
+      ...metadata,
     };
   }
 

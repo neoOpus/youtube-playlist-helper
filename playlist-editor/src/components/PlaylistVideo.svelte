@@ -1,8 +1,15 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
   import DeleteIcon from "./icons/DeleteIcon.svelte";
+  import InfoIcon from "./icons/InfoIcon.svelte";
+  import SearchIcon from "./icons/SearchIcon.svelte";
+  import CheckIcon from "./icons/CheckIcon.svelte";
   import SimpleButton from "./SimpleButton.svelte";
-  import type { Video } from "../types/model.js";
+  import type { Video } from "../types/model";
+  import VideoIdCard from "./VideoIdCard.svelte";
+  import SmartElement from "./SmartElement.svelte";
+  import { metadataService } from "../services/metadata-service";
+  import { alternativesService } from "../services/alternatives-service";
 
   export let video: Video;
   export let active: boolean;
@@ -17,11 +24,39 @@
   function deleteVideo(_: Event) {
     dispatch("delete", video);
   }
+
+  let showIdCard = false;
+  function openIdCard() {
+    showIdCard = true;
+  }
+
+  function trackDown() {
+    const urls = alternativesService.getSearchUrls(video.title, video.videoId);
+    // For now, just open Wayback Machine as a default or first choice
+    window.open(urls[0].url, "_blank");
+  }
+
+  async function handleSave() {
+    await metadataService.saveVideoMetadata(video.videoId, {
+      watched: video.watched,
+      notes: video.notes,
+      rating: video.rating,
+    });
+    dispatch("save", video);
+  }
 </script>
 
-<div class="playlist-video" class:is-active={active}>
+<SmartElement
+  className="playlist-video {video.watched ? 'is-watched' : ''}"
+  {active}
+  selected={video.selected}
+>
   <div class="video-selection">
-    <input type="checkbox" bind:checked={video.selected} on:click|stopPropagation />
+    <input
+      type="checkbox"
+      bind:checked={video.selected}
+      on:click|stopPropagation
+    />
   </div>
   {#if !disableThumbnails}
     <img
@@ -35,15 +70,21 @@
     <span>{video.channel}</span>
   </div>
   <div class="video-btns">
+    <SimpleButton on:click={trackDown} title="Track down alternatives"
+      ><SearchIcon /></SimpleButton
+    >
+    <SimpleButton on:click={openIdCard} title="Video ID Card"
+      ><InfoIcon /></SimpleButton
+    >
     <SimpleButton on:click={deleteVideo}><DeleteIcon /></SimpleButton>
   </div>
-</div>
+</SmartElement>
+
+<VideoIdCard bind:display={showIdCard} bind:video on:save={handleSave} />
 
 <style>
-  .playlist-video {
-    display: flex;
+  :global(.playlist-video) {
     padding: 0.5em 1em;
-    cursor: pointer;
     align-items: center;
   }
 
@@ -59,13 +100,12 @@
     cursor: pointer;
   }
 
-  .playlist-video:hover {
-    background-color: var(--hover-color);
+  :global(.playlist-video.is-watched) {
+    opacity: 0.6;
   }
 
-  .playlist-video.is-active {
-    background-color: #3273dc;
-    color: #fff;
+  :global(.playlist-video.is-watched) .video-title {
+    text-decoration: line-through;
   }
 
   img {

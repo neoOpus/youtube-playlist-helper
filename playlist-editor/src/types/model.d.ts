@@ -6,6 +6,10 @@ export interface Video {
   channel: string;
   thumbnailUrl: string;
   selected?: boolean;
+  watched?: boolean;
+  notes?: string;
+  rating?: number;
+  dateAdded?: number;
 }
 
 export interface PlaylistExport {
@@ -22,6 +26,7 @@ export interface Playlist {
   /** Date created */
   timestamp: number;
   saved?: boolean;
+  groups?: string[];
 }
 
 export interface Settings {
@@ -37,7 +42,10 @@ export interface Settings {
   disableContextBuilder: boolean;
   disableContextSaved: boolean;
   themeChoice: ThemeChoice;
+  viewMode: ViewMode;
 }
+
+export type ViewMode = "simple" | "advanced";
 
 export type PlaylistsSorting =
   | "date-created-asc"

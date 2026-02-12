@@ -5,6 +5,7 @@
   import Saved from "./views/Saved.svelte";
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
+  import UndoNotification from "./components/UndoNotification.svelte";
 
   const routes = {
     "/new": New,
@@ -17,4 +18,7 @@
   };
 </script>
 
-<Router {routes} />
+<div class="app-container">
+  <Router {routes} />
+  <UndoNotification />
+</div>
