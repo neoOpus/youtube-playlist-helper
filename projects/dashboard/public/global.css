@@ -1,0 +1,71 @@
+:root {
+  color-scheme: light;
+  --background-color: #fff;
+  --text-color: #333;
+  --border-color: #ccc;
+  --hover-color: rgb(255, 154, 154);
+  --active-bg-color: rgb(255, 221, 221);
+  --active-text-color: rgb(74, 75, 105);
+  --shadow-color: #666;
+  --sidebar-bg-color: rgb(255, 82, 82);
+  --sidebar-text-color: #ffffff;
+  --sidebar-width: 240px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background-color: rgba(36, 56, 102);
+  --text-color: rgb(179, 201, 255);
+  --border-color: rgb(15, 23, 41);
+  --hover-color: rgba(179, 201, 255, 0.2);
+  --active-bg-color: rgba(179, 201, 255, 0.1);
+  --active-text-color: rgb(58, 191, 248);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --sidebar-bg-color: rgb(26, 39, 71);
+  --sidebar-text-color: rgb(179, 201, 255);
+}
+
+html,
+body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: var(--text-color);
+  background-color: var(--background-color);
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+main {
+  margin-left: var(--sidebar-width);
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+input,
+button,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0.4em;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--background-color);
+  color: var(--text-color);
+}
+
+.is-collapsed + main {
+    --sidebar-width: 60px;
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "module": "ES2020",
+    "baseUrl": ".",
+    "paths": {
+      "@yph/core": ["../core/index.ts"],
+      "@yph/ui-kit": ["../ui-kit/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "../core/**/*", "../ui-kit/**/*"],
+  "exclude": ["node_modules/*", "public/*"]
+}

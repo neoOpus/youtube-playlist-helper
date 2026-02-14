@@ -1,0 +1,8 @@
+{
+  "name": "@yph/extension",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Extension source is static, Dashboard build handles editor files.'"
+  }
+}

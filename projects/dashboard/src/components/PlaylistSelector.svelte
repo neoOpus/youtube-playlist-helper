@@ -1,0 +1,34 @@
+<script lang="ts">
+  import type { Playlist } from "@yph/core";
+  import { storageService } from "@yph/core";
+  import PlaylistPreview from "./PlaylistPreview.svelte";
+  import PlaylistsFilters from "./PlaylistsFilters.svelte";
+
+  export let playlists: Playlist[];
+  let filteredPlaylists = playlists;
+
+  let disableThumbnails = true;
+  storageService.getSettings().then((settings) => {
+    disableThumbnails = settings.disableThumbnails;
+  });
+</script>
+
+{#if playlists.length > 0}
+  <PlaylistsFilters bind:playlists bind:filteredPlaylists />
+{/if}
+
+<div class="selector">
+  {#each filteredPlaylists as playlist (playlist.id)}
+    <PlaylistPreview {playlist} {disableThumbnails} />
+  {:else}
+    <p style="text-align: center; padding: 1rem 0;">No playlist found</p>
+  {/each}
+</div>
+
+<style>
+  .selector {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+</style>
