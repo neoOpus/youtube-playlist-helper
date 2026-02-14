@@ -7,11 +7,22 @@
       display = false;
     }
   }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      display = false;
+    }
+  }
 </script>
 
 {#if display}
-  <div on:click={handleModalClick} class="modal">
-    <div class="modal-content">
+  <div
+    on:click={handleModalClick}
+    on:keydown={handleKeydown}
+    class="modal"
+    role="presentation"
+  >
+    <div class="modal-content" role="dialog" aria-modal="true">
       <slot />
     </div>
   </div>
@@ -27,7 +38,7 @@
     top: 0;
     width: 100%;
     height: 100%;
-    z-index: 1;
+    z-index: 100;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.5);
   }
@@ -39,7 +50,10 @@
     background-color: var(--background-color);
     padding: 20px;
     border: 1px solid #888;
-    width: 80%;
+    width: auto;
+    max-width: 90%;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   }
 
   .modal:hover {

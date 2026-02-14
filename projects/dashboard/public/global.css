@@ -9,7 +9,6 @@
   --shadow-color: #666;
   --sidebar-bg-color: rgb(255, 82, 82);
   --sidebar-text-color: #ffffff;
-  --sidebar-width: 240px;
 }
 
 [data-theme="dark"] {
@@ -43,8 +42,6 @@ body {
 }
 
 main {
-  margin-left: var(--sidebar-width);
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -64,8 +61,4 @@ textarea {
   border-radius: 4px;
   background: var(--background-color);
   color: var(--text-color);
-}
-
-.is-collapsed + main {
-    --sidebar-width: 60px;
 }

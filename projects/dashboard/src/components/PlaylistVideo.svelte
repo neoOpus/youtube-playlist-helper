@@ -47,6 +47,12 @@
     });
     dispatch("save", video);
   }
+
+  function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "Enter" || e.key === " ") {
+          videoClicked();
+      }
+  }
 </script>
 
 <SmartElement
@@ -54,15 +60,27 @@
   {active}
   selected={video.selected}
 >
-  <div class="video-selection" on:click|stopPropagation>
+  <div
+    class="video-selection"
+    on:click|stopPropagation
+    on:keydown|stopPropagation
+    role="presentation"
+  >
     <SuperCheckbox bind:checked={video.selected} />
   </div>
+
   {#if !disableThumbnails}
-    <div class="thumbnail-container">
+    <div
+        class="thumbnail-container"
+        on:click|preventDefault={videoClicked}
+        on:keydown={handleKeydown}
+        role="button"
+        tabindex="0"
+        aria-label="Play video"
+    >
         <img
           alt={video.title}
           src={video.thumbnailUrl}
-          on:click|preventDefault={videoClicked}
         />
         {#if video.watched}
             <div class="watched-overlay">
@@ -71,7 +89,8 @@
         {/if}
     </div>
   {/if}
-  <div class="video-details">
+
+  <div class="video-details" on:click={videoClicked} on:keydown={handleKeydown} role="button" tabindex="0">
     <div class="title-row">
         {#if video.watched}
             <span class="watched-badge">WATCHED</span>
@@ -80,7 +99,8 @@
     </div>
     <span class="video-channel">{video.channel}</span>
   </div>
-  <div class="video-btns">
+
+  <div class="video-btns" on:click|stopPropagation on:keydown|stopPropagation role="presentation">
     <SuperButton on:click={trackDown} title="Track down alternatives" circle bgcolor="transparent" className="video-action-btn"
       ><SearchIcon /></SuperButton
     >
@@ -119,13 +139,13 @@
     margin-right: 10px;
     border-radius: 4px;
     overflow: hidden;
+    cursor: pointer;
   }
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    cursor: pointer;
   }
 
   .watched-overlay {
@@ -148,6 +168,7 @@
     justify-content: center;
     padding: 0.5em;
     min-width: 0;
+    cursor: pointer;
   }
 
   .title-row {

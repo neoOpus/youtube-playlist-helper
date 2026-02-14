@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { CloseIcon, PencilIcon } from "./icons/index.js";
+  import { CloseIcon, PencilIcon } from "./icons/index.ts";
 
   export let collapsed = false;
   export let width = "240px";

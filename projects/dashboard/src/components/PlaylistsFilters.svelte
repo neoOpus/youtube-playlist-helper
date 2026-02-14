@@ -1,107 +1,181 @@
 <script lang="ts">
   import { get } from "svelte/store";
-  import { getPlaylistsSorter } from "@yph/core";
+  import { getPlaylistsSorter, aiService } from "@yph/core";
   import {
     playlistsSearch,
     playlistsSorting,
   } from "../stores/playlists-filters";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
 
-  export let playlists: Playlist[];
-  export let filteredPlaylists: Playlist[];
+  export let playlists: Playlist[] = [];
+  export let filteredPlaylists: Playlist[] = [];
 
   let sortBy = get(playlistsSorting);
   let search = get(playlistsSearch);
   let selectedGroup = "All";
+  let useRegex = false;
 
   $: groups = [
     "All",
-    ...new Set(playlists.flatMap((p) => p.groups || []).filter(Boolean)),
+    ...new Set((playlists || []).flatMap((p) => p.groups || []).filter(Boolean)),
   ];
-
-  $: sortBy, search, selectedGroup, filtersUpdated();
-  filtersUpdated();
-
-  const sortOptions: Record<PlaylistsSorting, string> = {
-    "date-created-desc": "Date created (descending)",
-    "date-created-asc": "Date created (ascending)",
-    "title-az": "Title (A -> Z)",
-    "title-za": "Title (Z -> A)",
-  };
 
   function sortingChanged() {
     playlistsSorting.set(sortBy);
+    filtersUpdated();
   }
 
   function searchChanged() {
     playlistsSearch.set(search);
+    filtersUpdated();
   }
 
   function filtersUpdated() {
-    filteredPlaylists = playlists.sort(getPlaylistsSorter(sortBy));
+    if (!playlists) return;
+
+    let result = [...playlists];
+
+    if (sortBy === "relevance" as any) {
+        const keywords = search.split(/\s+/).filter(k => k.length > 2);
+        if (keywords.length > 0) {
+            result.sort((a, b) => {
+                const scoreA = aiService.calculatePlaylistRelevance(a, keywords);
+                const scoreB = aiService.calculatePlaylistRelevance(b, keywords);
+                return scoreB - scoreA;
+            });
+        }
+    } else {
+        result.sort(getPlaylistsSorter(sortBy));
+    }
 
     if (selectedGroup !== "All") {
-      filteredPlaylists = filteredPlaylists.filter((p) =>
+      result = result.filter((p) =>
         p.groups?.includes(selectedGroup)
       );
     }
 
-    const keywords = search
-      .split(/\s+/)
-      .filter((k) => k.length)
-      .map((k) => k.toLowerCase());
-    if (keywords.length) {
-      filteredPlaylists = filteredPlaylists.filter((playlist) =>
-        keywords.every((k) => playlist.title.toLowerCase().includes(k))
-      );
+    if (search.trim()) {
+        if (useRegex) {
+            try {
+                const regex = new RegExp(search, "i");
+                result = result.filter((p) => regex.test(p.title) || p.groups?.some(g => regex.test(g)));
+            } catch (e) {
+                // Invalid regex
+            }
+        } else {
+            const keywords = search
+              .split(/\s+/)
+              .filter((k) => k.length)
+              .map((k) => k.toLowerCase());
+
+            result = result.filter((playlist) =>
+                keywords.every((k) => playlist.title?.toLowerCase().includes(k))
+            );
+        }
     }
+
+    filteredPlaylists = result;
   }
+
+  $: if (playlists) filtersUpdated();
 </script>
 
 <aside>
-  <h2 style="margin: 0; flex-grow: 1; text-align: center;">
-    {filteredPlaylists.length} playlist{filteredPlaylists.length > 1 ? "s" : ""}
-  </h2>
-  <label style="flex-grow: 2">
-    <span style="width: 30%">Search</span>
-    <input
-      type="text"
-      bind:value={search}
-      on:input={searchChanged}
-      style="width: 70%"
-    />
-  </label>
-  <label style="min-width: fit-content;">
-    <span>Group</span>
-    <select bind:value={selectedGroup}>
-      {#each groups as group}
-        <option value={group}>{group}</option>
-      {/each}
-    </select>
-  </label>
-  <label style="min-width: fit-content;">
-    <span>Sort by</span>
-    <select bind:value={sortBy} on:change={sortingChanged}>
-      {#each Object.entries(sortOptions) as [value, label]}
-        <option {value}>{label}</option>
-      {/each}
-    </select>
-  </label>
+  <div class="header-row">
+      <h2 style="margin: 0;">
+        {filteredPlaylists?.length || 0} playlist{filteredPlaylists?.length !== 1 ? "s" : ""}
+      </h2>
+
+      <div class="search-box">
+          <input
+            type="text"
+            bind:value={search}
+            on:input={searchChanged}
+            placeholder={useRegex ? "Regex Search..." : "Search playlists..."}
+          />
+          <label class="regex-toggle">
+              <input type="checkbox" bind:checked={useRegex} on:change={filtersUpdated} />
+              <span>Regex</span>
+          </label>
+      </div>
+
+      <div class="filters">
+          <label>
+            <span>Group</span>
+            <select bind:value={selectedGroup} on:change={filtersUpdated}>
+              {#each groups as group}
+                <option value={group}>{group}</option>
+              {/each}
+            </select>
+          </label>
+
+          <label>
+            <span>Sort</span>
+            <select bind:value={sortBy} on:change={sortingChanged}>
+              <optgroup label="Standard">
+                  <option value="date-created-desc">Newest First</option>
+                  <option value="date-created-asc">Oldest First</option>
+                  <option value="title-az">A-Z</option>
+                  <option value="title-za">Z-A</option>
+              </optgroup>
+              <optgroup label="Intelligence">
+                  <option value="relevance">Smart Relevance</option>
+              </optgroup>
+            </select>
+          </label>
+      </div>
+  </div>
 </aside>
 
 <style>
   aside {
-    padding: 1rem 0;
+    padding: 1.5rem 0;
     position: sticky;
     top: 0;
     background-color: var(--background-color);
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 2rem;
+    z-index: 5;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
   }
-  label > * {
-    margin-left: 0.5rem;
+
+  .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      width: 100%;
+  }
+
+  .search-box {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 500px;
+  }
+
+  .search-box input {
+      width: 100%;
+  }
+
+  .regex-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+  }
+
+  .filters {
+      display: flex;
+      gap: 1rem;
+  }
+
+  label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
   }
 </style>

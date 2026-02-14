@@ -1,54 +1,51 @@
 <script lang="ts">
+  import SmartElement from "./SmartElement.svelte";
+  export let bgcolor = "var(--sidebar-bg-color)";
   export let title = "";
-  export let bgcolor = "#007bff";
 </script>
 
-<div class="fab" style="background-color: {bgcolor}" on:click>
+<SmartElement
+  className="fab"
+  style="background-color: {bgcolor}"
+  {title}
+  on:click
+>
   <slot />
-  {#if !!title}
-    <span class="tooltip" style="background-color: {bgcolor}">{title}</span>
+  {#if title}
+    <span class="tooltip">{title}</span>
   {/if}
-</div>
+</SmartElement>
 
 <style>
-  .fab {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    line-height: 40px;
-    color: white;
+  :global(.fab) {
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    box-shadow: 0 6px 10px 0 var(--shadow-color);
-    transition: all 0.1s ease-in-out;
-    cursor: pointer;
-  }
-
-  .fab:hover {
-    box-shadow: 0 6px 14px 0 var(--shadow-color);
-    transform: scale(1.05);
-  }
-
-  .fab:hover .tooltip {
-    visibility: visible;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    justify-content: center;
+    align-items: center;
+    position: relative;
   }
 
   .tooltip {
     visibility: hidden;
-    width: 120px;
-    opacity: 0.8;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px;
-    line-height: initial;
-
-    /* Position the tooltip */
     position: absolute;
-    z-index: 1;
-    bottom: 125%;
+    bottom: 120%;
     left: 50%;
-    margin-left: -60px;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  :global(.fab:hover) .tooltip {
+    visibility: visible;
+    opacity: 1;
   }
 </style>

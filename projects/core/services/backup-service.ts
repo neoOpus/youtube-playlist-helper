@@ -1,17 +1,32 @@
+import { storageService } from "./storage-service";
+
 /**
  * Service for performing automatic backups of playlists.
  */
 export const backupService = {
   /**
-   * Performs an automatic backup by saving all current playlists to a daily snapshot.
-   * @param allObjects All objects currently in storage.
-   * @param storeObject Function to store an object.
+   * Initializes the backup service by registering it with the storage service.
    */
-  async performAutoBackup(allObjects: Record<string, any>, storeObject: (id: string, obj: any) => Promise<void>) {
+  init() {
+    storageService.onSave(async (id) => {
+        if (id.startsWith("playlist_")) {
+            await this.performAutoBackup();
+        }
+    });
+  },
+
+  /**
+   * Performs an automatic backup by saving all current playlists to a daily snapshot.
+   */
+  async performAutoBackup() {
     try {
-      const playlists = Object.keys(allObjects)
+      const allData = await storageService.fetchAllObjects();
+      const playlists = Object.keys(allData)
         .filter((key) => key.startsWith("playlist_"))
-        .map((key) => JSON.parse(allObjects[key]));
+        .map((key) => {
+            const item = allData[key];
+            return typeof item === 'string' ? JSON.parse(item) : item;
+        });
 
       if (playlists.length === 0) return;
 
@@ -21,10 +36,14 @@ export const backupService = {
       };
 
       const backupKey = `backup_${new Date().toISOString().split("T")[0]}`;
-      await storeObject(backupKey, backup);
+      // Use internal storage call to avoid triggering the backup loop if we ever store backups differently
+      await storageService.storeObject(backupKey, backup);
       console.log("Auto-backup performed successfully.");
     } catch (error) {
       console.error("Failed to perform auto-backup:", error);
     }
   },
 };
+
+// Initialize the service automatically
+backupService.init();

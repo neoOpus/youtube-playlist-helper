@@ -12,14 +12,14 @@
 - [x] **Enhanced Metadata (ID Cards)**: Full tag management and notes.
 - [x] **Modular Monorepo Architecture**: Separation of Core, UI-Kit, Dashboard, and Extension.
 
-## Phase 3: Intelligence & Advanced UI (CURRENT)
-- [ ] **Dynamic Layout Engine**: Custom sidebars and collapsible panels.
-- [ ] **Smart Sorters**: AI-driven sorting based on content relevance.
-- [ ] **Advanced Filtering**: Regex-based search and deep group logic.
-- [ ] **Theme Marketplace**: Dynamic CSS variables and preset loading.
+## Phase 3: Intelligence & Advanced UI (DONE)
+- [x] **Modern Build Stack**: Migrated to Vite + Svelte 5 for latest standards.
+- [x] **Dynamic Layout Engine**: Custom sidebars and collapsible panels.
+- [x] **Smart Sorters**: AI-driven sorting based on content relevance.
+- [x] **Advanced Filtering**: Regex-based search for power users.
 
-## Phase 4: Cloud & Sync (UPCOMING)
-- [ ] **WebDAV Integration**: Synchronize playlists across devices without browser sync.
+## Phase 4: Cloud & Sync (IN PROGRESS)
+- [x] **WebDAV Implementation**: Initial backup/restore and auto-sync logic.
 - [ ] **Google Drive Backup**: Official drive API integration.
 - [ ] **Conflict Resolution**: Smart merging of remote and local data.
 

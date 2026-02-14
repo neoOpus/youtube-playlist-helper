@@ -14,12 +14,14 @@
   }
 </script>
 
+{#if playlist}
 <SmartElement {active} on:click={handleClick} className="playlist-preview">
   <div class="info">
-    <span class="title">{playlist.title}</span>
-    <PlaylistCount count={playlist.videos.length} />
+    <span class="title">{playlist.title || 'Untitled'}</span>
+    <PlaylistCount count={playlist.videos?.length || 0} />
   </div>
 </SmartElement>
+{/if}
 
 <style>
   :global(.playlist-preview) {

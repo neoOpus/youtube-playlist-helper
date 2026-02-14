@@ -40,35 +40,35 @@
   <div class="video-id-card">
     <h3>Video ID Card</h3>
     <div class="field">
-      <label for="title">Title</label>
-      <input id="title" type="text" bind:value={video.title} readonly />
+      <label for="video-title">Title</label>
+      <input id="video-title" type="text" bind:value={video.title} readonly />
     </div>
     <div class="field">
-      <label for="notes">Notes</label>
-      <textarea id="notes" bind:value={video.notes} placeholder="Add your private notes here..."></textarea>
+      <label for="video-notes">Notes</label>
+      <textarea id="video-notes" bind:value={video.notes} placeholder="Add your private notes here..."></textarea>
     </div>
     <div class="field-row">
         <div class="field">
-          <label for="rating">Rating (1-5)</label>
-          <input id="rating" type="number" min="1" max="5" bind:value={video.rating} />
+          <label for="video-rating">Rating (1-5)</label>
+          <input id="video-rating" type="number" min="1" max="5" bind:value={video.rating} />
         </div>
         <div class="field checkbox-field">
-            <label>
-                <input type="checkbox" bind:checked={video.watched} />
+            <input id="video-watched" type="checkbox" bind:checked={video.watched} />
+            <label for="video-watched">
                 Mark as Watched
             </label>
         </div>
     </div>
 
     <div class="field ai-section">
-        <label>AI Enrichment & Tags</label>
+        <label for="video-ai">AI Enrichment & Tags</label>
         {#if video.aiSummary}
             <div class="ai-summary">
                 <p>{video.aiSummary}</p>
             </div>
         {/if}
         <TagManager tags={video.aiTags || []} on:change={handleTagsChange} placeholder="Add tag..." />
-        <button on:click={analyze} disabled={loadingAi} class="ai-btn">
+        <button id="video-ai" on:click={analyze} disabled={loadingAi} class="ai-btn">
             {loadingAi ? 'Analyzing...' : 'Analyze with AI Agent'}
         </button>
     </div>

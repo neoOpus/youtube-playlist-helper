@@ -1,25 +1,52 @@
-/// <reference path="../../../node_modules/@types/firefox-webext-browser/index.d.ts" />
+/// <reference path="../types/services.ts" />
 
-import type { Playlist, PlaylistExport, Settings } from "../types/model.js";
-import { backupService } from "./backup-service.js";
+import type { Playlist, Settings } from "../types/model";
 
+/**
+ * Prefix for playlist keys in storage.
+ */
 const PLAYLIST_KEY_PREFIX = "playlist_";
+
+/**
+ * Key for the playlist ID counter.
+ */
 const ID_COUNTER_KEY = "PlaylistIdCounter";
 
+/**
+ * Type for storage change listeners.
+ */
+type StorageChangeListener = (id: string, obj: any) => void | Promise<void>;
+
+/**
+ * Internal set of listeners for storage changes.
+ */
+const changeListeners: Set<StorageChangeListener> = new Set();
+
+/**
+ * Converts a playlist object to a DTO for storage.
+ * @param playlist The playlist to convert.
+ * @returns The playlist DTO.
+ */
 function playlistToDto(playlist: Playlist) {
   const dto = { ...playlist };
   delete dto.loadedVideos;
   return dto;
 }
 
-function savedPlaylistsChanged() {
-  if (typeof browser !== "undefined" && browser.runtime && browser.runtime.sendMessage) {
+/**
+ * Notifies the extension that saved playlists have changed.
+ */
+function notifySavedPlaylistsChanged() {
+  if (typeof browser !== "undefined" && browser.runtime?.sendMessage) {
     browser.runtime.sendMessage({
       cmd: "update-saved-playlists",
-    });
+    }).catch(() => { /* Ignore errors if background script is not active */ });
   }
 }
 
+/**
+ * Default application settings.
+ */
 const DEFAULT_SETTINGS: Settings = {
   openPlaylistEditorAfterCreation: true,
   openPlaylistPage: false,
@@ -35,7 +62,24 @@ const DEFAULT_SETTINGS: Settings = {
   viewMode: "simple",
 };
 
+/**
+ * Service for handling persistent storage across different environments (Extension vs Web).
+ */
 export const storageService = {
+  /**
+   * Registers a listener for storage changes.
+   * @param listener The callback function.
+   */
+  onSave(listener: StorageChangeListener) {
+    changeListeners.add(listener);
+  },
+
+  /**
+   * Fetches an object from storage.
+   * @param id The key of the object.
+   * @param defaultValue The default value if not found.
+   * @returns The fetched object or default value.
+   */
   async fetchObject(id: string, defaultValue: any): Promise<any> {
     if (typeof browser !== "undefined" && browser.storage) {
       const result = await browser.storage.local.get(id);
@@ -63,6 +107,11 @@ export const storageService = {
     }
   },
 
+  /**
+   * Stores an object in storage.
+   * @param id The key of the object.
+   * @param obj The object to store.
+   */
   async storeObject(id: string, obj: any): Promise<void> {
     const value = obj ? (typeof obj === "string" ? obj : JSON.stringify(obj)) : null;
     if (typeof browser !== "undefined" && browser.storage) {
@@ -75,8 +124,17 @@ export const storageService = {
         localStorage.setItem(id, value);
       }
     }
+
+    // Notify listeners
+    for (const listener of changeListeners) {
+        await listener(id, obj);
+    }
   },
 
+  /**
+   * Fetches all objects from storage.
+   * @returns A record of all objects.
+   */
   async fetchAllObjects(): Promise<Record<string, any>> {
     if (typeof browser !== "undefined" && browser.storage) {
       return browser.storage.local.get(null);
@@ -84,12 +142,23 @@ export const storageService = {
       const all: Record<string, any> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key) all[key] = localStorage.getItem(key);
+        if (key) {
+            const val = localStorage.getItem(key);
+            try {
+                all[key] = val ? JSON.parse(val) : val;
+            } catch {
+                all[key] = val;
+            }
+        }
       }
       return all;
     }
   },
 
+  /**
+   * Removes an object from storage.
+   * @param id The key of the object.
+   */
   async removeObject(id: string): Promise<void> {
     if (typeof browser !== "undefined" && browser.storage) {
       await browser.storage.local.remove(id);
@@ -98,6 +167,10 @@ export const storageService = {
     }
   },
 
+  /**
+   * Generates a new unique playlist ID.
+   * @returns A promise resolving to the new ID.
+   */
   async generatePlaylistId(): Promise<string> {
     if (typeof browser !== "undefined" && browser.storage) {
       const obj = await browser.storage.local.get(ID_COUNTER_KEY);
@@ -111,6 +184,11 @@ export const storageService = {
     }
   },
 
+  /**
+   * Generates multiple unique playlist IDs.
+   * @param size Number of IDs to generate.
+   * @returns A promise resolving to an array of IDs.
+   */
   async generatePlaylistIds(size: number): Promise<string[]> {
     if (typeof browser !== "undefined" && browser.storage) {
       const obj = await browser.storage.local.get(ID_COUNTER_KEY);
@@ -126,6 +204,11 @@ export const storageService = {
     }
   },
 
+  /**
+   * Saves a playlist to storage.
+   * @param playlist The playlist to save.
+   * @returns The ID of the saved playlist.
+   */
   async savePlaylist(playlist: Playlist): Promise<string> {
     let id = playlist.id;
     if (!playlist.saved) {
@@ -137,11 +220,15 @@ export const storageService = {
       id,
     };
     await this.storeObject(PLAYLIST_KEY_PREFIX + id, playlistToDto(playlist));
-    savedPlaylistsChanged();
-    backupService.performAutoBackup(await this.fetchAllObjects(), this.storeObject.bind(this));
+    notifySavedPlaylistsChanged();
     return id;
   },
 
+  /**
+   * Retrieves a playlist by ID.
+   * @param id The playlist ID.
+   * @returns The playlist or null if not found.
+   */
   async getPlaylist(id: string): Promise<Playlist | null> {
     const item = await this.fetchObject(PLAYLIST_KEY_PREFIX + id, null);
     if (!item) return null;
@@ -150,26 +237,40 @@ export const storageService = {
     return playlist;
   },
 
+  /**
+   * Retrieves all saved playlists.
+   * @returns An array of playlists.
+   */
   async getPlaylists(): Promise<Playlist[]> {
     const allItems = await this.fetchAllObjects();
     return Object.keys(allItems)
       .filter((key) => key.startsWith(PLAYLIST_KEY_PREFIX))
       .map((key) => {
-        const playlist: Playlist = JSON.parse(allItems[key]);
+        const item = allItems[key];
+        const playlist: Playlist = typeof item === 'string' ? JSON.parse(item) : item;
         playlist.saved = true;
         return playlist;
       });
   },
 
+  /**
+   * Removes a playlist from storage.
+   * @param playlist The playlist to remove.
+   */
   async removePlaylist(playlist: Playlist): Promise<void> {
+    const key = PLAYLIST_KEY_PREFIX + playlist.id;
     if (!playlist.saved) {
-      localStorage.removeItem(PLAYLIST_KEY_PREFIX + playlist.id);
+      localStorage.removeItem(key);
     } else {
-      await this.removeObject(PLAYLIST_KEY_PREFIX + playlist.id);
-      savedPlaylistsChanged();
+      await this.removeObject(key);
+      notifySavedPlaylistsChanged();
     }
   },
 
+  /**
+   * Retrieves application settings.
+   * @returns The application settings.
+   */
   async getSettings(): Promise<Settings> {
     const settings = { ...DEFAULT_SETTINGS };
     await Promise.all(
@@ -182,13 +283,7 @@ export const storageService = {
   }
 };
 
-// Legacy support for background scripts (for now)
+// Global legacy support for background scripts
 if (typeof window !== 'undefined') {
-    (window as any).getSettings = storageService.getSettings.bind(storageService);
-    (window as any).getPlaylists = storageService.getPlaylists.bind(storageService);
-    (window as any).getPlaylist = storageService.getPlaylist.bind(storageService);
-    (window as any).savePlaylist = storageService.savePlaylist.bind(storageService);
-    (window as any).fetchObject = storageService.fetchObject.bind(storageService);
-    (window as any).storeObject = storageService.storeObject.bind(storageService);
-    (window as any).fetchAllObjects = storageService.fetchAllObjects.bind(storageService);
+    (window as any).storageService = storageService;
 }

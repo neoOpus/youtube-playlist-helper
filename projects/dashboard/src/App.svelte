@@ -1,5 +1,4 @@
-import Sync from "./views/Sync.svelte";
-<script>
+<script lang="ts">
   import Router from "svelte-spa-router";
   import PlaylistEditor from "./components/PlaylistEditor.svelte";
   import New from "./views/New.svelte";
@@ -9,6 +8,7 @@ import Sync from "./views/Sync.svelte";
   import PlaylistComparison from "./components/PlaylistComparison.svelte";
   import UndoNotification from "./components/UndoNotification.svelte";
   import Sidebar from "./components/Sidebar.svelte";
+  import Sync from "./views/Sync.svelte";
 
   const routes = {
     "/new": New,

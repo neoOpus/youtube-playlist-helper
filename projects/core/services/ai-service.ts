@@ -1,4 +1,4 @@
-import type { Video } from "../types/model";
+import type { Video, Playlist } from "../types/model";
 
 /**
  * Service for AI-driven enrichment and intelligent operations.
@@ -29,13 +29,16 @@ export const aiService = {
     const normalizedKeywords = keywords.map(k => k.toLowerCase());
 
     return [...videos].sort((a, b) => {
-      const scoreA = this.calculateRelevance(a, normalizedKeywords);
-      const scoreB = this.calculateRelevance(b, normalizedKeywords);
+      const scoreA = this.calculateVideoRelevance(a, normalizedKeywords);
+      const scoreB = this.calculateVideoRelevance(b, normalizedKeywords);
       return scoreB - scoreA; // Descending
     });
   },
 
-  calculateRelevance(video: Video, keywords: string[]): number {
+  /**
+   * Calculates a relevance score for a video based on keywords.
+   */
+  calculateVideoRelevance(video: Video, keywords: string[]): number {
     let score = 0;
     const text = (video.title + " " + (video.aiSummary || "") + " " + (video.aiTags?.join(" ") || "")).toLowerCase();
 
@@ -46,5 +49,21 @@ export const aiService = {
     });
 
     return score;
+  },
+
+  /**
+   * Calculates a relevance score for a playlist based on keywords.
+   */
+  calculatePlaylistRelevance(playlist: Playlist, keywords: string[]): number {
+      let score = 0;
+      const text = (playlist.title + " " + (playlist.groups?.join(" ") || "")).toLowerCase();
+
+      keywords.forEach(word => {
+          const lowerWord = word.toLowerCase();
+          if (text.includes(lowerWord)) score += 1;
+          if (playlist.title.toLowerCase().includes(lowerWord)) score += 2;
+      });
+
+      return score;
   }
 };

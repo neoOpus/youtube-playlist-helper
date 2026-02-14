@@ -1,12 +1,10 @@
 <script lang="ts">
-  import type { Playlist } from "../types/model.js";
-
-  export let playlist: Playlist;
+  export let count = 0;
   export let className = "";
 </script>
 
 <div class="playlist-count {className}">
-  <span>({playlist.videos.length})</span>
+  <span>({count})</span>
 </div>
 
 <style>
@@ -17,5 +15,8 @@
     text-align: center;
     background-color: black;
     color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
   }
 </style>

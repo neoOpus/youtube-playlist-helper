@@ -42,10 +42,10 @@
         <span>➕</span> {#if !collapsed}<span>New playlist</span>{/if}
     </a>
     <a href="#/manage" class:active={isActive("manage")} title="Manage">
+        <span>⚙️</span> {#if !collapsed}<span>Manage</span>{/if}
+    </a>
     <a href="#/sync" class:active={isActive("sync")} title="Cloud Sync">
         <span>☁️</span> {#if !collapsed}<span>Cloud Sync</span>{/if}
-    </a>
-        <span>⚙️</span> {#if !collapsed}<span>Manage</span>{/if}
     </a>
     <a href="#/compare" class:active={isActive("compare")} title="Merge Tool">
         <span>↔️</span> {#if !collapsed}<span>Merge Tool</span>{/if}

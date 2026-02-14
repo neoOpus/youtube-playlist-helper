@@ -527,7 +527,7 @@
                 {#each paginatedVideos as video, index (video.id)}
                 <div
                   animate:customFlip
-                  draggable={true}
+                  draggable={true} role="listitem"
                   on:dragstart={(event) => dragstart(event, index)}
                   on:dragenter={() => (hovering = index)}
                   on:dragover|preventDefault
@@ -574,13 +574,13 @@
 
 <Modal bind:display={displayModal}>
   {#if modalType === ModalType.Export}
-    <textarea bind:value={exportText} bind:this={exportTextArea}/>
+    <textarea bind:value={exportText} bind:this={exportTextArea}></textarea>
     <FloatingButton on:click={exportVideos} title="Copy to clipboard"
       ><ClipboardMultiple /></FloatingButton
     >
     <span style="margin-left: 1rem">{notificationText}</span>
   {:else if modalType === ModalType.Import}
-    <textarea bind:value={importText} />
+    <textarea bind:value={importText}></textarea>
     <FloatingButton on:click={importVideos} title="Import videos"
       ><PlusMultiple /></FloatingButton
     >

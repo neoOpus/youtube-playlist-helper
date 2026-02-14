@@ -1,20 +1,9 @@
-import App from "./App.svelte";
-import { initTheme } from "./stores/theme.store.js";
+import { mount } from 'svelte';
+import './stores/theme.store.js'; // Ensure theme is initialized
+import App from './App.svelte';
 
-let app: App;
-
-async function init() {
-  if (app) return;
-  app = new App({
-    target: document.body,
-  });
-  initTheme();
-}
-
-if (document.readyState !== "loading") {
-  init();
-} else {
-  document.addEventListener("DOMContentLoaded", init);
-}
+const app = mount(App, {
+  target: document.getElementById('app')!,
+});
 
 export default app;

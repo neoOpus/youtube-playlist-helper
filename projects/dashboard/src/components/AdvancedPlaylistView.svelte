@@ -3,8 +3,8 @@
   import PlaylistsFilters from "./PlaylistsFilters.svelte";
   import { replace } from "svelte-spa-router";
 
-  export let playlists: Playlist[];
-  let filteredPlaylists = playlists;
+  export let playlists: Playlist[] = [];
+  let filteredPlaylists: Playlist[] = [];
 
   let sortColumn = "timestamp";
   let sortDirection = -1; // -1 for desc, 1 for asc
@@ -14,6 +14,7 @@
   }
 
   function formatDate(ts: number) {
+    if (!ts) return "-";
     return new Date(ts).toLocaleDateString();
   }
 
@@ -25,14 +26,16 @@
       sortDirection = column === "title" ? 1 : -1;
     }
 
+    if (!filteredPlaylists) return;
+
     filteredPlaylists = [...filteredPlaylists].sort((a, b) => {
       let valA, valB;
       if (column === "videos") {
-        valA = a.videos.length;
-        valB = b.videos.length;
+        valA = a.videos?.length || 0;
+        valB = b.videos?.length || 0;
       } else {
-        valA = a[column];
-        valB = b[column];
+        valA = (a as any)[column];
+        valB = (b as any)[column];
       }
 
       if (valA < valB) return -1 * sortDirection;
@@ -42,13 +45,15 @@
   }
 
   $: {
-      filteredPlaylists = playlists;
-      sortBy(sortColumn);
+      if (playlists) {
+          filteredPlaylists = playlists;
+          sortBy(sortColumn);
+      }
   }
 </script>
 
-{#if playlists.length > 0}
-  <PlaylistsFilters bind:playlists bind:filteredPlaylists />
+{#if playlists}
+  <PlaylistsFilters {playlists} bind:filteredPlaylists />
 {/if}
 
 <div class="advanced-selector">
@@ -69,7 +74,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each filteredPlaylists as playlist (playlist.id)}
+      {#each filteredPlaylists || [] as playlist (playlist.id)}
         <tr>
           <td>
             <div class="title-cell">
@@ -85,7 +90,7 @@
                 {/each}
             </div>
           </td>
-          <td>{playlist.videos.length}</td>
+          <td>{playlist.videos?.length || 0}</td>
           <td>{formatDate(playlist.timestamp)}</td>
           <td>
             <button class="action-btn" on:click={() => editPlaylist(playlist.id)}>Edit</button>

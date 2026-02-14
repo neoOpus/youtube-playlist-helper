@@ -1,0 +1,13 @@
+
+> @yph/dashboard@1.0.0 preview
+> vite preview --port 5000 --host
+
+9:50:04 PM [vite-plugin-svelte] The following packages have a svelte field in their package.json but no exports condition for svelte.
+
+svelte-fa@3.0.4
+svelte-spa-router@3.3.0
+
+Please see https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md#missing-exports-condition for details.
+Port 5000 is in use, trying another one...
+  ➜  Local:   http://localhost:5001/
+  ➜  Network: http://192.168.0.2:5001/
