@@ -1,0 +1,16 @@
+{
+  "name": "@yph/core",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": { "build": "echo 'Core built.'",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "svelte": "^4.0.0",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "notyf": "^3.10.0"
+  }
+}

@@ -1,19 +1,11 @@
 {
-  "name": "youtube-playlist-helper",
-  "version": "1",
-  "description": "Generate YouTube playlists from bookmarks and URL lists",
-  "author": "Soufiane Sakhi <soufiane.sakhi.js@gmail.com>",
-  "license": "MIT",
+  "name": "youtube-playlist-helper-monorepo",
+  "private": true,
+  "workspaces": [
+    "projects/*"
+  ],
   "scripts": {
-    "start": "npm run dev",
-    "dev": "cd playlist-editor && npm run dev",
-    "prod": "cd playlist-editor && npm run prod",
-    "cors": "cd playlist-editor && npm run cors",
-    "build": "cd playlist-editor && npm run build"
-  },
-  "devDependencies": {
-    "@types/firefox-webext-browser": "^70.0.1",
-    "notyf": "^3.10.0",
-    "webextension-polyfill": "^0.6.0"
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces"
   }
 }

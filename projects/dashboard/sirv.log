@@ -1,0 +1,34 @@
+
+> @yph/dashboard@1.0.0 start
+> sirv public
+
+[H[2J
+  [32mYour application is ready~! 🚀
+
+[39m  [1m- Local:[22m      http://localhost:5000
+  [1m- Network:[22m    [2mAdd `--host` to expose[22m
+
+[7m LOGS [27m
+
+  [[35m17:49:43[39m] [32m200[39m[90m ─ [39m[37m[1m5.17ms[39m[22m[90m ─ [39m/
+  [[35m17:49:43[39m] [32m200[39m[90m ─ [39m[37m[1m1.32ms[39m[22m[90m ─ [39m/global.css
+  [[35m17:49:43[39m] [31m404[39m[90m ─ [39m[37m[1m0.18ms[39m[22m[90m ─ [39m/build/bundle.css
+  [[35m17:49:43[39m] [31m404[39m[90m ─ [39m[37m[1m0.13ms[39m[22m[90m ─ [39m/build/main.js
+  [[35m17:49:43[39m] [32m200[39m[90m ─ [39m[37m[1m1.44ms[39m[22m[90m ─ [39m/
+  [[35m17:49:43[39m] [31m404[39m[90m ─ [39m[37m[1m0.29ms[39m[22m[90m ─ [39m/build/bundle.css
+  [[35m17:49:43[39m] [31m404[39m[90m ─ [39m[37m[1m0.24ms[39m[22m[90m ─ [39m/build/main.js
+  [[35m17:51:06[39m] [32m200[39m[90m ─ [39m[37m[1m1.47ms[39m[22m[90m ─ [39m/
+  [[35m17:51:06[39m] [31m404[39m[90m ─ [39m[37m[1m0.20ms[39m[22m[90m ─ [39m/build/bundle.css
+  [[35m17:51:06[39m] [32m200[39m[90m ─ [39m[37m[1m0.62ms[39m[22m[90m ─ [39m/global.css
+  [[35m17:51:06[39m] [31m404[39m[90m ─ [39m[37m[1m0.09ms[39m[22m[90m ─ [39m/build/main.js
+  [[35m17:51:06[39m] [32m200[39m[90m ─ [39m[37m[1m1.20ms[39m[22m[90m ─ [39m/
+  [[35m17:51:06[39m] [31m404[39m[90m ─ [39m[37m[1m0.11ms[39m[22m[90m ─ [39m/build/bundle.css
+  [[35m17:51:06[39m] [31m404[39m[90m ─ [39m[37m[1m0.09ms[39m[22m[90m ─ [39m/build/main.js
+Terminated
+npm error Lifecycle script `start` failed with error:
+npm error code 143
+npm error path /app/projects/dashboard
+npm error workspace @yph/dashboard@1.0.0
+npm error location /app/projects/dashboard
+npm error command failed
+npm error command sh -c sirv public
