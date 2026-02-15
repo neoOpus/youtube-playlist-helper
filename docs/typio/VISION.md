@@ -1,34 +1,37 @@
-# 2026 Vision: Typio Modernization
+# 2026 Vision: Typio Modernization (v2)
 
 ## Core Philosophy
 In 2026, form recovery should be invisible, intelligent, and uncompromising on privacy. Typio should transition from a "dumb" keylogger to a "smart" contextual assistant.
 
 ## The Modern Tech Stack
 - **Extension Manifest V3**: Utilizing Service Workers for background processing and declarative content scripts.
-- **Frontend**: **Svelte 5** with Runes for a lightweight, high-performance UI that minimizes interference with host pages.
-- **Language**: **TypeScript** for safety and developer productivity.
-- **Build Tooling**: **Vite + CRXJS** for lightning-fast development cycles and optimized builds.
-- **Storage**: **Dexie.js (IndexedDB)** for robust, searchable, and high-performance local data storage.
+- **Frontend**: **Svelte 5** with Runes for a lightweight, high-performance UI.
+- **Language**: **TypeScript** for safety.
+- **Build Tooling**: **Vite + CRXJS**.
+- **Storage**: **Dexie.js (IndexedDB)** with AES-GCM encryption.
 
-## Key 2026 Features
-### 1. AI-Assisted Contextual Mapping
-- Use a **Local LLM** (via WebGPU/WebNN) to understand the semantic meaning of form fields.
-- If a website changes its layout or IDs, the AI can still map saved data to the correct fields.
-- **Smart PII Detection**: Use NLP to identify and redact sensitive information (names, addresses, IDs) from logs if requested by the user.
+## Key 2026 Features (Refined by Research)
 
-### 2. Zero-Knowledge Privacy
-- **Encryption at Rest**: All recovery data is encrypted with a key derived from a user password or biometric (WebAuthn).
-- **E2EE Sync**: Optional cloud sync using end-to-end encryption, ensuring the service provider never sees the data.
+### 1. AI-Assisted Semantic Mapping
+- **The Problem**: Current tools (Typio, Lazarus) rely on DOM paths or IDs that break when a site updates.
+- **The Solution**: Use a **Local LLM** (WebGPU) to generate a semantic "fingerprint" of the field (e.g., "Main Login Email").
+- **Robustness**: If the DOM changes but the field's purpose remains, Typio 2026 will still map the saved data correctly.
 
-### 3. Seamless Integration
-- **Web Components**: Injected UI components are encapsulated using native Web Components to prevent CSS leakage and conflicts.
-- **Intersection & Resize Observers**: Replacing heavy event listeners with modern, performance-oriented browser APIs.
+### 2. Aggressive Catching Strategy (Lessons from Lazarus)
+- **XHR/Fetch Interception**: Use `Proxy` to intercept all network requests. If a request contains large text blocks that match what the user typed, mark that form as "safely submitted".
+- **Enhanced Iframe Recursive Monitoring**: Implement a robust observer that can dive into nested `about:blank` and same-origin iframes automatically, catching text editors like TinyMCE and CKEditor without custom "hacks".
 
-### 4. Advanced Analytics & Dashboard
-- A professional-grade dashboard for managing history across all sites.
-- "Timeline" view of form changes over time.
-- Ability to export specific sessions for use in other tools or as backups.
+### 3. Zero-Knowledge Privacy & E2EE
+- **Local Encryption**: The database is locked with a user-defined key or WebAuthn.
+- **E2EE Sync**: Sync recovery data via WebDAV/Google Drive using end-to-end encryption. The extension provider never has access to the data.
 
-## Future Potential
-- **Form Automation**: Use recovered data to suggest completions for similar forms on different domains.
-- **Collaboration**: Securely share form "sessions" or templates within a team.
+### 4. Non-Destructive UI (Shadow DOM)
+- Injected components are encapsulated in Shadow DOM (lessons from Typio).
+- Use **Web Components** for the recovery icons and dialogs to ensure zero style leakage.
+
+### 5. Smart PII & Password Protection
+- Use local NLP to identify and warn/mask PII (Personally Identifiable Information) before saving.
+- Enhanced password field protection, with a "Request to Save" prompt for sensitive types if not explicitly enabled.
+
+## Conclusion
+Typio 2026 combines the **encapsulation** of Typio, the **aggressive detection** of Lazarus, and **modern AI** to create a form recovery tool that is both more powerful and more private than anything available in the 2020s.
