@@ -32,7 +32,8 @@
     actionLogger,
     metadataService,
     videoService,
-    storageService
+    storageService,
+    aiService
   } from "@yph/core";
 
   enum ModalType {
@@ -200,6 +201,10 @@
   let exportText = "";
   let notificationText = "";
   let exportTextArea: HTMLTextAreaElement;
+
+  let suggestingGroups = false;
+  let suggestedGroups: string[] = [];
+  let showAIGroupsModal = false;
 
   let disableThumbnails = true;
   storageService.getSettings().then((settings) => {
@@ -433,8 +438,64 @@
     });
   };
 
+  async function handleMoveVideo(event: CustomEvent<{ direction: "top" | "bottom", video: Video }>) {
+    const { direction, video } = event.detail;
+    const index = videos.findIndex(v => v.id === video.id);
+    if (index === -1) return;
+
+    const previousVideos = [...videos];
+    actionLogger.log(`Move video to ${direction}`, () => {
+        videos = previousVideos;
+        loadPageVideos(currentPage);
+        savePlaylistBuilder();
+    });
+
+    const newVideos = [...videos];
+    newVideos.splice(index, 1);
+    if (direction === "top") {
+        newVideos.unshift(video);
+        currentPage = 1;
+    } else {
+        newVideos.push(video);
+        currentPage = Math.ceil(newVideos.length / pageSize);
+    }
+    videos = newVideos;
+    loadPageVideos(currentPage);
+    await savePlaylistBuilder();
+  }
+
   function selectVideo(video: Video) {
       selectedVideo = video;
+  }
+
+  async function suggestGroups() {
+      suggestingGroups = true;
+      try {
+          suggestedGroups = await aiService.suggestPlaylistGroups(videos);
+          showAIGroupsModal = true;
+      } catch (e) {
+          if ((window as any).error) (window as any).error("AI analysis failed");
+      } finally {
+          suggestingGroups = false;
+      }
+  }
+
+  function applyAIGroups() {
+      const currentGroups = new Set(playlist.groups || []);
+      suggestedGroups.forEach(g => currentGroups.add(g));
+
+      const previousGroups = [...(playlist.groups || [])];
+      const newGroups = Array.from(currentGroups);
+
+      actionLogger.log("Apply AI Categories", () => {
+          playlist.groups = previousGroups;
+          groups = [...previousGroups];
+      });
+
+      playlist.groups = newGroups;
+      groups = [...newGroups];
+      showAIGroupsModal = false;
+      if ((window as any).success) (window as any).success(`Added ${newGroups.length - previousGroups.length} categories`);
   }
 </script>
 
@@ -473,6 +534,9 @@
             <div class="quick-actions">
                 <button on:click={play}>Play All</button>
                 <button on:click={removeDuplicates}>Clean Dups</button>
+                <button on:click={suggestGroups} disabled={suggestingGroups}>
+                    {suggestingGroups ? 'Analyzing...' : 'Magic Categories ✨'}
+                </button>
             </div>
         </div>
     </ResizablePanel>
@@ -536,6 +600,7 @@
                   <PlaylistVideo
                     on:delete={deleteVideo}
                     on:save={savePlaylistBuilder}
+                    on:move={handleMoveVideo}
                     on:click={() => selectVideo(video)}
                     {video}
                     {disableThumbnails}
@@ -585,6 +650,26 @@
       ><PlusMultiple /></FloatingButton
     >
   {/if}
+</Modal>
+
+<Modal bind:display={showAIGroupsModal}>
+  <h3>AI Suggested Categories</h3>
+  <p>Based on your videos, we suggest adding these tags to organize your playlist:</p>
+  <div class="suggested-tags">
+      {#each suggestedGroups as tag}
+          <span class="tag-suggestion">
+              {tag}
+              <button class="remove-suggestion" on:click={() => suggestedGroups = suggestedGroups.filter(t => t !== tag)}>×</button>
+          </span>
+      {/each}
+      {#if suggestedGroups.length === 0}
+          <p>No suggestions found or all removed.</p>
+      {/if}
+  </div>
+  <div class="modal-actions">
+      <button class="apply-btn" on:click={applyAIGroups} disabled={suggestedGroups.length === 0}>Apply to Playlist</button>
+      <button class="cancel-btn" on:click={() => showAIGroupsModal = false}>Cancel</button>
+  </div>
 </Modal>
 
 {#if loading}
@@ -700,6 +785,76 @@
       background: var(--sidebar-bg-color);
       color: white;
       border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+  }
+
+  .quick-actions button:hover:not(:disabled) {
+      background: #444;
+  }
+
+  .quick-actions button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+  }
+
+  .suggested-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+      min-height: 40px;
+  }
+
+  .tag-suggestion {
+      background: #eee;
+      padding: 5px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+  }
+
+  .remove-suggestion {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: bold;
+      color: #888;
+      padding: 0;
+      line-height: 1;
+  }
+
+  .remove-suggestion:hover {
+      color: #f44336;
+  }
+
+  .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+  }
+
+  .apply-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+  }
+
+  .apply-btn:disabled {
+      background: #ccc;
+  }
+
+  .cancel-btn {
+      background: #eee;
+      border: 1px solid #ccc;
+      padding: 8px 16px;
       border-radius: 4px;
       cursor: pointer;
   }

@@ -23,6 +23,32 @@ export const aiService = {
   },
 
   /**
+   * Analyzes all videos in a playlist to suggest common themes/groups.
+   */
+  async suggestPlaylistGroups(videos: Video[]): Promise<string[]> {
+      // Simulate complex analysis
+      await new Promise(r => setTimeout(r, 1500));
+
+      const allTags = new Set<string>();
+      videos.forEach(v => {
+          if (v.aiTags) v.aiTags.forEach(t => allTags.add(t));
+
+          // Heuristic based on common words in titles
+          const words = v.title.toLowerCase().split(/\s+/);
+          if (words.includes("tutorial") || words.includes("how") || words.includes("guide")) allTags.add("Education");
+          if (words.includes("music") || words.includes("official") || words.includes("remix")) allTags.add("Music");
+          if (words.includes("review") || words.includes("tech") || words.includes("unboxing")) allTags.add("Tech");
+          if (words.includes("vlog") || words.includes("daily")) allTags.add("Vlogs");
+      });
+
+      // Filter out generic tags
+      allTags.delete("YouTube");
+      allTags.delete("Video");
+
+      return Array.from(allTags).slice(0, 5); // Return top 5 suggestions
+  },
+
+  /**
    * Intelligent sorting based on relevance to a set of tags or keywords.
    */
   sortByRelevance(videos: Video[], keywords: string[]): Video[] {

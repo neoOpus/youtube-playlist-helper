@@ -1,17 +1,16 @@
 import { storageService } from "./storage-service";
+import { eventBus, EVENTS } from "./event-bus";
 
 /**
  * Service for performing automatic backups of playlists.
  */
 export const backupService = {
   /**
-   * Initializes the backup service by registering it with the storage service.
+   * Initializes the backup service by registering it with the event bus.
    */
   init() {
-    storageService.onSave(async (id) => {
-        if (id.startsWith("playlist_")) {
-            await this.performAutoBackup();
-        }
+    eventBus.on(EVENTS.PLAYLIST_SAVED, async () => {
+        await this.performAutoBackup();
     });
   },
 
@@ -36,7 +35,7 @@ export const backupService = {
       };
 
       const backupKey = `backup_${new Date().toISOString().split("T")[0]}`;
-      // Use internal storage call to avoid triggering the backup loop if we ever store backups differently
+      // Use internal storage call to avoid triggering the backup loop
       await storageService.storeObject(backupKey, backup);
       console.log("Auto-backup performed successfully.");
     } catch (error) {

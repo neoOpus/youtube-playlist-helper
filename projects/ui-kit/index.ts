@@ -21,3 +21,4 @@ export { default as SimpleButton } from "./components/SimpleButton.svelte";
 export { default as TagManager } from "./components/TagManager.svelte";
 export { default as CollapsibleSidebar } from "./components/CollapsibleSidebar.svelte";
 export { default as ResizablePanel } from "./components/ResizablePanel.svelte";
+export { default as ContextMenu } from "./components/ContextMenu.svelte";

@@ -1,6 +1,7 @@
 /// <reference path="../types/services.ts" />
 
 import type { Playlist, Settings } from "../types/model";
+import { eventBus, EVENTS } from "./event-bus";
 
 /**
  * Prefix for playlist keys in storage.
@@ -11,16 +12,6 @@ const PLAYLIST_KEY_PREFIX = "playlist_";
  * Key for the playlist ID counter.
  */
 const ID_COUNTER_KEY = "PlaylistIdCounter";
-
-/**
- * Type for storage change listeners.
- */
-type StorageChangeListener = (id: string, obj: any) => void | Promise<void>;
-
-/**
- * Internal set of listeners for storage changes.
- */
-const changeListeners: Set<StorageChangeListener> = new Set();
 
 /**
  * Converts a playlist object to a DTO for storage.
@@ -66,14 +57,6 @@ const DEFAULT_SETTINGS: Settings = {
  * Service for handling persistent storage across different environments (Extension vs Web).
  */
 export const storageService = {
-  /**
-   * Registers a listener for storage changes.
-   * @param listener The callback function.
-   */
-  onSave(listener: StorageChangeListener) {
-    changeListeners.add(listener);
-  },
-
   /**
    * Fetches an object from storage.
    * @param id The key of the object.
@@ -123,11 +106,6 @@ export const storageService = {
       } else {
         localStorage.setItem(id, value);
       }
-    }
-
-    // Notify listeners
-    for (const listener of changeListeners) {
-        await listener(id, obj);
     }
   },
 
@@ -220,6 +198,10 @@ export const storageService = {
       id,
     };
     await this.storeObject(PLAYLIST_KEY_PREFIX + id, playlistToDto(playlist));
+
+    // Emit event
+    eventBus.emit(EVENTS.PLAYLIST_SAVED, playlist);
+
     notifySavedPlaylistsChanged();
     return id;
   },
@@ -263,6 +245,7 @@ export const storageService = {
       localStorage.removeItem(key);
     } else {
       await this.removeObject(key);
+      eventBus.emit(EVENTS.PLAYLIST_DELETED, playlist.id);
       notifySavedPlaylistsChanged();
     }
   },
@@ -282,8 +265,3 @@ export const storageService = {
     return settings;
   }
 };
-
-// Global legacy support for background scripts
-if (typeof window !== 'undefined') {
-    (window as any).storageService = storageService;
-}

@@ -1,30 +1,38 @@
-# YouTube Playlist Helper
+# YouTube Playlist Helper (Modular Edition)
 
-| :warning: WARNING: This extension is currently discontinued. The source code is still available under the [MIT license](https://opensource.org/license/mit) |
-| ---------------------------------------------------------------------------------------------------- |
+A powerful, modular YouTube playlist manager and creator, refactored for the modern web.
 
-A YouTube playlist creator for [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-playlist-helper/) and [Google Chrome](https://chrome.google.com/webstore/detail/youtube-playlist-helper/ibdakohjhchaagmccfedeejmeillongg).
+## 🏗️ Architecture (Monorepo)
 
-## Features
+This project has been refactored into a clean, modular monorepo using npm workspaces:
 
-- A complete playlist editor: add, delete, reorder, reverse, remove duplicates, import and export videos
+- **@yph/core**: Pure business logic, services (Storage, AI, Sync, Undo), and domain models.
+- **@yph/ui-kit**: Reusable Svelte 5 component library with a dedicated icon set.
+- **@yph/dashboard**: Modern SPA dashboard powered by Vite and Svelte 5.
+- **@yph/extension**: Browser extension manifest, background scripts, and build artifacts.
 
-- Queue up videos from any page (with the right-click context menu) and play or save them using the playlist builder.
+## 🚀 Key Features
 
-- Save playlists using your browser's sync storage
+- **Robust Undo System**: Revert any destructive action (delete, title change, de-duplicate).
+- **AI-Powered Organization**: Auto-categorization and relevance sorting.
+- **Cloud Sync**: Integrated WebDAV support with smart conflict resolution.
+- **Enhanced Metadata**: Track "Watched" status, ratings, and custom notes per video.
+- **Advanced UI**: Resizable panels, collapsible sidebars, and fluid Svelte 5 animations.
+- **Performance**: Paginated views and optimized rendering for large playlists.
 
-- Create a playlist from a bookmark folder
+## 🛠️ Development
 
-- Create a playlist from a list of links
+### Prerequisites
+- Node.js 18+
+- npm 9+
 
-- Combine YouTube tabs and create playlist
+### Commands
+- `npm run build`: Builds all packages (outputs extension to `projects/extension/`).
+- `npm test`: Runs unit tests for core services using Vitest.
+- `npm run dev`: (In `projects/dashboard`) Starts the Vite dev server for UI work.
 
-- Scan current tab for YouTube links and create a playlist (including thumbnails)
+## 📜 Roadmap
+See [ROADMAP.md](ROADMAP.md) for the vision and future phases.
 
-- Convert current YouTube playlist tab to YouTube queue
-
-## Build instructions
-
-1. Install Node.js and npm.
-2. Run `npm run build`.
-3. The extension final sources are found in the `src` directory.
+## 📄 License
+MIT

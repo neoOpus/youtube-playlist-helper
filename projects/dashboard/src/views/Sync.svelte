@@ -9,6 +9,7 @@
   let autoSync = true;
   let testing = false;
   let syncing = false;
+  let lastSync = "Never";
 
   onMount(async () => {
     const config = await webdavService.getConfig();
@@ -17,7 +18,13 @@
     password = config.password || "";
     enabled = config.enabled || false;
     autoSync = config.autoSync ?? true;
+    updateLastSyncDisplay(config.lastSyncTimestamp);
   });
+
+  function updateLastSyncDisplay(ts: number) {
+      if (ts) lastSync = new Date(ts).toLocaleString();
+      else lastSync = "Never";
+  }
 
   async function save() {
     await webdavService.saveConfig({ url, username, password, enabled, autoSync, fileName: "yph_backup.json" });
@@ -39,7 +46,11 @@
       syncing = true;
       const ok = await webdavService.sync();
       syncing = false;
-      if (ok) notificationService.success("Sync complete (Local -> Remote)");
+      if (ok) {
+          notificationService.success("Smart Sync complete.");
+          const config = await webdavService.getConfig();
+          updateLastSyncDisplay(config.lastSyncTimestamp);
+      }
       else notificationService.error("Sync failed.");
   }
 
@@ -63,6 +74,13 @@
   <p class="subtitle">Keep your playlists synchronized across devices using your own server.</p>
 
   <div class="form">
+    <div class="status-bar">
+        <span>Last Smart Sync: <strong>{lastSync}</strong></span>
+        {#if syncing}
+            <span class="syncing-spinner">🔄 Syncing...</span>
+        {/if}
+    </div>
+
     <section class="config-section">
         <h3>Connection Settings</h3>
         <label>
@@ -83,11 +101,11 @@
         <h3>Behavior</h3>
         <label class="checkbox-label">
             <input type="checkbox" bind:checked={enabled} />
-            <span>Enable Cloud Sync</span>
+            <span>Enable Cloud Sync (Smart Merge)</span>
         </label>
         <label class="checkbox-label">
             <input type="checkbox" bind:checked={autoSync} />
-            <span>Auto-sync on changes (Upload)</span>
+            <span>Auto-sync on changes</span>
         </label>
     </section>
 
@@ -102,14 +120,14 @@
         <h3>Sync Actions</h3>
         <div class="action-grid">
             <div class="action-card">
-                <h4>Manual Backup</h4>
-                <p>Upload your current local data to the server immediately.</p>
-                <button on:click={syncNow} disabled={syncing}>Upload Now</button>
+                <h4>Smart Sync Now</h4>
+                <p>Merge local changes with remote server using timestamps.</p>
+                <button on:click={syncNow} disabled={syncing}>Run Smart Sync</button>
             </div>
             <div class="action-card">
-                <h4>Restore Data</h4>
-                <p>Download your data from the server and replace local playlists.</p>
-                <button on:click={restoreNow} disabled={syncing} class="danger-btn">Download & Restore</button>
+                <h4>Full Restore</h4>
+                <p>Overwrites local playlists with the remote backup file.</p>
+                <button on:click={restoreNow} disabled={syncing} class="danger-btn">Force Download</button>
             </div>
         </div>
     </section>
@@ -120,6 +138,14 @@
   .subtitle {
       color: #666;
       margin-bottom: 2rem;
+  }
+  .status-bar {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      border: 1px solid #dee2e6;
   }
   .form {
     max-width: 600px;
@@ -180,5 +206,9 @@
       background: #dc3545;
       color: white;
       border: none;
+  }
+  .syncing-spinner {
+      color: #007bff;
+      font-weight: bold;
   }
 </style>
