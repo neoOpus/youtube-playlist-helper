@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PlaylistEditor from "../components/PlaylistEditor.svelte";
+  import PlaylistEditor from "../components/core/PlaylistEditor.svelte";
 
   async function newPLaylist() {
     let playlist = await window.videoService.generatePlaylist();

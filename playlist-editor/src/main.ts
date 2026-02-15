@@ -3,9 +3,9 @@ import { initTheme } from "./stores/theme.store.js";
 
 async function loadServices() {
   if (!window.savePlaylist) {
-    await import("./services/storage-service");
-    await import("./services/video-service");
-    await import("./services/utils");
+    await import("./services/core/storage-service");
+    await import("./services/core/video-service");
+    await import("./services/core/utils");
   }
 }
 

@@ -29,6 +29,7 @@ export interface Playlist {
   timestamp: number;
   saved?: boolean;
   groups?: string[];
+  version?: number;
 }
 
 export interface Settings {

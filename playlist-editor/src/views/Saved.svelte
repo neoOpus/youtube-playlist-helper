@@ -1,8 +1,8 @@
 <script>
   import { onMount } from "svelte";
-  import PlaylistSelector from "../components/PlaylistSelector.svelte";
-  import AdvancedPlaylistView from "../components/AdvancedPlaylistView.svelte";
-  import Sidebar from "../components/Sidebar.svelte";
+  import PlaylistSelector from "../components/core/PlaylistSelector.svelte";
+  import AdvancedPlaylistView from "../components/mega/AdvancedPlaylistView.svelte";
+  import Sidebar from "../components/core/Sidebar.svelte";
 
   const playlistsAsync = window.getPlaylists();
   let viewMode = "simple";

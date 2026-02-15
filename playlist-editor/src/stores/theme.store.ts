@@ -3,14 +3,14 @@ import type { Theme, ThemeChoice } from "../types/model.js";
 
 const themeStorageKey = "themeChoice";
 
-const theme = writable<ThemeChoice>("device");
+export const themeStore = writable<ThemeChoice>("device");
 
-export const currentTheme: Readable<Theme> = derived(theme, ($theme) =>
+export const currentTheme: Readable<Theme> = derived(themeStore, ($theme) =>
   $theme == "device"
     ? window.matchMedia?.("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light"
-    : $theme
+    : $theme as Theme
 );
 
 function updatePageTheme() {
@@ -21,9 +21,9 @@ export function initTheme() {
   window
     .fetchObject(themeStorageKey, "device")
     .then((themeChoice: ThemeChoice) => {
-      theme.set(themeChoice);
-      theme.subscribe((themeChoice) => {
-        window.storeObject(themeStorageKey, themeChoice);
+      themeStore.set(themeChoice);
+      themeStore.subscribe((val) => {
+        window.storeObject(themeStorageKey, val);
         updatePageTheme();
       });
       updatePageTheme();

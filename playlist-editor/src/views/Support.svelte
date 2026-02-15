@@ -1,7 +1,7 @@
 <script lang="ts">
   import Fa from "svelte-fa";
-  import LargeButton from "../components/LargeButton.svelte";
-  import Sidebar from "../components/Sidebar.svelte";
+  import LargeButton from "../components/ui/LargeButton.svelte";
+  import Sidebar from "../components/core/Sidebar.svelte";
   import PayPalIcon from "../components/icons/PayPalIcon.svelte";
   import { faEnvelope } from "@fortawesome/free-regular-svg-icons";
 
