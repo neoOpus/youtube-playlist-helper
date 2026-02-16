@@ -1,7 +1,7 @@
 <script lang="ts">
   import { link, push } from "svelte-spa-router";
   import Fa from "svelte-fa";
-  import { faSearch, faMoon, faSun, faCog, faLifeRing, faUserCircle } from "@fortawesome/free-solid-svg-icons";
+  import { faSearch, faMoon, faSun, faCog, faLifeRing, faUserCircle, faKeyboard } from "@fortawesome/free-solid-svg-icons";
   import SuperButton from "../ui/SuperButton.svelte";
   import { themeStore } from "../../stores/theme.store";
   import { onMount } from "svelte";
@@ -25,6 +25,14 @@
   function toggleTheme() {
     themeStore.update(current => current === 'dark' ? 'light' : 'dark');
   }
+
+  function openPalette() {
+      window.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'k',
+          ctrlKey: true,
+          bubbles: true
+      }));
+  }
 </script>
 
 <header class="global-header">
@@ -36,24 +44,20 @@
   </div>
 
   <div class="center">
-    <div class="search-bar">
+    <div class="search-bar" on:click={openPalette} role="button" tabindex="0" on:keydown={(e) => e.key === 'Enter' && openPalette()}>
       <Fa icon={faSearch} />
-      <input
-        type="text"
-        placeholder="Search playlists or videos..."
-        bind:value={searchQuery}
-        on:keydown={handleSearch}
-      />
+      <span class="search-placeholder">Press Ctrl+K to search actions...</span>
+      <span class="kbd">Ctrl K</span>
     </div>
   </div>
 
   <div class="right">
-    <SuperButton on:click={toggleTheme} title="Toggle Theme" circle bgcolor="transparent" className="header-icon">
+    <SuperButton on:click={toggleTheme} title="Toggle Theme" variant="ghost" className="header-icon">
       <Fa icon={$themeStore === 'dark' ? faSun : faMoon} />
     </SuperButton>
 
     <a href="/manage" use:link title="Account & Settings">
-       <SuperButton circle bgcolor="transparent" className="header-icon">
+       <SuperButton variant="ghost" className="header-icon">
          {#if user && user.user_metadata?.avatar_url}
             <img src={user.user_metadata.avatar_url} alt="User" class="avatar-small" />
          {:else if user}
@@ -65,7 +69,7 @@
     </a>
 
     <a href="/support" use:link title="Help & Support">
-       <SuperButton circle bgcolor="transparent" className="header-icon">
+       <SuperButton variant="ghost" className="header-icon">
          <Fa icon={faLifeRing} />
        </SuperButton>
     </a>
@@ -106,28 +110,36 @@
   }
 
   .center {
-    flex: 0 1 400px;
+    flex: 0 1 450px;
   }
 
   .search-bar {
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 6px 15px;
+    border-radius: 12px;
+    padding: 8px 15px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
   }
 
-  .search-bar input {
-    background: transparent;
-    border: none;
-    color: white;
-    width: 100%;
-    outline: none;
+  .search-bar:hover {
+      background: rgba(255, 255, 255, 0.15);
   }
 
-  .search-bar input::placeholder {
-    color: rgba(255,255,255,0.5);
+  .search-placeholder {
+      flex: 1;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+  }
+
+  .kbd {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: bold;
   }
 
   .right {
@@ -138,6 +150,7 @@
 
   :global(.header-icon) {
     color: white !important;
+    box-shadow: none !important;
   }
 
   .avatar-small {

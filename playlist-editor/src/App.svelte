@@ -9,6 +9,7 @@
   import UndoNotification from "./components/mega/UndoNotification.svelte";
   import GlobalHeader from "./components/mega/GlobalHeader.svelte";
   import StatusBar from "./components/mega/StatusBar.svelte";
+  import CommandPalette from "./components/mega/CommandPalette.svelte";
 
   const routes = {
     "/new": New,
@@ -20,6 +21,8 @@
     "/support": Support,
     "*": Saved,
   };
+
+  let paletteOpen = false;
 </script>
 
 <div class="app-layout">
@@ -31,6 +34,7 @@
 
   <StatusBar />
   <UndoNotification />
+  <CommandPalette bind:isOpen={paletteOpen} />
 </div>
 
 <style>

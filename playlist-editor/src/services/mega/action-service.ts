@@ -7,18 +7,20 @@ export interface CustomAction {
     icon: string;
     color: string;
     scope: 'video' | 'playlist' | 'global';
-    handler: (context: any) => Promise<void>;
+    handlerStr?: string; // JavaScript string for custom logic
+    handler?: (context: any) => Promise<void>;
 }
 
 class ActionService {
     private actions = writable<CustomAction[]>([]);
     public actionsStore = { subscribe: this.actions.subscribe };
+    private readonly STORAGE_KEY = "custom_actions";
 
     constructor() {
-        this.loadDefaultActions();
+        this.loadActions();
     }
 
-    private loadDefaultActions() {
+    private async loadActions() {
         const defaults: CustomAction[] = [
             {
                 id: 'mark-all-watched',
@@ -48,18 +50,36 @@ class ActionService {
                 }
             }
         ];
-        this.actions.set(defaults);
+
+        const saved = await window.fetchObject(this.STORAGE_KEY, []);
+        const customized = saved.map(a => ({
+            ...a,
+            handler: a.handlerStr ? new Function('context', `return (async (context) => { ${a.handlerStr} })(context)`) : null
+        })).filter(a => a.handler);
+
+        this.actions.set([...defaults, ...customized]);
     }
 
-    public registerAction(action: CustomAction) {
-        this.actions.update(current => [...current, action]);
+    public async registerAction(action: CustomAction) {
+        const saved = await window.fetchObject(this.STORAGE_KEY, []);
+        saved.push({
+            id: action.id,
+            label: action.label,
+            icon: action.icon,
+            color: action.color,
+            scope: action.scope,
+            handlerStr: action.handlerStr
+        });
+        await window.storeObject(this.STORAGE_KEY, saved);
+        await this.loadActions();
     }
 
     public async executeAction(actionId: string, context: any) {
         let action: CustomAction;
-        this.actions.subscribe(all => {
+        const unsubscribe = this.actions.subscribe(all => {
             action = all.find(a => a.id === actionId);
-        })();
+        });
+        unsubscribe();
 
         if (action) {
             console.log(`Executing action: ${action.label}`);

@@ -371,7 +371,7 @@
                     <span class="value">{stats.progress.toFixed(1)}%</span>
                 </div>
             </div>
-            <Logigram data={videos.slice(0, 12)} title="Playlist Execution Logic" />
+            <Logigram data={videos.slice(0, 12)} title="Playlist Execution Logic" on:selectVideo={(e) => handleVideoSidebar(e.detail)} />
         </section>
     {:else if view === 'curriculum'}
         <section class="curriculum-view">

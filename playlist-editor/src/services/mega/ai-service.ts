@@ -1,45 +1,83 @@
 import type { Video, Playlist } from "../../types/model";
 
+export interface AIAgent {
+    id: string;
+    name: string;
+    description: string;
+    role: 'categorizer' | 'summarizer' | 'auditor' | 'reorderer';
+    execute: (context: any) => Promise<any>;
+}
+
 class AIService {
+  private agents: AIAgent[] = [];
+
+  constructor() {
+      this.registerDefaultAgents();
+  }
+
+  private registerDefaultAgents() {
+      this.agents = [
+          {
+              id: 'agent-categorizer-1',
+              name: 'Heuristic Categorizer',
+              description: 'Uses smart heuristics to assign categories based on titles and metadata.',
+              role: 'categorizer',
+              execute: async ({ playlist }) => {
+                  const categories = new Set<string>();
+                  const keywords = {
+                      'Music': ['music', 'official video', 'lyrics', 'song', 'live'],
+                      'Education': ['tutorial', 'how to', 'lesson', 'course', 'education', 'lecture'],
+                      'Gaming': ['gameplay', 'walkthrough', 'gaming', 'review', 'nintendo', 'playstation', 'xbox'],
+                      'Tech': ['unboxing', 'tech', 'review', 'iphone', 'android', 'software', 'programming'],
+                      'News': ['news', 'report', 'politics', 'current events']
+                  };
+                  const title = playlist.title.toLowerCase();
+                  Object.entries(keywords).forEach(([cat, keys]) => {
+                      if (keys.some(k => title.includes(k))) categories.add(cat);
+                  });
+                  return Array.from(categories);
+              }
+          },
+          {
+              id: 'agent-watchdog-1',
+              name: 'Deleted Video Watchdog',
+              description: 'Periodically checks for videos that may have been deleted or privated.',
+              role: 'auditor',
+              execute: async ({ videos }) => {
+                  // Simulating a check
+                  const issues = [];
+                  for (const v of videos) {
+                      if (!v.title || v.title.includes('Deleted video')) {
+                          issues.push({ videoId: v.videoId, status: 'missing' });
+                      }
+                  }
+                  return issues;
+              }
+          }
+      ];
+  }
+
+  async runAgent(role: string, context: any) {
+      const agent = this.agents.find(a => a.role === role);
+      if (agent) {
+          console.log(`Running AI Agent: ${agent.name}`);
+          return await agent.execute(context);
+      }
+      throw new Error(`No agent found for role: ${role}`);
+  }
+
   async suggestPlaylistTitle(videos: Video[]): Promise<string> {
     if (videos.length === 0) return "New Playlist";
-
     const channels = videos.map(v => v.channel).filter(Boolean);
     const commonChannel = this.getMostFrequent(channels);
-
-    if (commonChannel) {
-        return `Best of ${commonChannel}`;
-    }
-
-    return `Curated Collection (${videos.length} videos)`;
+    return commonChannel ? `Best of ${commonChannel}` : `Curated Collection (${videos.length} videos)`;
   }
 
   async categorizePlaylist(playlist: Playlist): Promise<string[]> {
-    const categories = new Set<string>();
-    const keywords = {
-        'Music': ['music', 'official video', 'lyrics', 'song', 'live'],
-        'Education': ['tutorial', 'how to', 'lesson', 'course', 'education', 'lecture'],
-        'Gaming': ['gameplay', 'walkthrough', 'gaming', 'review', 'nintendo', 'playstation', 'xbox'],
-        'Tech': ['unboxing', 'tech', 'review', 'iphone', 'android', 'software', 'programming'],
-        'News': ['news', 'report', 'politics', 'current events']
-    };
-
-    const title = playlist.title.toLowerCase();
-    Object.entries(keywords).forEach(([cat, keys]) => {
-        if (keys.some(k => title.includes(k))) {
-            categories.add(cat);
-        }
-    });
-
-    return Array.from(categories);
-  }
-
-  async generateVideoSummary(video: Video): Promise<string> {
-      return `This video by ${video.channel} covers topics related to ${video.title.split(' ').slice(0, 3).join(', ')}.`;
+      return await this.runAgent('categorizer', { playlist });
   }
 
   async analyzeVideo(video: Video): Promise<Partial<Video>> {
-      // Mocking AI analysis
       return {
           aiSummary: `Deep dive into ${video.title}. An expert perspective from ${video.channel}.`,
           aiTags: ['Education', 'Insightful', 'Verified']

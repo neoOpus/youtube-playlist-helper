@@ -1,35 +1,42 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
   import type { Video } from "../../types/model";
   import { spring } from "svelte/motion";
 
   export let data: Video[] = [];
   export let title = "Playlist Intelligence Map";
 
-  // Calculate nodes and connections
+  const dispatch = createEventDispatcher();
+
   $: nodes = data.map((v, i) => ({
+      video: v,
       id: v.videoId,
       title: v.title,
       x: 100 + (i % 4) * 200,
-      y: 80 + Math.floor(i / 4) * 100,
+      y: 80 + Math.floor(i / 4) * 120,
       watched: v.watched
   }));
 
   $: connections = nodes.slice(0, -1).map((n, i) => ({
       x1: n.x + 75,
       y1: n.y + 30,
-      x2: nodes[i+1].x - 25, // Adjusted to point to start of next node
+      x2: nodes[i+1].x - 75,
       y2: nodes[i+1].y + 30,
       active: n.watched
   }));
+
+  function handleNodeClick(video: Video) {
+      dispatch("selectVideo", video);
+  }
 </script>
 
 <div class="logigram-container">
   <div class="header">
       <h4>{title}</h4>
-      <span class="badge">Experimental</span>
+      <span class="badge">Interactive</span>
   </div>
   <div class="canvas-wrapper">
-    <svg width="900" height={Math.max(400, (Math.ceil(data.length / 4)) * 120)} viewBox="0 0 900 600">
+    <svg width="900" height={Math.max(400, (Math.ceil(data.length / 4)) * 140)} viewBox="0 0 900 600">
       <defs>
         <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
           <polygon points="0 0, 10 3.5, 0 7" fill="#888" />
@@ -42,8 +49,8 @@
       {#each connections as conn}
         <path
             d="M {conn.x1} {conn.y1} C {conn.x1 + 50} {conn.y1}, {conn.x2 - 50} {conn.y2}, {conn.x2} {conn.y2}"
-            stroke={conn.active ? 'var(--sidebar-bg-color)' : '#ddd'}
-            stroke-width="2"
+            stroke={conn.active ? '#28a745' : '#ddd'}
+            stroke-width={conn.active ? '3' : '2'}
             fill="none"
             marker-end="url(#arrowhead)"
             class="flow-line"
@@ -52,7 +59,16 @@
       {/each}
 
       {#each nodes as node}
-        <g class="node" class:is-watched={node.watched} filter="url(#shadow)">
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <g
+            class="node"
+            class:is-watched={node.watched}
+            filter="url(#shadow)"
+            on:click={() => handleNodeClick(node.video)}
+            on:keydown={(e) => e.key === 'Enter' && handleNodeClick(node.video)}
+            tabindex="0"
+            role="button"
+        >
           <rect x={node.x - 75} y={node.y} width="150" height="60" rx="12" class="node-bg" />
           <text x={node.x} y={node.y + 35} text-anchor="middle" class="node-text">
             {node.title?.substring(0, 18)}...
@@ -78,24 +94,26 @@
 
   .header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
   h4 { margin: 0; font-size: 1.1rem; color: #333; }
-  .badge { font-size: 0.7rem; background: #eee; padding: 2px 8px; border-radius: 10px; color: #666; }
+  .badge { font-size: 0.7rem; background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 10px; }
 
   .canvas-wrapper {
     overflow-x: auto;
-    border-radius: 8px;
+    border-radius: 12px;
     background: #fafafa;
+    border: 1px solid #f0f0f0;
   }
 
+  .node { cursor: pointer; outline: none; }
   .node-bg { fill: white; stroke: #eee; stroke-width: 1; transition: all 0.3s; }
   .is-watched .node-bg { stroke: #28a745; stroke-width: 2; }
-  .node-text { font-size: 10px; fill: #444; font-weight: 500; }
+  .node:hover .node-bg { fill: #f8f9fa; stroke: var(--sidebar-bg-color); transform: translateY(-2px); }
 
-  .flow-line { transition: stroke 0.5s; stroke-dasharray: 5; animation: dash 10s linear infinite; }
-  .flow-line.is-active { stroke-dasharray: none; animation: none; stroke-width: 3; }
+  .node-text { font-size: 10px; fill: #444; font-weight: 500; pointer-events: none; }
+
+  .flow-line { transition: all 0.5s; stroke-dasharray: 5; animation: dash 10s linear infinite; }
+  .flow-line.is-active { stroke-dasharray: none; animation: none; }
 
   @keyframes dash {
     to { stroke-dashoffset: 100; }
   }
-
-  .node:hover .node-bg { fill: #f0f0f0; transform: translateY(-2px); }
 </style>
