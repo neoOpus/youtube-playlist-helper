@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Phoenix Form Recovery",
+  "version": "0.1.0",
+  "description": "2026 Modern Form Recovery - Autosave and intelligent restore.",
+  "action": {
+    "default_popup": "src/popup/index.html"
+  },
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "js": ["src/content/index.ts"],
+      "matches": ["<all_urls>"],
+      "run_at": "document_start"
+    }
+  ],
+  "permissions": ["storage", "unlimitedStorage", "tabs"],
+  "host_permissions": ["<all_urls>"]
+}
