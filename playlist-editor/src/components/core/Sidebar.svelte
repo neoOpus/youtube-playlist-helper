@@ -1,97 +1,134 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { Settings, ViewMode } from "../../types/model";
+  import { link, location } from "svelte-spa-router";
+  import Fa from "svelte-fa";
+  import {
+    faPlus, faList, faHistory, faCog, faLifeRing, faGlobe, faExchangeAlt, faLayerGroup
+  } from "@fortawesome/free-solid-svg-icons";
 
   let viewMode: ViewMode = "simple";
-
   onMount(async () => {
     const settings = await window.getSettings();
     viewMode = settings.viewMode || "simple";
   });
 
-  async function toggleViewMode() {
-    viewMode = viewMode === "simple" ? "advanced" : "simple";
-    await window.storeObject("viewMode", viewMode);
-    window.location.reload(); // Refresh to apply view mode changes
-  }
-
-  function isActive(...pages: string[]) {
-    return pages.some(
-      (page) =>
-        location.href.endsWith(page) || location.href.endsWith(page + "/")
-    );
-  }
+  $: isActive = (path: string) => $location === path;
 </script>
 
-<div class="sidenav">
-  <a href="#/saved" class:active={isActive("saved")}>Saved playlists</a>
-  <a href="#/new" class:active={isActive("new")}>New playlist</a>
-  <a href="#/manage" class:active={isActive("manage")}>Manage playlists</a>
-  <a href="#/compare" class:active={isActive("compare")}>Merge Tool</a>
-  <a href="#/support" class:active={isActive("support")}>Support</a>
+<aside class="sidebar">
+  <nav>
+    <div class="nav-group">
+        <span class="nav-label">Management</span>
+        <a href="/new" use:link class:active={isActive('/new')}>
+          <Fa icon={faPlus} />
+          <span>New Playlist</span>
+        </a>
+        <a href="/saved" use:link class:active={isActive('/saved')}>
+          <Fa icon={faList} />
+          <span>Saved Playlists</span>
+        </a>
+        <a href="/omni" use:link class:active={isActive('/omni')}>
+          <Fa icon={faGlobe} />
+          <span>Omni View</span>
+        </a>
+    </div>
 
-  <div class="sidebar-footer">
-    <button on:click={toggleViewMode} class="view-mode-btn">
-      Switch to {viewMode === "simple" ? "Advanced" : "Simple"} Mode
-    </button>
-  </div>
-</div>
+    <div class="nav-group">
+        <span class="nav-label">Advanced Tools</span>
+        <a href="/compare" use:link class:active={isActive('/compare')}>
+          <Fa icon={faExchangeAlt} />
+          <span>Multi-Orchestrator</span>
+        </a>
+        <a href="/playlist-builder" use:link class:active={isActive('/playlist-builder')}>
+          <Fa icon={faHistory} />
+          <span>Recent Builder</span>
+        </a>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="nav-footer">
+        <a href="/manage" use:link class:active={isActive('/manage')}>
+          <Fa icon={faCog} />
+          <span>Settings</span>
+        </a>
+        <a href="/support" use:link class:active={isActive('/support')}>
+          <Fa icon={faLifeRing} />
+          <span>Support</span>
+        </a>
+    </div>
+  </nav>
+</aside>
 
 <style>
-  .sidenav {
-    height: 100%;
+  .sidebar {
+    width: 240px;
+    height: 100vh;
+    background-color: var(--sidebar-bg-color, #2c3e50);
+    color: white;
     position: fixed;
-    z-index: 1;
     top: 0;
     left: 0;
-    background-color: var(--sidebar-bg-color);
-    padding: 1rem 0.2rem;
+    z-index: 100;
+    padding-top: 60px; /* Header height */
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
   }
 
-  .sidenav a {
-    padding: 1rem 0.5rem;
-    margin-bottom: 0.2rem;
+  nav {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1rem;
+  }
+
+  .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 2rem;
+  }
+
+  .nav-group .nav-label {
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding-left: 12px;
+      margin-bottom: 8px;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
     text-decoration: none;
-    font-size: 1.2rem;
-    line-height: 1.2rem;
-    color: var(--sidebar-text-color);
-    display: block;
+    color: rgba(255,255,255,0.7);
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-size: 0.95rem;
   }
 
-  .sidenav a:hover {
-    background-color: var(--hover-color);
-  }
-
-  .sidenav a.active {
-    background-color: var(--active-bg-color);
-    color: var(--active-text-color);
-  }
-
-  .sidenav a:hover,
-  .sidenav a.active {
-    border-radius: 0.5rem;
-  }
-
-  .sidebar-footer {
-    position: absolute;
-    bottom: 2rem;
-    left: 0;
-    width: 100%;
-    padding: 0 0.5rem;
-  }
-
-  .view-mode-btn {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid white;
+  a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
     color: white;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-size: 0.9rem;
   }
 
-  .view-mode-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+  a.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: 600;
+  }
+
+  .spacer {
+    flex-grow: 1;
+  }
+
+  .nav-footer {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 1rem;
+      margin-bottom: 80px; /* Space for status bar + some padding */
   }
 </style>

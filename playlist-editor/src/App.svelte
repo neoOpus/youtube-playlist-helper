@@ -5,6 +5,7 @@
   import Saved from "./views/Saved.svelte";
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
+  import OmniView from "./views/OmniView.svelte";
   import PlaylistComparison from "./components/mega/PlaylistComparison.svelte";
   import UndoNotification from "./components/mega/UndoNotification.svelte";
   import GlobalHeader from "./components/mega/GlobalHeader.svelte";
@@ -19,6 +20,7 @@
     "/manage": Manage,
     "/compare": PlaylistComparison,
     "/support": Support,
+    "/omni": OmniView,
     "*": Saved,
   };
 
@@ -46,7 +48,7 @@
 
   .main-content {
     flex: 1;
-    padding-bottom: 30px; /* Space for status bar */
+    padding-bottom: 30px;
     overflow-y: auto;
   }
 

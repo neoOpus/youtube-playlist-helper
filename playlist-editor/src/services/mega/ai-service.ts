@@ -4,7 +4,7 @@ export interface AIAgent {
     id: string;
     name: string;
     description: string;
-    role: 'categorizer' | 'summarizer' | 'auditor' | 'reorderer';
+    role: 'categorizer' | 'summarizer' | 'auditor' | 'reorderer' | 'coder';
     execute: (context: any) => Promise<any>;
 }
 
@@ -44,7 +44,6 @@ class AIService {
               description: 'Periodically checks for videos that may have been deleted or privated.',
               role: 'auditor',
               execute: async ({ videos }) => {
-                  // Simulating a check
                   const issues = [];
                   for (const v of videos) {
                       if (!v.title || v.title.includes('Deleted video')) {
@@ -52,6 +51,23 @@ class AIService {
                       }
                   }
                   return issues;
+              }
+          },
+          {
+              id: 'agent-coder-1',
+              name: 'Action Architect',
+              description: 'Generates custom action handlers from natural language prompts.',
+              role: 'coder',
+              execute: async ({ prompt }) => {
+                  console.log(`Architecting action for: ${prompt}`);
+                  // Simulation of AI code generation
+                  if (prompt.toLowerCase().includes('notion')) {
+                      return "console.log('Exporting to Notion...', context.videos); window.success('Data sent to Notion mock API');";
+                  }
+                  if (prompt.toLowerCase().includes('clean')) {
+                      return "const clean = context.videos.filter(v => !v.title.includes('DELETED')); context.playlist.videos = clean.map(v => v.videoId); await window.savePlaylist(context.playlist); await context.refresh();";
+                  }
+                  return "console.log('Custom Action Executed', context);";
               }
           }
       ];
@@ -64,6 +80,10 @@ class AIService {
           return await agent.execute(context);
       }
       throw new Error(`No agent found for role: ${role}`);
+  }
+
+  async generateActionHandler(prompt: string): Promise<string> {
+      return await this.runAgent('coder', { prompt });
   }
 
   async suggestPlaylistTitle(videos: Video[]): Promise<string> {
