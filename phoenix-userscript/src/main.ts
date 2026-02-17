@@ -7,7 +7,28 @@ import RecoveryMenu from './components/RecoveryMenu.svelte';
 // @ts-ignore
 import SmartGhost from './components/SmartGhost.svelte';
 
-console.log('Phoenix SOTA Form Recovery Started');
+console.log('Phoenix SOTA Form Recovery: Initializing Robust Engine');
+
+/**
+ * Robust Field Restoration Logic
+ * Handles state-managed editors (DraftJS, Slate) using execCommand
+ */
+function restoreField(el: HTMLElement, value: string) {
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    el.value = value;
+  } else if (el.isContentEditable) {
+    // DraftJS Hack: Init state if empty
+    if (!el.textContent?.trim()) {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    }
+    el.focus();
+    document.execCommand('selectAll', false);
+    document.execCommand('insertHTML', false, value);
+  }
+
+  // Trigger events for React/Vue listeners
+  ['input', 'change'].forEach(t => el.dispatchEvent(new Event(t, { bubbles: true })));
+}
 
 function attachToField(el: HTMLElement) {
   if (el.dataset.phoenixAttached) return;
@@ -15,16 +36,18 @@ function attachToField(el: HTMLElement) {
 
   const fieldId = generateHeuristicId(el);
 
-  // Focus Logic
+  // Focus: Show UI
   el.addEventListener('focus', () => {
     const rect = el.getBoundingClientRect();
 
-    // Recovery Menu
+    // 1. Recovery Menu (Shadow DOM)
     const menuHost = document.createElement('div');
-    menuHost.style.position = 'absolute';
-    menuHost.style.left = `${rect.right - 30}px`;
-    menuHost.style.top = `${rect.top}px`;
-    menuHost.style.zIndex = '1000000';
+    Object.assign(menuHost.style, {
+      position: 'absolute',
+      left: `${rect.right - 35}px`,
+      top: `${rect.top}px`,
+      zIndex: '2147483647'
+    });
     const menuShadow = menuHost.attachShadow({ mode: 'open' });
     document.body.appendChild(menuHost);
 
@@ -33,26 +56,23 @@ function attachToField(el: HTMLElement) {
       props: {
         fieldId,
         onRestore: (val: string) => {
-          if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-            el.value = val;
-          } else {
-            el.innerHTML = val;
-          }
-          el.dispatchEvent(new Event('input', { bubbles: true }));
+          restoreField(el, val);
           menuHost.remove();
         }
       }
     });
 
-    // Smart Ghost (Experimental)
+    // 2. Smart Ghost (Predictive UX)
     const ghostHost = document.createElement('div');
-    ghostHost.style.position = 'absolute';
-    ghostHost.style.left = `${rect.left}px`;
-    ghostHost.style.top = `${rect.top}px`;
-    ghostHost.style.width = `${rect.width}px`;
-    ghostHost.style.height = `${rect.height}px`;
-    ghostHost.style.pointerEvents = 'none';
-    ghostHost.style.zIndex = '999999';
+    Object.assign(ghostHost.style, {
+      position: 'absolute',
+      left: `${rect.left}px`,
+      top: `${rect.top}px`,
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+      pointerEvents: 'none',
+      zIndex: '2147483646'
+    });
     const ghostShadow = ghostHost.attachShadow({ mode: 'open' });
     document.body.appendChild(ghostHost);
 
@@ -61,46 +81,59 @@ function attachToField(el: HTMLElement) {
       props: { fieldId, targetEl: el }
     });
 
-    const blurHandler = (e: MouseEvent) => {
+    const cleanup = (e: MouseEvent) => {
       if (!menuHost.contains(e.target as Node) && e.target !== el) {
         menuHost.remove();
         ghostHost.remove();
-        document.removeEventListener('mousedown', blurHandler);
+        document.removeEventListener('mousedown', cleanup);
       }
     };
-    document.addEventListener('mousedown', blurHandler);
+    document.addEventListener('mousedown', cleanup);
   });
 
-  el.addEventListener('input', () => {
-    const value = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement
-      ? el.value
-      : el.innerHTML;
-
-    if (value.length > 3) {
-      db.save({
-        domain: window.location.hostname,
-        url: window.location.href,
-        fieldId,
-        fieldName: getFieldName(el),
-        value,
-        timestamp: Date.now(),
-        isSubmitted: false
-      });
-    }
+  // Aggressive Monitoring: Multiple events + MutationObserver (handled globally)
+  ['input', 'change', 'keyup'].forEach(evt => {
+    el.addEventListener(evt, () => {
+      const value = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? el.value : el.innerHTML;
+      if (value.length > 2) {
+        db.save({
+          domain: window.location.hostname,
+          url: window.location.href,
+          fieldId,
+          fieldName: getFieldName(el),
+          value,
+          timestamp: Date.now(),
+          isSubmitted: false
+        });
+      }
+    });
   });
 }
 
-const observer = new MutationObserver(() => {
-  document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach(el => {
-    attachToField(el as HTMLElement);
+// Global Mutation Observer for dynamic nodes and subtree changes
+const globalObserver = new MutationObserver((mutations) => {
+  mutations.forEach(m => {
+    // Detect new fields
+    m.addedNodes.forEach(node => {
+      if (node instanceof HTMLElement) {
+        node.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach(f => attachToField(f as HTMLElement));
+        if (node.matches('input[type="text"], textarea, [contenteditable="true"]')) attachToField(node);
+      }
+    });
+    // Handle rich text mutations directly
+    const target = m.target as HTMLElement;
+    if (target.isContentEditable) {
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   });
 });
-observer.observe(document.body, { childList: true, subtree: true });
+globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
 
-document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach(el => {
-  attachToField(el as HTMLElement);
-});
+// Initial injection
+document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach(el => attachToField(el as HTMLElement));
 
-initInterceptor((data) => {
-    console.log('Phoenix: Submission detected.');
+// Submission Interceptor
+initInterceptor((body) => {
+    // Logic to mark entries as submitted if body contains field content
+    console.log('[Phoenix] Network submission detected.');
 });

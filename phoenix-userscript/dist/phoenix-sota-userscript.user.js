@@ -6323,24 +6323,29 @@
   }
   const db = new PhoenixDB();
   function generateHeuristicId(el) {
-    var _a2;
+    var _a2, _b2, _c2;
     const parts = [];
     if (el.id) parts.push(`id:${el.id}`);
     const name = el.getAttribute("name");
     if (name) parts.push(`name:${name}`);
     const label = el.getAttribute("aria-label") || el.getAttribute("placeholder") || "";
     if (label) parts.push(`label:${label.slice(0, 20)}`);
-    if (el instanceof HTMLInputElement && el.labels && el.labels.length > 0) {
-      parts.push(`text:${(_a2 = el.labels[0].textContent) == null ? void 0 : _a2.trim().slice(0, 20)}`);
+    if (el instanceof HTMLInputElement && ((_a2 = el.labels) == null ? void 0 : _a2[0])) {
+      parts.push(`text:${(_b2 = el.labels[0].textContent) == null ? void 0 : _b2.trim().slice(0, 20)}`);
+    }
+    const root2 = el.getRootNode();
+    if (root2 instanceof ShadowRoot && ((_c2 = root2.host) == null ? void 0 : _c2.id)) {
+      parts.push(`shadow-host:${root2.host.id}`);
     }
     const form = el.closest("form");
     if (form) {
       const inputs = Array.from(form.querySelectorAll("input, textarea, [contenteditable]"));
-      const index2 = inputs.indexOf(el);
-      parts.push(`form-idx:${index2}`);
+      parts.push(`form-idx:${inputs.indexOf(el)}`);
+    } else {
+      const sameType = Array.from(document.querySelectorAll(el.tagName.toLowerCase()));
+      parts.push(`page-idx:${sameType.indexOf(el)}`);
     }
-    const rawId = parts.join("|") || "fallback-id";
-    return btoa(rawId).replace(/=/g, "");
+    return btoa(unescape(encodeURIComponent(parts.join("|") || "fallback"))).replace(/=/g, "");
   }
   function getFieldName(el) {
     var _a2, _b2, _c2;
@@ -6458,7 +6463,21 @@
     pop();
   }
   delegate(["click"]);
-  console.log("Phoenix SOTA Form Recovery Started");
+  console.log("Phoenix SOTA Form Recovery: Initializing Robust Engine");
+  function restoreField(el, value) {
+    var _a2;
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      el.value = value;
+    } else if (el.isContentEditable) {
+      if (!((_a2 = el.textContent) == null ? void 0 : _a2.trim())) {
+        el.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+      }
+      el.focus();
+      document.execCommand("selectAll", false);
+      document.execCommand("insertHTML", false, value);
+    }
+    ["input", "change"].forEach((t) => el.dispatchEvent(new Event(t, { bubbles: true })));
+  }
   function attachToField(el) {
     if (el.dataset.phoenixAttached) return;
     el.dataset.phoenixAttached = "true";
@@ -6466,10 +6485,12 @@
     el.addEventListener("focus", () => {
       const rect = el.getBoundingClientRect();
       const menuHost = document.createElement("div");
-      menuHost.style.position = "absolute";
-      menuHost.style.left = `${rect.right - 30}px`;
-      menuHost.style.top = `${rect.top}px`;
-      menuHost.style.zIndex = "1000000";
+      Object.assign(menuHost.style, {
+        position: "absolute",
+        left: `${rect.right - 35}px`,
+        top: `${rect.top}px`,
+        zIndex: "2147483647"
+      });
       const menuShadow = menuHost.attachShadow({ mode: "open" });
       document.body.appendChild(menuHost);
       mount(RecoveryMenu, {
@@ -6477,65 +6498,71 @@
         props: {
           fieldId,
           onRestore: (val) => {
-            if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-              el.value = val;
-            } else {
-              el.innerHTML = val;
-            }
-            el.dispatchEvent(new Event("input", { bubbles: true }));
+            restoreField(el, val);
             menuHost.remove();
           }
         }
       });
       const ghostHost = document.createElement("div");
-      ghostHost.style.position = "absolute";
-      ghostHost.style.left = `${rect.left}px`;
-      ghostHost.style.top = `${rect.top}px`;
-      ghostHost.style.width = `${rect.width}px`;
-      ghostHost.style.height = `${rect.height}px`;
-      ghostHost.style.pointerEvents = "none";
-      ghostHost.style.zIndex = "999999";
+      Object.assign(ghostHost.style, {
+        position: "absolute",
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        pointerEvents: "none",
+        zIndex: "2147483646"
+      });
       const ghostShadow = ghostHost.attachShadow({ mode: "open" });
       document.body.appendChild(ghostHost);
       mount(SmartGhost, {
         target: ghostShadow,
         props: { fieldId, targetEl: el }
       });
-      const blurHandler = (e) => {
+      const cleanup = (e) => {
         if (!menuHost.contains(e.target) && e.target !== el) {
           menuHost.remove();
           ghostHost.remove();
-          document.removeEventListener("mousedown", blurHandler);
+          document.removeEventListener("mousedown", cleanup);
         }
       };
-      document.addEventListener("mousedown", blurHandler);
+      document.addEventListener("mousedown", cleanup);
     });
-    el.addEventListener("input", () => {
-      const value = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? el.value : el.innerHTML;
-      if (value.length > 3) {
-        db.save({
-          domain: window.location.hostname,
-          url: window.location.href,
-          fieldId,
-          fieldName: getFieldName(el),
-          value,
-          timestamp: Date.now(),
-          isSubmitted: false
-        });
-      }
+    ["input", "change", "keyup"].forEach((evt) => {
+      el.addEventListener(evt, () => {
+        const value = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? el.value : el.innerHTML;
+        if (value.length > 2) {
+          db.save({
+            domain: window.location.hostname,
+            url: window.location.href,
+            fieldId,
+            fieldName: getFieldName(el),
+            value,
+            timestamp: Date.now(),
+            isSubmitted: false
+          });
+        }
+      });
     });
   }
-  const observer = new MutationObserver(() => {
-    document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach((el) => {
-      attachToField(el);
+  const globalObserver = new MutationObserver((mutations) => {
+    mutations.forEach((m) => {
+      m.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          node.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach((f) => attachToField(f));
+          if (node.matches('input[type="text"], textarea, [contenteditable="true"]')) attachToField(node);
+        }
+      });
+      const target = m.target;
+      if (target.isContentEditable) {
+        target.dispatchEvent(new Event("input", { bubbles: true }));
+      }
     });
   });
-  observer.observe(document.body, { childList: true, subtree: true });
-  document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach((el) => {
-    attachToField(el);
-  });
-  initInterceptor((data) => {
-    console.log("Phoenix: Submission detected.");
+  globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+  document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach((el) => attachToField(el));
+  initInterceptor((body) => {
+    console.log("[Phoenix] Network submission detected.");
   });
 
 })();
