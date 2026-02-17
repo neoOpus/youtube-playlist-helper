@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { storage } from '../../services/core/storage-service';
   import { onMount } from "svelte";
 
   let storageUsage = "0 KB";

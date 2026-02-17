@@ -1,5 +1,7 @@
+import { storage } from '../core/storage-service';
 import { writable } from "svelte/store";
 import type { Video, Playlist } from "../../types/model";
+import { metadataService } from "./metadata-service";
 
 export interface CustomAction {
     id: string;
@@ -31,7 +33,7 @@ class ActionService {
                 handler: async ({ playlist, videos, refresh }) => {
                     for (const v of videos) {
                         v.watched = true;
-                        await window.videoService.saveVideoMetadata(v.videoId, { watched: true });
+                        await metadataService.saveVideoMetadata(v.videoId, { watched: true });
                     }
                     await refresh();
                 }
@@ -45,13 +47,13 @@ class ActionService {
                 handler: async ({ playlist, videos, refresh }) => {
                     const unwatched = videos.filter(v => !v.watched).map(v => v.videoId);
                     playlist.videos = unwatched;
-                    await window.savePlaylist(playlist);
+                    await storage.savePlaylist(playlist);
                     await refresh();
                 }
             }
         ];
 
-        const saved = await window.fetchObject(this.STORAGE_KEY, []);
+        const saved = await storage.get(this.STORAGE_KEY, []);
         const customized = saved.map(a => ({
             ...a,
             handler: a.handlerStr ? new Function('context', `return (async (context) => { ${a.handlerStr} })(context)`) : null
@@ -61,7 +63,7 @@ class ActionService {
     }
 
     public async registerAction(action: CustomAction) {
-        const saved = await window.fetchObject(this.STORAGE_KEY, []);
+        const saved = await storage.get(this.STORAGE_KEY, []);
         saved.push({
             id: action.id,
             label: action.label,
@@ -70,7 +72,7 @@ class ActionService {
             scope: action.scope,
             handlerStr: action.handlerStr
         });
-        await window.storeObject(this.STORAGE_KEY, saved);
+        await storage.set(this.STORAGE_KEY, saved);
         await this.loadActions();
     }
 

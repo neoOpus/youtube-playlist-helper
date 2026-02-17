@@ -64,8 +64,26 @@
 </script>
 
 {#if isOpen}
-  <div class="palette-overlay" on:click={close} on:keydown={(e) => e.key === 'Escape' && close()} transition:fade={{ duration: 150 }} role="presentation">
-    <div class="palette-content" on:click|stopPropagation transition:fly={{ y: -20, duration: 200 }} role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    class="palette-overlay"
+    on:click={close}
+    on:keydown={(e) => e.key === 'Escape' && close()}
+    transition:fade={{ duration: 150 }}
+    role="button"
+    aria-label="Close Palette"
+    tabindex="-1"
+  >
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <div
+        class="palette-content"
+        on:click|stopPropagation
+        transition:fly={{ y: -20, duration: 200 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="command-palette-title"
+    >
       <h2 id="command-palette-title" class="sr-only">Command Palette</h2>
       <div class="search-box">
         <Fa icon={Icons.faSearch} />
@@ -125,6 +143,8 @@
     justify-content: center;
     padding-top: 15vh;
     z-index: 2000;
+    border: none;
+    cursor: default;
   }
 
   .palette-content {
@@ -136,6 +156,7 @@
     display: flex;
     flex-direction: column;
     max-height: 60vh;
+    cursor: default;
   }
 
   .search-box {

@@ -1,3 +1,4 @@
+import { storage } from '../services/core/storage-service';
 import { writable } from "svelte/store";
 import type { PlaylistsSorting } from "../types/model.js";
 
@@ -13,5 +14,5 @@ window
   .fetchObject(playlistsSortingStorageKey, defaultPlaylistsSorting)
   .then(playlistsSorting.set);
 playlistsSorting.subscribe((sorting) => {
-  window.storeObject(playlistsSortingStorageKey, sorting);
+  storage.set(playlistsSortingStorageKey, sorting);
 });

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { storage } from '../../services/core/storage-service';
   import { replace } from "svelte-spa-router";
   import { flip } from "svelte/animate";
   import { expoOut } from "svelte/easing";
@@ -25,6 +26,7 @@
   import VideoSidebar from "../mega/VideoSidebar.svelte";
   import Logigram from "../mega/Logigram.svelte";
   import { paginate } from "svelte-paginate";
+  import VirtualList from "svelte-virtual-list";
   import RemoveDuplicates from "../icons/RemoveDuplicates.svelte";
   import type { Playlist, Video } from "../../types/model";
   import PaginationNav from "./PaginationNav.svelte";
@@ -142,7 +144,7 @@
     loading = false;
   }
 
-  const possiblePageSizes = [10, 20, 30, 40, 50, 100];
+  const possiblePageSizes = [10, 20, 30, 40, 50, 100, 500];
   const defaultPageSize = 50;
   let currentPage = 1;
   let pageSize = defaultPageSize;
@@ -155,7 +157,7 @@
 
   async function pageSizeChanged() {
     currentPage = 1;
-    window.storeObject("page-size", pageSize);
+    storage.set("page-size", pageSize);
     await loadPageVideos(currentPage);
   }
 
@@ -167,7 +169,7 @@
       const url = new URL(document.URL);
       const id = url.searchParams.get("id");
       if (id) {
-        playlist = await window.getPlaylist(id);
+        playlist = await storage.getPlaylist(id);
         history.replaceState({ playlist }, "", url.pathname + url.hash);
       } else {
         const videoIds = url.searchParams.get("videoIds");
@@ -178,7 +180,7 @@
       }
     }
     if (!playlist) { replace("/"); return; }
-    pageSize = await window.fetchObject("page-size", defaultPageSize);
+    pageSize = await storage.get("page-size", defaultPageSize);
     await Promise.all(playlist.videos.map((id) => videoService.fetchVideo(id, true))).then(async (loadedVideos) => {
       videos = [...loadedVideos];
       await loadPageVideos(currentPage);
@@ -204,7 +206,7 @@
   let exportTextArea: HTMLTextAreaElement;
 
   let disableThumbnails = false;
-  window.getSettings().then((settings) => disableThumbnails = settings.disableThumbnails);
+  storage.getSettings().then((settings) => disableThumbnails = settings.disableThumbnails);
 
   const drop = (event, target) => {
     event.dataTransfer.dropEffect = "move";
@@ -274,7 +276,7 @@
   async function savePlaylist() {
     const videoIds = videos.map((video) => video.videoId.toString());
     playlist = { ...playlist, videos: videoIds };
-    const id = await window.savePlaylist(playlist);
+    const id = await storage.savePlaylist(playlist);
     playlist = { ...playlist, id };
     if (isPlaylistBuilder) await browser.runtime.sendMessage({ cmd: "clear-playlist-builder" });
     window.success("Playlist saved");
@@ -406,29 +408,43 @@
       <div class="batch-controls">
         <SuperCheckbox checked={allSelected} on:change={toggleSelectAll} label="Select All" />
       </div>
-      <div class="list" role="list">
-        {#each paginatedVideos as video, index (video.id)}
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div animate:customFlip draggable={true}
-              on:dragstart={(event) => dragstart(event, index)}
-              on:dragenter={() => (hovering = index)}
-              on:dragover|preventDefault
-              on:drop|preventDefault={(event) => drop(event, index)}
-              on:click={() => handleVideoSidebar(video)}
-              on:keydown={(e) => e.key === 'Enter' && handleVideoSidebar(video)}
-              role="button"
-              tabindex="0"
-            >
-              <PlaylistVideo on:delete={deleteVideo} on:save={savePlaylistBuilder} on:select={(e) => handleVideoSelect(e, index)} {video} {disableThumbnails} active={hovering === index} />
-            </div>
-        {:else}
-            <p style="text-align: center; padding: 2rem;">Empty</p>
-        {/each}
+
+      <div class="list-container" style="height: 60vh">
+          {#if videos.length > 100}
+              <VirtualList items={paginatedVideos} let:item>
+                  <div role="button" tabindex="0" on:click={() => handleVideoSidebar(item)} on:keydown={(e) => e.key === 'Enter' && handleVideoSidebar(item)}>
+                      <PlaylistVideo video={item} on:delete={deleteVideo} on:save={savePlaylistBuilder} on:select={(e) => handleVideoSelect(e, videos.indexOf(item))} active={hovering === videos.indexOf(item)} />
+                  </div>
+              </VirtualList>
+          {:else}
+              <div class="list" role="list">
+                {#each paginatedVideos as video, index (video.id)}
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <div animate:customFlip draggable={true}
+                      on:dragstart={(event) => dragstart(event, index)}
+                      on:dragenter={() => (hovering = index)}
+                      on:dragover|preventDefault
+                      on:drop|preventDefault={(event) => drop(event, index)}
+                      on:click={() => handleVideoSidebar(video)}
+                      on:keydown={(e) => e.key === 'Enter' && handleVideoSidebar(video)}
+                      role="button"
+                      tabindex="0"
+                    >
+                      <PlaylistVideo on:delete={deleteVideo} on:save={savePlaylistBuilder} on:select={(e) => handleVideoSelect(e, index)} {video} {disableThumbnails} active={hovering === index} />
+                    </div>
+                {:else}
+                    <p style="text-align: center; padding: 2rem;">Empty</p>
+                {/each}
+              </div>
+          {/if}
       </div>
     {/if}
 
     <div class="pagination">
       <PaginationNav totalItems={videos.length} {pageSize} {currentPage} limit={1} showStepOptions={true} on:setPage={updatePaginationPage} />
+      <select bind:value={pageSize} on:change={pageSizeChanged}>
+        {#each possiblePageSizes as size}<option value={size}>{size}</option>{/each}
+      </select>
     </div>
   {/if}
 </main>
@@ -459,7 +475,7 @@
 
   .dashboard-view { display: flex; flex-direction: column; gap: 2rem; }
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
-  .stat-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .stat-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border: 1px solid #eee; }
   .stat-card .label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
   .stat-card .value { font-size: 2.2rem; font-weight: bold; }
   .progress-container { height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin: 10px 0; }
@@ -471,7 +487,9 @@
   .curriculum-item:hover { background: #f8f9fa; }
   .curriculum-item.is-done { color: #28a745; opacity: 0.6; }
 
-  .list { border-radius: 12px; border: 1px solid #eee; background: white; }
+  .list-container { border-radius: 12px; border: 1px solid #eee; background: white; overflow: hidden; }
+  .list { display: flex; flex-direction: column; }
   .batch-controls { padding-bottom: 1rem; }
-  .pagination { display: flex; justify-content: center; margin-top: 3rem; }
+  .pagination { display: flex; justify-content: center; margin-top: 3rem; gap: 1rem; align-items: center; }
+  select { padding: 5px; border-radius: 4px; border: 1px solid #ddd; }
 </style>

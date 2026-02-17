@@ -1,7 +1,7 @@
 interface Window {
   videoIdCount: number;
   youtubeRegexPattern: string;
-  videoService: import("../services/video-service").VideoService;
+  videoService: import("../services/core/video-service").VideoService;
 }
 
 /**
@@ -21,6 +21,8 @@ type SavePlaylist = (playlist: Playlist) => Promise<string>;
 type RemovePlaylist = (playlist: Playlist) => Promise<void>;
 type GetPlaylists = () => Promise<Playlist[]>;
 type GetPlaylist = (id: string) => Promise<Playlist>;
+type GetTrash = () => Promise<any[]>;
+type RestoreFromTrash = (id: string) => Promise<boolean>;
 
 interface Window {
   getSettings: GetSettings;
@@ -36,6 +38,8 @@ interface Window {
   removePlaylist: RemovePlaylist;
   getPlaylists: GetPlaylists;
   getPlaylist: GetPlaylist;
+  getTrash: GetTrash;
+  restoreFromTrash: RestoreFromTrash;
 }
 
 /**
@@ -43,7 +47,7 @@ interface Window {
  */
 
 interface Window {
-  success: (string) => Function;
-  error: (string) => Function;
-  info: (string) => Function;
+  success: (msg: string) => void;
+  error: (msg: string) => void;
+  info: (msg: string) => void;
 }

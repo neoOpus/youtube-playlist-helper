@@ -1,10 +1,15 @@
 /// <reference path="../../node_modules/@types/firefox-webext-browser/index.d.ts" />
 
-import type { Playlist, PlaylistExport, Settings } from "../../types/model.js";
-import { backupService } from "../mega/backup-service.js";
+import type { Playlist, Settings } from "../../types/model.js";
+
+import LZString from "lz-string";
 
 const PLAYLIST_KEY_PREFIX = "playlist_";
+const TRASH_KEY_PREFIX = "trash_";
 const PENDING_OPS_KEY = "storage_pending_ops";
+const BROADCAST_CHANNEL = "yph_sync_channel";
+
+const syncChannel = typeof window !== 'undefined' ? new BroadcastChannel(BROADCAST_CHANNEL) : null;
 
 function playlistToDto(playlist: Playlist) {
   const dto = { ...playlist };
@@ -12,41 +17,67 @@ function playlistToDto(playlist: Playlist) {
   return dto;
 }
 
-// Transactional storage wrapper
-const storage = {
+// Advanced Storage Layer with Compression and Cross-Tab Sync
+export const storage: any = {
     async get(key: string, defaultValue: any = null) {
-        if (typeof browser !== 'undefined') {
+        let raw;
+        if (typeof browser !== 'undefined' && browser.storage) {
             const res = await browser.storage.local.get(key);
-            return res[key] !== undefined ? (typeof res[key] === 'string' ? JSON.parse(res[key]) : res[key]) : defaultValue;
+            raw = res[key];
         } else {
-            const res = localStorage.getItem(key);
-            return res ? JSON.parse(res) : defaultValue;
+            raw = localStorage.getItem(key);
+        }
+
+        if (raw === undefined || raw === null) return defaultValue;
+
+        try {
+            const decompressed = LZString.decompressFromUTF16(raw);
+            if (decompressed) return JSON.parse(decompressed);
+            return JSON.parse(raw);
+        } catch (e) {
+            try { return JSON.parse(raw); } catch { return raw; }
         }
     },
 
-    async set(key: string, value: any) {
+    async set(key: string, value: any, silent = false) {
         const valStr = JSON.stringify(value);
-        if (typeof browser !== 'undefined') {
-            await browser.storage.local.set({ [key]: valStr });
+        const compressed = LZString.compressToUTF16(valStr);
+
+        if (typeof browser !== 'undefined' && browser.storage) {
+            await browser.storage.local.set({ [key]: compressed });
         } else {
-            localStorage.setItem(key, valStr);
+            localStorage.setItem(key, compressed);
+        }
+
+        if (!silent && syncChannel) {
+            syncChannel.postMessage({ type: 'UPDATE', key });
         }
     },
 
-    async remove(key: string) {
-        if (typeof browser !== 'undefined') {
+    async remove(key: string, silent = false) {
+        if (typeof browser !== 'undefined' && browser.storage) {
             await browser.storage.local.remove(key);
         } else {
             localStorage.removeItem(key);
         }
+
+        if (!silent && syncChannel) {
+            syncChannel.postMessage({ type: 'DELETE', key });
+        }
     },
 
     async getAll() {
-        if (typeof browser !== 'undefined') {
-            return await browser.storage.local.get(null);
-        } else {
-            return { ...localStorage };
+        const all = (typeof browser !== 'undefined' && browser.storage) ? await browser.storage.local.get(null) : { ...localStorage };
+        const parsed = {};
+        for (const key in all) {
+            try {
+                const decompressed = LZString.decompressFromUTF16(all[key]);
+                parsed[key] = decompressed ? JSON.parse(decompressed) : JSON.parse(all[key]);
+            } catch {
+                parsed[key] = all[key];
+            }
         }
+        return parsed;
     }
 };
 
@@ -54,13 +85,13 @@ const transactionManager = {
     async logOp(op: { type: 'set' | 'remove', key: string, data?: any }) {
         const ops = await storage.get(PENDING_OPS_KEY, []);
         ops.push({ ...op, id: Date.now() });
-        await storage.set(PENDING_OPS_KEY, ops);
+        await storage.set(PENDING_OPS_KEY, ops, true);
     },
 
     async commitOp(opId: number) {
         let ops = await storage.get(PENDING_OPS_KEY, []);
         ops = ops.filter(o => o.id !== opId);
-        await storage.set(PENDING_OPS_KEY, ops);
+        await storage.set(PENDING_OPS_KEY, ops, true);
     },
 
     async recover() {
@@ -68,30 +99,28 @@ const transactionManager = {
         if (ops.length > 0) {
             console.warn("Recovering storage from pending operations...", ops);
             for (const op of ops) {
-                if (op.type === 'set') {
-                    await storage.set(op.key, op.data);
-                } else if (op.type === 'remove') {
-                    await storage.remove(op.key);
-                }
+                if (op.type === 'set') await storage.set(op.key, op.data, true);
+                else if (op.type === 'remove') await storage.remove(op.key, true);
             }
-            await storage.set(PENDING_OPS_KEY, []);
+            await storage.set(PENDING_OPS_KEY, [], true);
         }
     }
 };
 
-// Auto-recover on load
 transactionManager.recover();
 
-window.fetchObject = storage.get;
-window.storeObject = storage.set;
-window.removeObject = storage.remove;
-window.fetchAllObjects = storage.getAll;
+const ID_COUNTER_KEY = "PlaylistIdCounter";
+storage.generatePlaylistId = async () => {
+    let count = await storage.get(ID_COUNTER_KEY, 0);
+    count++;
+    await storage.set(ID_COUNTER_KEY, count);
+    return count.toString();
+};
 
-window.savePlaylist = async (playlist: Playlist) => {
+storage.savePlaylist = async (playlist: Playlist) => {
   let id = playlist.id;
-  if (!playlist.saved) {
-    id = await window.generatePlaylistId();
-  }
+  if (!playlist.saved) id = await storage.generatePlaylistId();
+
   playlist = {
     timestamp: Date.now(),
     ...playlist,
@@ -101,78 +130,72 @@ window.savePlaylist = async (playlist: Playlist) => {
 
   const key = PLAYLIST_KEY_PREFIX + id;
   const dto = playlistToDto(playlist);
+  const opId = Date.now();
 
-  const op: { type: 'set' | 'remove', key: string, data?: any, id: number } = { type: 'set', key, data: dto, id: Date.now() };
-  await transactionManager.logOp(op);
+  await transactionManager.logOp({ type: 'set', key, data: dto });
   await storage.set(key, dto);
-  await transactionManager.commitOp(op.id);
+  await transactionManager.commitOp(opId);
 
   savedPlaylistsChanged();
-  backupService.performAutoBackup();
+  import("../mega/backup-service.js").then(m => m.backupService.performAutoBackup());
   return id;
 };
 
-window.importPlaylists = async (playlistsExport: PlaylistExport[]) => {
-  const ids = await window.generatePlaylistIds(playlistsExport.length);
-  const playlists = playlistsExport.map((p) => ({ ...p, id: ids.shift(), version: 1 }));
-
-  for (const playlist of playlists) {
-      const key = PLAYLIST_KEY_PREFIX + playlist.id;
-      const dto = playlistToDto(playlist as Playlist);
-      await storage.set(key, dto);
-  }
-  savedPlaylistsChanged();
-};
-
-window.removePlaylist = async (playlist: Playlist) => {
+storage.removePlaylist = async (playlist: Playlist) => {
   const key = PLAYLIST_KEY_PREFIX + playlist.id;
-  if (!playlist.saved) {
-    localStorage.removeItem(key);
-  } else {
+  const trashKey = TRASH_KEY_PREFIX + playlist.id;
+
+  if (playlist.saved) {
+    const data = await storage.get(key);
+    await storage.set(trashKey, { ...data, deletedAt: Date.now() });
     await storage.remove(key);
     savedPlaylistsChanged();
+  } else {
+    localStorage.removeItem(key);
   }
 };
 
-window.getPlaylists = async () => {
+storage.getTrash = async () => {
+    const all = await storage.getAll();
+    return Object.keys(all)
+        .filter(k => k.startsWith(TRASH_KEY_PREFIX))
+        .map(k => all[k]);
+};
+
+storage.restoreFromTrash = async (playlistId: string) => {
+    const trashKey = TRASH_KEY_PREFIX + playlistId;
+    const key = PLAYLIST_KEY_PREFIX + playlistId;
+    const data = await storage.get(trashKey);
+    if (data) {
+        delete data.deletedAt;
+        await storage.set(key, data);
+        await storage.remove(trashKey);
+        savedPlaylistsChanged();
+        return true;
+    }
+    return false;
+};
+
+storage.getPlaylists = async () => {
   const allItems = await storage.getAll();
   return Object.keys(allItems)
     .filter((key) => key.startsWith(PLAYLIST_KEY_PREFIX))
     .map((key) => {
-      const playlist: Playlist = typeof allItems[key] === 'string' ? JSON.parse(allItems[key]) : allItems[key];
+      const playlist: Playlist = allItems[key];
       playlist.saved = true;
       return playlist;
     });
 };
 
-window.getPlaylist = async (id) => {
+storage.getPlaylist = async (id: string) => {
   const item = await storage.get(PLAYLIST_KEY_PREFIX + id);
   if (!item) return null;
-  const playlist: Playlist = typeof item === 'string' ? JSON.parse(item) : item;
+  const playlist: Playlist = item;
   playlist.saved = true;
   return playlist;
 };
 
-const ID_COUNTER_KEY = "PlaylistIdCounter";
-window.generatePlaylistId = async () => {
-    let count = await storage.get(ID_COUNTER_KEY, 0);
-    count++;
-    await storage.set(ID_COUNTER_KEY, count);
-    return count.toString();
-};
-
-window.generatePlaylistIds = async (size: number) => {
-    let count = await storage.get(ID_COUNTER_KEY, 0);
-    const ids = [];
-    for (let i = 0; i < size; i++) {
-        count++;
-        ids.push(count.toString());
-    }
-    await storage.set(ID_COUNTER_KEY, count);
-    return ids;
-};
-
-window.getSettings = async () => {
+storage.getSettings = async () => {
   const DEFAULT_SETTINGS: Settings = {
     openPlaylistEditorAfterCreation: true,
     openPlaylistPage: false,
@@ -186,19 +209,18 @@ window.getSettings = async () => {
     disableContextSaved: false,
     themeChoice: "device",
     viewMode: "simple",
+    privacyMode: false,
   };
   const settings = { ...DEFAULT_SETTINGS };
   const keys = Object.keys(DEFAULT_SETTINGS);
   for (const key of keys) {
-      settings[key] = await storage.get(key, DEFAULT_SETTINGS[key]);
+      settings[key] = await storage.get(key, (DEFAULT_SETTINGS as any)[key]);
   }
   return settings;
 };
 
 function savedPlaylistsChanged() {
-  if (typeof browser !== 'undefined') {
+  if (typeof browser !== 'undefined' && browser.runtime) {
       browser.runtime.sendMessage({ cmd: "update-saved-playlists" });
   }
 }
-
-export {};

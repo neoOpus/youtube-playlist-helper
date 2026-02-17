@@ -1,31 +1,25 @@
-import { derived, get, readable, writable, type Readable } from "svelte/store";
-import type { Theme, ThemeChoice } from "../types/model.js";
+import { writable } from 'svelte/store';
+import { storage } from '../services/core/storage-service';
 
-const themeStorageKey = "themeChoice";
+export const themeStore = writable('device');
 
-export const themeStore = writable<ThemeChoice>("device");
-
-export const currentTheme: Readable<Theme> = derived(themeStore, ($theme) =>
-  $theme == "device"
-    ? window.matchMedia?.("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light"
-    : $theme as Theme
-);
-
-function updatePageTheme() {
-  document.documentElement.dataset.theme = get(currentTheme);
+export async function initTheme() {
+    const val = await storage.get("themeChoice", "device");
+    themeStore.set(val);
+    themeStore.subscribe(v => {
+        storage.set("themeChoice", v);
+        applyTheme();
+    });
+    applyTheme();
 }
 
-export function initTheme() {
-  window
-    .fetchObject(themeStorageKey, "device")
-    .then((themeChoice: ThemeChoice) => {
-      themeStore.set(themeChoice);
-      themeStore.subscribe((val) => {
-        window.storeObject(themeStorageKey, val);
-        updatePageTheme();
-      });
-      updatePageTheme();
-    });
+function applyTheme() {
+    themeStore.subscribe(v => {
+        if (v === 'dark') document.body.classList.add('dark-theme');
+        else if (v === 'light') document.body.classList.remove('dark-theme');
+        else {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.classList.toggle('dark-theme', isDark);
+        }
+    })();
 }

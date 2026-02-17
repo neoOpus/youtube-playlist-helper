@@ -35,9 +35,12 @@
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@supabase/supabase-js": "^2.95.3",
+    "@types/lz-string": "^1.3.34",
+    "lz-string": "^1.5.0",
     "sirv-cli": "^1.0.0",
     "svelte-fa": "^3.0.4",
     "svelte-paginate": "^0.0.1",
-    "svelte-spa-router": "^3.1.0"
+    "svelte-spa-router": "^3.1.0",
+    "svelte-virtual-list": "^3.0.1"
   }
 }

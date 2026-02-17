@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { storage } from '../../services/core/storage-service';
   import { onMount } from "svelte";
   import type { Playlist, Video } from "../../types/model";
   import Sidebar from "../core/Sidebar.svelte";
@@ -19,14 +20,14 @@
   let videos2: Video[] = [];
 
   onMount(async () => {
-    playlists = await window.getPlaylists();
+    playlists = await storage.getPlaylists();
   });
 
   $: playlistOptions = playlists.map(p => ({ value: p.id, label: p.title }));
 
   async function loadPlaylist(id: string, side: 1 | 2) {
     if (!id) return;
-    const p = await window.getPlaylist(id);
+    const p = await storage.getPlaylist(id);
     const loadedVideos = await Promise.all(
       p.videos.map((vid) => window.videoService.fetchVideo(vid))
     );
@@ -84,11 +85,11 @@
   async function saveBoth() {
     if (playlist1) {
       playlist1.videos = videos1.map(v => v.videoId);
-      await window.savePlaylist(playlist1);
+      await storage.savePlaylist(playlist1);
     }
     if (playlist2) {
       playlist2.videos = videos2.map(v => v.videoId);
-      await window.savePlaylist(playlist2);
+      await storage.savePlaylist(playlist2);
     }
     window.success("Playlists synchronized and saved");
   }

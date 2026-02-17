@@ -46,6 +46,7 @@ export interface Settings {
   disableContextSaved: boolean;
   themeChoice: ThemeChoice;
   viewMode: ViewMode;
+  privacyMode: boolean;
 }
 
 export type ViewMode = "simple" | "advanced";

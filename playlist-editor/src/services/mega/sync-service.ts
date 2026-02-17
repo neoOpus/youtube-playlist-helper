@@ -1,24 +1,37 @@
+import { storage } from '../core/storage-service';
 import { supabaseService } from "./supabase-service";
+import { cryptoUtils } from "../core/crypto-utils";
 
 export interface SyncConfig {
   enabled: boolean;
-  type: "webdav" | "google" | "supabase";
+  type: "google" | "webdav" | "supabase";
   url?: string;
   username?: string;
   password?: string;
   lastSync?: number;
 }
 
+const CRYPTO_SECRET = "yph-extension-internal-key";
+
 class SyncService {
   async getSyncConfig(): Promise<SyncConfig> {
-    return await window.fetchObject("sync_config", {
+    const config = (await storage.get("sync_config", {
       enabled: false,
       type: "supabase",
-    });
+    })) as SyncConfig;
+
+    if (config.password) {
+        config.password = await cryptoUtils.decrypt(config.password, CRYPTO_SECRET);
+    }
+    return config;
   }
 
   async saveSyncConfig(config: SyncConfig) {
-    await window.storeObject("sync_config", config);
+    const toSave = { ...config };
+    if (toSave.password) {
+        toSave.password = await cryptoUtils.encrypt(toSave.password, CRYPTO_SECRET);
+    }
+    await storage.set("sync_config", toSave);
   }
 
   async syncNow() {
@@ -27,26 +40,21 @@ class SyncService {
 
     if (config.type === "supabase") {
         if (!supabaseService.isConfigured) throw new Error("Supabase is not configured");
-
-        const localPlaylists = await window.getPlaylists();
+        const localPlaylists = await storage.getPlaylists();
         const remotePlaylists = await supabaseService.fetchRemotePlaylists();
 
-        // Conflict Resolution Strategy: Last Write Wins based on 'version' and 'timestamp'
         for (const local of localPlaylists) {
             const remote = remotePlaylists.find(p => p.id === local.id);
             if (!remote || (local.version || 0) > (remote.version || 0)) {
-                // Local is newer or remote doesn't exist
                 await supabaseService.syncPlaylists([local]);
             } else if ((remote.version || 0) > (local.version || 0)) {
-                // Remote is newer
-                await window.savePlaylist(remote);
+                await storage.savePlaylist(remote);
             }
         }
 
-        // Handle playlists that exist on remote but not on local
         for (const remote of remotePlaylists) {
             if (!localPlaylists.find(p => p.id === remote.id)) {
-                await window.savePlaylist(remote);
+                await storage.savePlaylist(remote);
             }
         }
 
@@ -60,7 +68,7 @@ class SyncService {
 
   private async performWebDavSync(config: SyncConfig) {
     if (!config.url) throw new Error("WebDAV URL missing");
-    const allData = await window.fetchAllObjects();
+    const allData = await storage.getAll();
     const payload = JSON.stringify(allData);
     const headers = new Headers();
     if (config.username && config.password) {
@@ -84,25 +92,14 @@ class SyncService {
     if (config.type === "supabase") {
         const remote = await supabaseService.fetchRemotePlaylists();
         if (remote.length > 0) {
-            await window.importPlaylists(remote);
+            // storage.savePlaylist handles updates
+            for (const p of remote) {
+                await storage.savePlaylist(p);
+            }
             return true;
         }
     }
     return false;
-  }
-
-  async runHealthCheck() {
-      const playlists = await window.getPlaylists();
-      let issuesFound = 0;
-      for (const p of playlists) {
-          const validVideos = p.videos.filter(v => v && v.length > 5);
-          if (validVideos.length !== p.videos.length) {
-              p.videos = validVideos;
-              await window.savePlaylist(p);
-              issuesFound++;
-          }
-      }
-      return issuesFound;
   }
 }
 

@@ -1,3 +1,4 @@
+import { storage } from './storage-service';
 /// <reference path="../types/services.d.ts" />
 
 import type { Playlist } from "../../types/model.js";
@@ -5,41 +6,48 @@ import { metadataService } from "../mega/metadata-service.js";
 
 window.videoIdCount = 100;
 
-// https://regex101.com/r/rq2KLv/1
-window.youtubeRegexPattern =
-  /(?:https?:\/\/)?(?:www\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[-a-zA-Z0-9_]{11,}(?!\S))\/)|(?:\S*v=|v\/)))([-a-zA-Z0-9_]{11,})/.source;
+// Enhanced Regex for all YT variants including Shorts and Music
+const YOUTUBE_REGEX = /(?:https?:\/\/)?(?:www\.|m\.|music\.)?youtu(?:\.be\/|be\.com\/(?:watch\?v=|embed\/|shorts\/|v\/|live\/))([-a-zA-Z0-9_]{11,})/;
+window.youtubeRegexPattern = YOUTUBE_REGEX.source;
 
 class VideoService {
   YOUTUBE_URL_PREFIX = "https://www.youtube.com/watch?v=";
   THUMBNAIL_URL_PREFIX = "https://i.ytimg.com/vi/";
-  THUMBNAIL_URL_SUFFIX = "/default.jpg";
+  THUMBNAIL_URL_SUFFIX = "/mqdefault.jpg"; // mqdefault for better aspect ratio
+
+  private requestQueue: Promise<any> = Promise.resolve();
+  private cache = new Map();
 
   youtubeServiceURL = globalThis.youtubeServiceURL;
 
+  // Rate-limited fetch with caching
   async fetchVideo(videoId: string, sessionOnly = false) {
+    if (this.cache.has(videoId)) return this.cache.get(videoId);
+
+    const metadata = await metadataService.getVideoMetadata(videoId);
     let title = "";
     let channel = "";
-    let sessionVideoData = sessionStorage.getItem(videoId);
-    if (!sessionOnly && !sessionVideoData) {
-      try {
-        const res = await fetch(
-          `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
-        );
-        const json = await res.json();
-        title = json.title;
-        channel = json.author_name;
-        sessionStorage.setItem(videoId, JSON.stringify({ title, channel }));
-      } catch (e) {
-        console.log(e);
-      }
-    } else if (sessionVideoData) {
-      ({ title, channel } = JSON.parse(sessionVideoData));
-    } else {
-      title = "";
-      channel = "";
+
+    if (!sessionOnly) {
+        // Enqueue request to avoid burst rate-limiting
+        const videoData = await (this.requestQueue = this.requestQueue.then(async () => {
+            try {
+                const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+                if (!res.ok) throw new Error('API down');
+                const json = await res.json();
+                return { title: json.title, channel: json.author_name };
+            } catch {
+                return { title: "Private or Unavailable Video", channel: "Unknown" };
+            } finally {
+                // Throttle: 200ms between requests
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }));
+        title = videoData.title;
+        channel = videoData.channel;
     }
-    const metadata = await metadataService.getVideoMetadata(videoId);
-    return {
+
+    const videoObj = {
       id: window.videoIdCount++,
       videoId,
       url: this.YOUTUBE_URL_PREFIX + videoId,
@@ -48,31 +56,28 @@ class VideoService {
       thumbnailUrl: this.getVideoThumbnailUrl(videoId),
       ...metadata,
     };
+
+    if (title) this.cache.set(videoId, videoObj);
+    return videoObj;
   }
 
-  getVideoThumbnailUrl(videoId) {
-    if (!videoId) {
-      return null;
-    }
-    return this.THUMBNAIL_URL_PREFIX + videoId + this.THUMBNAIL_URL_SUFFIX;
+  getVideoThumbnailUrl(videoId: string) {
+    return videoId ? `${this.THUMBNAIL_URL_PREFIX}${videoId}${this.THUMBNAIL_URL_SUFFIX}` : null;
   }
 
   parseYoutubeId(url: string) {
-    const result = RegExp(window.youtubeRegexPattern, "i").exec(url);
-    if (result && result.length > 1) {
-      return result[1];
-    }
-    return null;
+    const result = YOUTUBE_REGEX.exec(url);
+    return (result && result.length > 1) ? result[1] : null;
   }
 
   parseYoutubeIds(text: string) {
-    let matches: RegExpExecArray;
-    let videoIds: string[] = [];
-    const regex = RegExp(window.youtubeRegexPattern, "ig");
-    while ((matches = regex.exec(text))) {
-      videoIds.push(matches[1]);
+    const regex = new RegExp(window.youtubeRegexPattern, "ig");
+    const videoIds: string[] = [];
+    let match;
+    while ((match = regex.exec(text))) {
+      videoIds.push(match[1]);
     }
-    return videoIds;
+    return [...new Set(videoIds)]; // De-duplicate during parse
   }
 
   async generatePlaylist(videoIds?: string[], title?: string) {
@@ -80,59 +85,51 @@ class VideoService {
     const date = new Date();
     return {
       id,
-      title: title ?? date.toLocaleString(),
+      title: title ?? `Collection ${date.toLocaleDateString()}`,
       videos: videoIds || [],
       timestamp: date.getTime(),
+      version: 1
     };
   }
 
   openPlaylistEditor(playlist: Playlist) {
-    const previousPage =
-      location.hash.length > 0 ? location.hash.substring(1) : "/";
+    const previousPage = location.hash.length > 0 ? location.hash.substring(1) : "/";
     history.pushState({ playlist, previousPage }, "", "#/editor");
     window.dispatchEvent(new Event("hashchange"));
   }
 
   PLAYLIST_LIMIT = 50;
   async openPlaylist(videoIds: string[]) {
-    const remainingVideoIds = [...videoIds];
-    // prettier-ignore
-    // @ts-ignore
-    const videoIdsChunks = new Array(Math.ceil(remainingVideoIds.length / this.PLAYLIST_LIMIT)).fill().map(_ => remainingVideoIds.splice(0, this.PLAYLIST_LIMIT));
-    const settings = await window.getSettings();
-    await Promise.all(
-      videoIdsChunks.map(async (videoIds) => {
-        const video_ids = videoIds.join(",");
+    const settings = await storage.getSettings();
+    const chunks = [];
+    for (let i = 0; i < videoIds.length; i += this.PLAYLIST_LIMIT) {
+        chunks.push(videoIds.slice(i, i + this.PLAYLIST_LIMIT));
+    }
+
+    for (const chunk of chunks) {
+        const video_ids = chunk.join(",");
         let url = `${this.youtubeServiceURL}/watch_videos?video_ids=${video_ids}`;
-        const data = await (await fetch(url)).text();
-        const [_, listId] = /og:video:url[^>]+\?list=([^"']+)/.exec(data);
-        if (listId) {
-          if (settings.openPlaylistPage) {
-            url = `https://www.youtube.com/playlist?list=${listId}`;
-          } else {
-            url = `https://www.youtube.com/watch?v=${videoIds[0]}&list=${listId}`;
-            // Fix playlist not displayed
-            await Promise.all([
-              fetch(
-                `${this.youtubeServiceURL}/watch?v=${videoIds[0]}&list=${listId}`
-              ),
-              fetch(
-                `${this.youtubeServiceURL}/watch?v=${videoIds[0]}&list=${listId}`
-              ),
-            ]);
-          }
-        } else if (settings.openPlaylistPage) {
-          window.error(
-            "Unable to retrieve playlist id. Directly playing videos instead..."
-          );
+
+        try {
+            const data = await (await fetch(url)).text();
+            const match = /og:video:url[^>]+\?list=([^"']+)/.exec(data);
+            const listId = match ? match[1] : null;
+
+            if (listId) {
+                url = settings.openPlaylistPage ?
+                    `https://www.youtube.com/playlist?list=${listId}` :
+                    `https://www.youtube.com/watch?v=${chunk[0]}&list=${listId}`;
+            }
+
+            if (typeof browser !== "undefined") {
+                await browser.tabs.create({ url });
+            } else {
+                window.open(url, "_blank");
+            }
+        } catch (e) {
+            window.error("Failed to generate YouTube player session.");
         }
-        if (typeof browser != "undefined") {
-          return browser.tabs.create({ url });
-        } else {
-          window.open(url, "_blank");
-        }
-      })
-    );
+    }
   }
 }
 

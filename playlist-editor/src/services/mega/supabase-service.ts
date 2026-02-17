@@ -1,3 +1,4 @@
+import { storage } from '../core/storage-service';
 import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 
 const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || '';
@@ -12,8 +13,8 @@ class SupabaseService {
   }
 
   async init() {
-    const url = await window.fetchObject("supabase_url", SUPABASE_URL);
-    const key = await window.fetchObject("supabase_key", SUPABASE_ANON_KEY);
+    const url = await storage.get("supabase_url", SUPABASE_URL);
+    const key = await storage.get("supabase_key", SUPABASE_ANON_KEY);
 
     if (url && key) {
       this.client = createClient(url, key);

@@ -1,3 +1,4 @@
+import { storage } from '../core/storage-service';
 import type { Video, Playlist } from "../../types/model";
 
 export interface AIAgent {
@@ -65,7 +66,7 @@ class AIService {
                       return "console.log('Exporting to Notion...', context.videos); window.success('Data sent to Notion mock API');";
                   }
                   if (prompt.toLowerCase().includes('clean')) {
-                      return "const clean = context.videos.filter(v => !v.title.includes('DELETED')); context.playlist.videos = clean.map(v => v.videoId); await window.savePlaylist(context.playlist); await context.refresh();";
+                      return "const clean = context.videos.filter(v => !v.title.includes('DELETED')); context.playlist.videos = clean.map(v => v.videoId); await storage.savePlaylist(context.playlist); await context.refresh();";
                   }
                   return "console.log('Custom Action Executed', context);";
               }
