@@ -32,6 +32,7 @@
     actionLogger,
     metadataService,
     videoService,
+    sanitize,
     storageService,
     aiService
   } from "@yph/core";
@@ -421,7 +422,7 @@
     endTitleEdit();
   }
   function endTitleEdit() {
-    const newTitle = playlist.title;
+    const newTitle = sanitize(playlist.title); playlist.title = newTitle;
     if (newTitle !== originalTitle) {
         const prevTitle = originalTitle;
         actionLogger.log("Change title", () => {

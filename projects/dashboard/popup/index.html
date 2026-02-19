@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <div id="main-menu" class="popup-menu">
+      <div id="open-editor" class="menu-item">Open playlist editor</div>
+      <div id="from-builder" class="menu-item">Open playlist builder</div>
+      <div id="from-bookmark" class="menu-item">Create from bookmarks</div>
+      <div id="from-urls" class="menu-item">Create from URLs</div>
+      <div id="from-current-links" class="menu-item">Scan current tab</div>
+      <div id="open-settings" class="menu-item">Settings</div>
+    </div>
+    <div id="from-bookmark-menu" class="popup-menu" style="display: none">
+      <div class="back-item menu-item">Back</div>
+      <div id="bookmarks"></div>
+    </div>
+    <div id="from-urls-menu" class="popup-menu" style="display: none">
+      <div class="back-item menu-item">Back</div>
+      <textarea id="urlsTextarea" placeholder="YouTube URLs"></textarea>
+      <div id="create-from-urls" class="menu-item">Create Playlist</div>
+    </div>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>

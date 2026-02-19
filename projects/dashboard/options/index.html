@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Options</title>
+    <style>
+      body { padding: 20px; font-family: sans-serif; }
+      .option { margin-bottom: 10px; }
+      label { margin-left: 10px; }
+    </style>
+  </head>
+  <body>
+    <h1>YouTube Playlist Helper Options</h1>
+    <div class="option">
+      <input type="checkbox" id="saveCreatedPlaylists" />
+      <label for="saveCreatedPlaylists">Save created playlists automatically</label>
+    </div>
+    <div class="option">
+      <input type="checkbox" id="openPlaylistEditorAfterCreation" />
+      <label for="openPlaylistEditorAfterCreation">Open editor after creating playlist</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" id="disableThumbnails" />
+        <label for="disableThumbnails">Disable thumbnails in editor</label>
+    </div>
+    <div class="option">
+        <label>Theme:</label>
+        <select id="themeChoice">
+            <option value="device">Follow System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </select>
+    </div>
+    <!-- Add more options as needed -->
+    <button id="save">Save</button>
+    <div id="status"></div>
+    <script type="module" src="./options.ts"></script>
+  </body>
+</html>

@@ -12,17 +12,20 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../extension/editor',
-    emptyOutDir: true,
+    outDir: '../extension',
+    emptyOutDir: false,
     rollupOptions: {
+      input: {
+        'editor/index': path.resolve(__dirname, 'editor/index.html'),
+        background: path.resolve(__dirname, '../extension/background.ts'),
+        'popup/index': path.resolve(__dirname, 'popup/index.html'),
+        'options/index': path.resolve(__dirname, 'options/index.html'),
+      },
       output: {
-        entryFileNames: 'build/[name].js',
+        entryFileNames: '[name].js',
         chunkFileNames: 'build/[name].js',
         assetFileNames: 'build/[name].[ext]',
       },
     },
-  },
-  server: {
-    port: 5000,
   },
 });

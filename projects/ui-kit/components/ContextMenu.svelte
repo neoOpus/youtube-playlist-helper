@@ -25,12 +25,16 @@
     style="top: {y}px; left: {x}px;"
     on:mousedown|stopPropagation
     on:keydown={handleKeydown}
+    role="menu"
+    tabindex="-1"
   >
-    <ul>
+    <ul role="none">
       {#each items as item}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
         <li
+          role="menuitem"
+          tabindex="0"
           class:danger={item.danger}
           on:click={() => { item.action(); close(); }}
         >
@@ -81,9 +85,10 @@
     gap: 10px;
     font-size: 14px;
     transition: background 0.1s;
+    outline: none;
   }
 
-  li:hover {
+  li:hover, li:focus {
     background: rgba(0, 0, 0, 0.05);
   }
 
@@ -91,7 +96,7 @@
     color: #dc3545;
   }
 
-  li.danger:hover {
+  li.danger:hover, li.danger:focus {
     background: #fff5f5;
   }
 
