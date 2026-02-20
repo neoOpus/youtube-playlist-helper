@@ -1,34 +1,52 @@
 import Dexie, { type Table } from 'dexie';
+import { z } from 'zod';
+import { type Delta, NanoDelta } from './compression';
 
-export interface FormEntry {
-  id?: number;
-  formId: string;      // Logical form identifier
-  fieldId: string;     // Unique field identifier (path/heuristic)
-  fieldName: string;   // Field name/label
-  fieldType: string;   // input, textarea, contenteditable
-  value: string;       // The saved text
-  timestamp: number;   // When it was saved
-  domain: string;      // Hostname
-  url: string;         // Full URL
-  sessionId: string;   // Grouped session
-}
+export const FormEntrySchema = z.object({
+  id: z.number().optional(),
+  domain: z.string(),
+  url: z.string(),
+  fieldId: z.string(),
+  fieldName: z.string(),
+  fieldType: z.string(),
+  value: z.string(), // Reconstructed value or snapshot
+  delta: z.any().optional(), // Delta from previous entry
+  timestamp: z.number(),
+  isSubmitted: z.boolean(),
+  version: z.string()
+});
 
-export interface FormMetadata {
-  id?: number;
-  domain: string;
-  isBlacklisted: boolean;
-  lastUsed: number;
-}
+export type FormEntry = z.infer<typeof FormEntrySchema>;
 
 export class PhoenixDatabase extends Dexie {
   entries!: Table<FormEntry>;
-  metadata!: Table<FormMetadata>;
 
   constructor() {
     super('PhoenixRecoveryDB');
     this.version(1).stores({
-      entries: '++id, [domain+fieldId], timestamp, sessionId, formId',
-      metadata: '++id, domain'
+      entries: '++id, domain, [domain+fieldId], timestamp, isSubmitted'
+    });
+  }
+
+  async save(entry: Omit<FormEntry, 'id' | 'version' | 'delta'>) {
+    return this.transaction('rw', this.entries, async () => {
+      // Find previous entry for this field to calculate delta
+      const prev = await this.entries
+        .where({ domain: entry.domain, fieldId: entry.fieldId })
+        .reverse()
+        .first();
+
+      let delta = null;
+      if (prev && entry.value.length > 100) {
+         delta = NanoDelta.diff(prev.value, entry.value);
+      }
+
+      const data = FormEntrySchema.parse({
+        ...entry,
+        delta,
+        version: '2026.02.15.01'
+      });
+      return await this.entries.put(data);
     });
   }
 }

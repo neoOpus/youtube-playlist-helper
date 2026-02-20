@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Phoenix Form Recovery",
-  "version": "0.1.0",
+  "version": "2026.02.15.01",
+  "author": "Anoir Ben Tanfous aka neoOpus",
   "description": "2026 Modern Form Recovery - Autosave and intelligent restore.",
   "action": {
     "default_popup": "src/popup/index.html"

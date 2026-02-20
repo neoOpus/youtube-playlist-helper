@@ -10,8 +10,8 @@ export default defineConfig({
       userscript: {
         name: 'Phoenix SOTA Form Recovery',
         namespace: 'https://github.com/user/phoenix-recovery',
-        version: '1.0.0',
-        author: 'User',
+        version: '2026.02.15.01',
+        author: 'Anoir Ben Tanfous aka neoOpus',
         description: 'Experimental State-of-the-Art Form Recovery Userscript',
         match: ['*://*/*'],
         grant: ['GM_addStyle', 'GM_getValue', 'GM_setValue'],
