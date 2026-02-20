@@ -1,13 +1,20 @@
 import { Notyf } from "notyf";
 
-let notify: any;
-let inform: any;
+interface INotyf {
+    error: (msg: string) => void;
+    success: (msg: string) => void;
+    open: (options: { type: string, message: string }) => void;
+    dismissAll: () => void;
+}
+
+let notify: INotyf | null = null;
+let inform: INotyf | null = null;
 
 if (typeof window !== 'undefined') {
     notify = new Notyf({
         duration: 5000,
         dismissible: true,
-    });
+    }) as unknown as INotyf;
 
     inform = new Notyf({
         duration: 5000,
@@ -19,7 +26,7 @@ if (typeof window !== 'undefined') {
                 icon: false,
             },
         ],
-    });
+    }) as unknown as INotyf;
 }
 
 export const notificationService = {
@@ -40,16 +47,11 @@ export const notificationService = {
   }
 };
 
-if (typeof window !== 'undefined') {
-    (window as any).error = notificationService.error;
-    (window as any).success = notificationService.success;
-    (window as any).info = notificationService.info;
-}
-
 /**
  * Basic sanitization for strings.
  */
 export function sanitize(str: string): string {
+    if (!str) return "";
     return str
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")

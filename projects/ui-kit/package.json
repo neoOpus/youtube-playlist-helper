@@ -1,8 +1,9 @@
 {
   "name": "@yph/ui-kit",
-  "version": "1.0.0",
+  "version": "3.1.20260220",
   "private": true,
   "scripts": {
     "build": "echo 'UI-Kit built.'"
-  }
+  },
+  "author": "Anoir Ben Tanfous aka neoOpus"
 }

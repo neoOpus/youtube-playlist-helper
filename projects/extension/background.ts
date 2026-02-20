@@ -1,4 +1,5 @@
-import { storageService, videoService, playlistService } from "@yph/core";
+import { storageService, videoService } from "@yph/core";
+import type { Settings } from "@yph/core";
 
 const playlistBuilderId = "yphPlaylistBuilder";
 const playlistBuilderPageId = "yphPlaylistBuilderPage";
@@ -11,16 +12,16 @@ const addVideoToPlaylistPageItemPrefix = `${addVideoToPlaylistPageId}${idSep}`;
 const contextMenuIds: string[] = [];
 const addVideoToPlaylistItemsContextIds: string[] = [];
 
-// Initialize
+/**
+ * Modernized Background Service Worker.
+ * Engineered for excellence by Anoir Ben Tanfous aka neoOpus.
+ */
 (async () => {
     const settings = await storageService.getSettings();
-    buildContextMenus(settings);
+    await buildContextMenus(settings);
 })();
 
-/**
- * Builds the context menus based on settings.
- */
-async function buildContextMenus(settings: any) {
+async function buildContextMenus(settings: Settings) {
   if (!settings.disableContextBuilder) {
     chrome.contextMenus.create({
       id: playlistBuilderId,
@@ -86,7 +87,7 @@ async function clearContextMenus() {
   addVideoToPlaylistItemsContextIds.length = 0;
 }
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info) => {
   const clickedMenuId = info.menuItemId.toString();
   try {
     if (clickedMenuId === playlistBuilderId || clickedMenuId === playlistBuilderPageId) {
@@ -94,8 +95,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     } else if (clickedMenuId.startsWith(addVideoToPlaylistItemPrefix) || clickedMenuId.startsWith(addVideoToPlaylistPageItemPrefix)) {
       await addVideoToPlaylist(info, clickedMenuId);
     }
-  } catch (error: any) {
-    notify(error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    notify(message);
   }
 });
 
@@ -145,12 +147,12 @@ async function createPlaylist(videoIds: string[], title?: string) {
   if (videoIds.length === 0) return;
   const playlist = await videoService.generatePlaylist(videoIds, title);
   const settings = await storageService.getSettings();
-  let playlistId;
+  let playlistId: string | undefined;
   if (settings.saveCreatedPlaylists) {
     playlistId = await storageService.savePlaylist(playlist);
   }
   if (settings.openPlaylistEditorAfterCreation) {
-    const url = settings.saveCreatedPlaylists
+    const url = settings.saveCreatedPlaylists && playlistId
         ? `/editor/index.html?id=${playlistId}#/editor`
         : `/editor/index.html?videoIds=${videoIds.join(",")}#/editor`;
     chrome.tabs.create({ url: chrome.runtime.getURL(url) });
@@ -176,7 +178,7 @@ async function addVideoToPlaylistBuilder(info: chrome.contextMenus.OnClickData) 
   await saveBuilder(playlistBuilder);
 
   const settings = await storageService.getSettings();
-  let builderTabs = [];
+  let builderTabs: chrome.tabs.Tab[] = [];
   if (settings.openPlaylistBuilderAfterAdd) {
     builderTabs = await openPlaylistBuilderTab();
   } else {
@@ -201,21 +203,21 @@ async function addVideoToPlaylist(info: chrome.contextMenus.OnClickData, clicked
   }
 }
 
-function parseVideoId(info: chrome.contextMenus.OnClickData) {
+function parseVideoId(info: chrome.contextMenus.OnClickData): string {
   const link = info.linkUrl || info.pageUrl;
   const videoId = link && videoService.parseYoutubeId(link);
   if (!videoId) throw new Error("Invalid YouTube video link: " + link);
   return videoId;
 }
 
-async function getPlaylistBuilderTab() {
+async function getPlaylistBuilderTab(): Promise<chrome.tabs.Tab[]> {
   const tabs = await chrome.tabs.query({
     url: chrome.runtime.getURL(`/editor/index.html`),
   });
   return tabs.filter(tab => tab.url && new URL(tab.url).hash === "#/playlist-builder");
 }
 
-async function openPlaylistBuilderTab() {
+async function openPlaylistBuilderTab(): Promise<chrome.tabs.Tab[]> {
   const builderTabs = await getPlaylistBuilderTab();
   if (builderTabs.length === 0) {
     const tab = await chrome.tabs.create({

@@ -32,13 +32,13 @@ export const syncService = {
     const config = await this.getSyncConfig();
     if (!config.enabled) return;
 
-    eventBus.emit(EVENTS.SYNC_STARTED);
+    eventBus.emit(EVENTS.SYNC_STARTED, undefined);
     console.log("Starting sync with provider:", config.provider);
 
     try {
         // Logic for WebDAV or Google Drive would go here
         // (Previously implemented in webdavService, we could call it here)
-        eventBus.emit(EVENTS.SYNC_COMPLETED);
+        eventBus.emit(EVENTS.SYNC_COMPLETED, undefined);
     } catch (error) {
         console.error("Sync failed:", error);
         eventBus.emit(EVENTS.SYNC_ERROR, error);

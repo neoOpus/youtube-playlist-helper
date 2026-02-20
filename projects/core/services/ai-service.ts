@@ -78,18 +78,10 @@ export const aiService = {
   },
 
   /**
-   * Calculates a relevance score for a playlist based on keywords.
+   * Finds related videos within a set based on a target video's content.
    */
-  calculatePlaylistRelevance(playlist: Playlist, keywords: string[]): number {
-      let score = 0;
-      const text = (playlist.title + " " + (playlist.groups?.join(" ") || "")).toLowerCase();
-
-      keywords.forEach(word => {
-          const lowerWord = word.toLowerCase();
-          if (text.includes(lowerWord)) score += 1;
-          if (playlist.title.toLowerCase().includes(lowerWord)) score += 2;
-      });
-
-      return score;
+  findRelatedVideos(target: Video, pool: Video[]): Video[] {
+      const keywords = [...(target.aiTags || []), ...target.title.toLowerCase().split(/\s+/)].filter(w => w.length > 3);
+      return this.sortByRelevance(pool.filter(v => v.id !== target.id), keywords).slice(0, 5);
   }
 };

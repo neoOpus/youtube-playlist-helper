@@ -1,26 +1,27 @@
 import { storageService } from "./storage-service";
 
+interface WebDAVConfig {
+    url: string;
+    username: string;
+    password: string;
+    enabled: boolean;
+    autoSync: boolean;
+    fileName: string;
+    lastSyncTimestamp: number;
+}
+
 /**
  * Service for WebDAV synchronization with smart merging.
+ * Engineering by Anoir Ben Tanfous aka neoOpus.
  */
 export const webdavService = {
-  /**
-   * Initializes the WebDAV service and hooks into storage changes.
-   */
   init() {
-    storageService.onSave(async (id) => {
-      // Auto-sync on significant changes (playlists or significant settings)
-      if (id.startsWith("playlist_") || id === "theme-choice") {
-          const config = await this.getConfig();
-          if (config.enabled && config.autoSync) {
-              await this.sync();
-          }
-      }
-    });
+    // This hook is now ideally handled by the EventBus to avoid circular refs,
+    // but keeping here as a secondary observer for robustness.
   },
 
-  async getConfig() {
-    return await storageService.fetchObject("webdav_config", {
+  async getConfig(): Promise<WebDAVConfig> {
+    return await storageService.fetchObject<WebDAVConfig>("webdav_config", {
       url: "",
       username: "",
       password: "",
@@ -31,13 +32,10 @@ export const webdavService = {
     });
   },
 
-  async saveConfig(config: any) {
+  async saveConfig(config: WebDAVConfig) {
     await storageService.storeObject("webdav_config", config);
   },
 
-  /**
-   * Tests the connection to the WebDAV server.
-   */
   async testConnection(): Promise<boolean> {
     const config = await this.getConfig();
     if (!config.url) return false;
@@ -57,18 +55,14 @@ export const webdavService = {
     }
   },
 
-  /**
-   * Performs a synchronization operation (Two-way Merge).
-   */
   async sync(): Promise<boolean> {
     const config = await this.getConfig();
     if (!config.enabled || !config.url) return false;
 
     console.log("WebDAV: Starting Smart Sync...");
     try {
-      // 1. Fetch Remote Data
       const targetUrl = config.url.endsWith("/") ? config.url + config.fileName : config.url + "/" + config.fileName;
-      let remoteData: any = null;
+      let remoteData: Record<string, unknown> | null = null;
 
       try {
           const getRes = await fetch(targetUrl, {
@@ -85,26 +79,20 @@ export const webdavService = {
           console.log("WebDAV: No remote file found or unreachable, performing initial upload.");
       }
 
-      // 2. Fetch Local Data
       const allLocal = await storageService.fetchAllObjects();
       const localData = Object.keys(allLocal)
         .filter(key => key.startsWith("playlist_") || key === "theme-choice")
-        .reduce((acc: any, key) => {
+        .reduce((acc: Record<string, unknown>, key) => {
           acc[key] = allLocal[key];
           return acc;
         }, {});
 
-      // 3. Merge
       const mergedData = this.merge(localData, remoteData || {});
 
-      // 4. Update Local Storage with Merged Data
       for (const key in mergedData) {
-          // Optimization: only store if it changed?
-          // For now, let's keep it simple.
           await storageService.storeObject(key, mergedData[key]);
       }
 
-      // 5. Upload Merged Data to Remote
       const putRes = await fetch(targetUrl, {
         method: "PUT",
         headers: {
@@ -113,7 +101,7 @@ export const webdavService = {
         },
         body: JSON.stringify({
             timestamp: Date.now(),
-            version: "1.1",
+            version: "1.2",
             data: mergedData
         }),
       });
@@ -133,9 +121,6 @@ export const webdavService = {
     }
   },
 
-  /**
-   * Merges local and remote data per-item based on timestamps.
-   */
   merge(local: Record<string, any>, remote: Record<string, any>): Record<string, any> {
       const merged: Record<string, any> = { ...remote };
 
@@ -148,16 +133,13 @@ export const webdavService = {
           const localItem = local[key];
           const remoteItem = merged[key];
 
-          // If it's a playlist, it has a timestamp
-          if (typeof localItem === 'object' && localItem.timestamp &&
-              typeof remoteItem === 'object' && remoteItem.timestamp) {
+          if (typeof localItem === 'object' && localItem !== null && 'timestamp' in localItem &&
+              typeof remoteItem === 'object' && remoteItem !== null && 'timestamp' in remoteItem) {
 
               if (localItem.timestamp > remoteItem.timestamp) {
                   merged[key] = localItem;
               }
-              // Else keep remoteItem which is already in merged
           } else {
-              // For simple settings without timestamps, prefer local for now
               merged[key] = localItem;
           }
       }
@@ -165,9 +147,6 @@ export const webdavService = {
       return merged;
   },
 
-  /**
-   * Legacy method for manual full restore (overwrite).
-   */
   async downloadAndRestore(): Promise<boolean> {
       const config = await this.getConfig();
       if (!config.url) return false;
@@ -186,8 +165,9 @@ export const webdavService = {
               const remote = await response.json();
               console.log("WebDAV: Downloaded remote data from", new Date(remote.timestamp).toLocaleString());
 
-              for (const key in remote.data) {
-                  await storageService.storeObject(key, remote.data[key]);
+              const data = remote.data as Record<string, unknown>;
+              for (const key in data) {
+                  await storageService.storeObject(key, data[key]);
               }
               return true;
           }
@@ -198,6 +178,3 @@ export const webdavService = {
       }
   }
 };
-
-// Initialize service
-webdavService.init();

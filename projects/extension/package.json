@@ -1,8 +1,9 @@
 {
   "name": "@yph/extension",
-  "version": "1.0.0",
+  "version": "3.1.20260220",
   "private": true,
   "scripts": {
     "build": "echo 'Extension source is static, Dashboard build handles editor files.'"
-  }
+  },
+  "author": "Anoir Ben Tanfous aka neoOpus"
 }

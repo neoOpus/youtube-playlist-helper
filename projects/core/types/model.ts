@@ -32,7 +32,6 @@ export interface Playlist {
 }
 
 export interface Settings {
-  [id: string]: any;
   openPlaylistEditorAfterCreation: boolean;
   openPlaylistPage: boolean;
   closeAfterCombine: boolean;

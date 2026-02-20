@@ -12,7 +12,7 @@
   } from "@yph/ui-kit";
   import type { Video } from "@yph/core";
   import VideoIdCard from "./VideoIdCard.svelte";
-  import { metadataService, alternativesService } from "@yph/core";
+  import { metadataService, alternativesService, notificationService } from "@yph/core";
 
   export let video: Video;
   export let active: boolean;
@@ -70,7 +70,7 @@
     { label: "Open in YouTube", action: videoClicked },
     { label: "Copy URL", action: () => {
         navigator.clipboard.writeText(video.url);
-        if ((window as any).success) (window as any).success("Copied to clipboard");
+        if (notificationService.success) notificationService.success("Copied to clipboard");
     } },
     { label: video.watched ? "Mark as Unwatched" : "Mark as Watched", action: () => {
         video.watched = !video.watched;

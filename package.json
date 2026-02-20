@@ -7,5 +7,7 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm test --workspaces"
-  }
+  },
+  "version": "3.1.20260220",
+  "author": "Anoir Ben Tanfous aka neoOpus"
 }

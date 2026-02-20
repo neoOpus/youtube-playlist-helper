@@ -1,4 +1,4 @@
-# YouTube Playlist Helper (Modular Edition)
+# YouTube Playlist Helper by neoOpus (Modular Edition)
 
 A powerful, modular YouTube playlist manager and creator, refactored for the modern web.
 

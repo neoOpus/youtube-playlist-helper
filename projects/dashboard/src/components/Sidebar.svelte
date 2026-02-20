@@ -30,6 +30,10 @@
         location.href.endsWith(page) || location.href.endsWith(page + "/")
     );
   }
+
+  function triggerSearch() {
+    window.dispatchEvent(new KeyboardEvent("keydown", {key: "k", ctrlKey: true}));
+  }
 </script>
 
 <CollapsibleSidebar bind:collapsed on:toggle={handleToggle}>
@@ -38,6 +42,9 @@
     <a href="#/saved" class:active={isActive("saved")} title="Saved playlists">
         <span>📁</span> {#if !collapsed}<span>Saved playlists</span>{/if}
     </a>
+    <button class="nav-btn" on:click={triggerSearch} title="Command Palette (Ctrl+K)">
+        <span>🔍</span> {#if !collapsed}<span>Search (Ctrl+K)</span>{/if}
+    </button>
     <a href="#/new" class:active={isActive("new")} title="New playlist">
         <span>➕</span> {#if !collapsed}<span>New playlist</span>{/if}
     </a>
@@ -79,7 +86,7 @@
       padding: 0 0.5rem;
   }
 
-  a {
+  a, .nav-btn {
     padding: 0.8rem 1rem;
     margin-bottom: 0.4rem;
     text-decoration: none;
@@ -89,9 +96,15 @@
     align-items: center;
     gap: 10px;
     transition: all 0.2s;
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
   }
 
-  a:hover {
+  a:hover, .nav-btn:hover {
     background-color: var(--hover-color);
   }
 
@@ -102,7 +115,7 @@
   }
 
   a:hover,
-  a.active {
+  a.active, .nav-btn:hover {
     border-radius: 0.5rem;
   }
 

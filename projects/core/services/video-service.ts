@@ -16,6 +16,7 @@ export const youtubeRegexPattern =
 
 /**
  * Service for interacting with YouTube video data and URLs.
+ * Refined and architected by Anoir Ben Tanfous aka neoOpus.
  */
 class VideoService {
   private readonly YOUTUBE_URL_PREFIX = "https://www.youtube.com/watch?v=";
@@ -23,15 +24,12 @@ class VideoService {
   private readonly THUMBNAIL_URL_SUFFIX = "/default.jpg";
 
   /**
-   * The base URL for YouTube service calls, configurable via globalThis.
+   * The base URL for YouTube service calls.
    */
-  private readonly youtubeServiceURL = (globalThis as any).youtubeServiceURL || "https://www.youtube.com";
+  private readonly youtubeServiceURL = "https://www.youtube.com";
 
   /**
    * Fetches video information, including metadata.
-   * @param videoId The YouTube video ID.
-   * @param sessionOnly If true, only fetches data from session cache or returns empty.
-   * @returns A promise resolving to a Video object.
    */
   async fetchVideo(videoId: string, sessionOnly = false): Promise<Video> {
     let title = "";
@@ -71,31 +69,16 @@ class VideoService {
     };
   }
 
-  /**
-   * Generates the thumbnail URL for a video.
-   * @param videoId The YouTube video ID.
-   * @returns The thumbnail URL.
-   */
   getVideoThumbnailUrl(videoId: string): string | null {
     if (!videoId) return null;
     return this.THUMBNAIL_URL_PREFIX + videoId + this.THUMBNAIL_URL_SUFFIX;
   }
 
-  /**
-   * Parses a single YouTube video ID from a URL.
-   * @param url The YouTube URL.
-   * @returns The video ID or null if not matched.
-   */
   parseYoutubeId(url: string): string | null {
     const result = RegExp(youtubeRegexPattern, "i").exec(url);
     return result && result.length > 1 ? result[1] : null;
   }
 
-  /**
-   * Parses all YouTube video IDs from a block of text.
-   * @param text The text containing YouTube URLs.
-   * @returns An array of unique video IDs.
-   */
   parseYoutubeIds(text: string): string[] {
     let matches: RegExpExecArray | null;
     const videoIds: Set<string> = new Set();
@@ -106,12 +89,6 @@ class VideoService {
     return Array.from(videoIds);
   }
 
-  /**
-   * Generates a new Playlist object.
-   * @param videoIds Initial video IDs.
-   * @param title Playlist title.
-   * @returns A promise resolving to the new Playlist.
-   */
   async generatePlaylist(videoIds?: string[], title?: string): Promise<Playlist> {
     const id = await storageService.generatePlaylistId();
     const date = new Date();
@@ -123,16 +100,12 @@ class VideoService {
     };
   }
 
-  /**
-   * Opens multiple videos as a YouTube playlist in a new tab.
-   * @param videoIds Array of video IDs.
-   */
   async openPlaylist(videoIds: string[]) {
     if (videoIds.length === 0) return;
 
     const PLAYLIST_LIMIT = 50;
     const remainingVideoIds = [...videoIds];
-    const videoIdsChunks = [];
+    const videoIdsChunks: string[][] = [];
     while (remainingVideoIds.length > 0) {
         videoIdsChunks.push(remainingVideoIds.splice(0, PLAYLIST_LIMIT));
     }
@@ -154,19 +127,14 @@ class VideoService {
                 url = `https://www.youtube.com/playlist?list=${listId}`;
               } else {
                 url = `https://www.youtube.com/watch?v=${chunk[0]}&list=${listId}`;
-                // Warm up the playlist by fetching it twice (fixes YT quirk)
-                await Promise.all([
-                  fetch(`${this.youtubeServiceURL}/watch?v=${chunk[0]}&list=${listId}`),
-                  fetch(`${this.youtubeServiceURL}/watch?v=${chunk[0]}&list=${listId}`),
-                ]);
               }
             }
         } catch (err) {
             console.warn("Failed to retrieve YouTube listId, using fallback URL:", err);
         }
 
-        if (typeof browser !== "undefined" && browser.tabs) {
-          return browser.tabs.create({ url });
+        if (typeof chrome !== "undefined" && chrome.tabs) {
+          chrome.tabs.create({ url });
         } else {
           window.open(url, "_blank");
         }
@@ -176,8 +144,3 @@ class VideoService {
 }
 
 export const videoService = new VideoService();
-
-// Global legacy support
-if (typeof window !== 'undefined') {
-    (window as any).videoService = videoService;
-}

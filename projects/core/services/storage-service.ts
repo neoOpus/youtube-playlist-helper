@@ -6,13 +6,13 @@ import { eventBus, EVENTS } from "./event-bus";
 const PLAYLIST_KEY_PREFIX = "playlist_";
 const ID_COUNTER_KEY = "PlaylistIdCounter";
 
-function playlistToDto(playlist: Playlist) {
+function playlistToDto(playlist: Playlist): Omit<Playlist, 'loadedVideos'> {
   const dto = { ...playlist };
   delete dto.loadedVideos;
   return dto;
 }
 
-function notifySavedPlaylistsChanged() {
+function notifySavedPlaylistsChanged(): void {
   if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
     chrome.runtime.sendMessage({
       cmd: "update-saved-playlists",
@@ -57,14 +57,13 @@ export const storageService = {
   },
 
   async storeObject<T>(id: string, obj: T): Promise<void> {
-    const value = obj;
     if (typeof chrome !== "undefined" && chrome.storage) {
-      await chrome.storage.local.set({ [id]: value });
+      await chrome.storage.local.set({ [id]: obj });
     } else {
-      if (value === null) {
+      if (obj === null) {
         localStorage.removeItem(id);
       } else {
-        localStorage.setItem(id, JSON.stringify(value));
+        localStorage.setItem(id, JSON.stringify(obj));
       }
     }
   },
@@ -100,7 +99,7 @@ export const storageService = {
   async generatePlaylistId(): Promise<string> {
     if (typeof chrome !== "undefined" && chrome.storage) {
       const obj = await chrome.storage.local.get(ID_COUNTER_KEY);
-      let count = obj[ID_COUNTER_KEY] || 0;
+      let count = (obj[ID_COUNTER_KEY] as number) || 0;
       count++;
       await chrome.storage.local.set({ [ID_COUNTER_KEY]: count });
       return count.toString();
@@ -114,9 +113,9 @@ export const storageService = {
     if (!playlist.saved) {
       id = await this.generatePlaylistId();
     }
-    playlist = { ...playlist, timestamp: playlist.timestamp || Date.now(), id };
-    await this.storeObject(PLAYLIST_KEY_PREFIX + id, playlistToDto(playlist));
-    eventBus.emit(EVENTS.PLAYLIST_SAVED, playlist);
+    const updatedPlaylist = { ...playlist, timestamp: playlist.timestamp || Date.now(), id };
+    await this.storeObject(PLAYLIST_KEY_PREFIX + id, playlistToDto(updatedPlaylist));
+    eventBus.emit(EVENTS.PLAYLIST_SAVED, updatedPlaylist);
     notifySavedPlaylistsChanged();
     return id;
   },
@@ -148,10 +147,14 @@ export const storageService = {
 
   async getSettings(): Promise<Settings> {
     const settings = { ...DEFAULT_SETTINGS };
-    for (const key of Object.keys(DEFAULT_SETTINGS)) {
-        const k = key as keyof Settings;
-        settings[k] = await this.fetchObject(k, DEFAULT_SETTINGS[k]) as any;
-    }
+    const keys = Object.keys(DEFAULT_SETTINGS) as Array<keyof Settings>;
+
+    await Promise.all(keys.map(async (key) => {
+        const value = await this.fetchObject(key, DEFAULT_SETTINGS[key]);
+        // @ts-ignore - dynamic key assignment
+        settings[key] = value;
+    }));
+
     return settings;
   }
 };

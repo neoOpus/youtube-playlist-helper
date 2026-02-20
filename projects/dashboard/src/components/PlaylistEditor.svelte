@@ -34,6 +34,7 @@
     videoService,
     sanitize,
     storageService,
+    notificationService,
     aiService
   } from "@yph/core";
 
@@ -87,7 +88,7 @@
       }
       loadPageVideos(currentPage);
       await savePlaylistBuilder();
-      if ((window as any).success) (window as any).success(`Deleted ${selectedCount} videos`);
+      if (notificationService.success) notificationService.success(`Deleted ${selectedCount} videos`);
     }
   }
 
@@ -269,7 +270,7 @@
       videos = [...videos, video];
       await savePlaylistBuilder();
     } else {
-       if ((window as any).error) (window as any).error("Invalid YouTube url");
+       if (notificationService.error) notificationService.error("Invalid YouTube url");
     }
   }
 
@@ -295,7 +296,7 @@
     displayModal = false;
     loading = false;
     setTimeout(
-      () => { if ((window as any).success) (window as any).success(`Imported ${importedVideos.length} videos`) },
+      () => { if (notificationService.success) notificationService.success(`Imported ${importedVideos.length} videos`) },
       100
     );
   }
@@ -353,11 +354,11 @@
       loadPageVideos(currentPage);
       await savePlaylistBuilder();
       setTimeout(
-        () => { if ((window as any).success) (window as any).success(`Removed ${duplicatesCount} duplicates`) },
+        () => { if (notificationService.success) notificationService.success(`Removed ${duplicatesCount} duplicates`) },
         200
       );
     } else {
-      if ((window as any).info) (window as any).info("No duplicates found");
+      if (notificationService.info) notificationService.info("No duplicates found");
     }
   }
 
@@ -373,7 +374,7 @@
         });
       }
     }
-    if ((window as any).success) (window as any).success("Playlist saved");
+    if (notificationService.success) notificationService.success("Playlist saved");
     await replace("/saved");
   }
 
@@ -472,10 +473,11 @@
   async function suggestGroups() {
       suggestingGroups = true;
       try {
+    notificationService,
           suggestedGroups = await aiService.suggestPlaylistGroups(videos);
           showAIGroupsModal = true;
       } catch (e) {
-          if ((window as any).error) (window as any).error("AI analysis failed");
+          if (notificationService.error) notificationService.error("AI analysis failed");
       } finally {
           suggestingGroups = false;
       }
@@ -496,7 +498,7 @@
       playlist.groups = newGroups;
       groups = [...newGroups];
       showAIGroupsModal = false;
-      if ((window as any).success) (window as any).success(`Added ${newGroups.length - previousGroups.length} categories`);
+      if (notificationService.success) notificationService.success(`Added ${newGroups.length - previousGroups.length} categories`);
   }
 </script>
 

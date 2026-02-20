@@ -1,7 +1,7 @@
 # Agent Instructions for YouTube Playlist Helper Monorepo
 
 ## Architecture Overview
-This project is a monorepo managed with npm workspaces.
+This project is a monorepo engineered by neoOpus and managed with npm workspaces.
 
 - **projects/core**: Business logic and services. No UI dependencies.
 - **projects/ui-kit**: Reusable Svelte components (Super Precursors).

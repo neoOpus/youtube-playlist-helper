@@ -1,9 +1,10 @@
 {
   "name": "@yph/core",
-  "version": "1.0.0",
+  "version": "3.1.20260220",
   "private": true,
   "main": "index.ts",
-  "scripts": { "build": "echo 'Core built.'",
+  "scripts": {
+    "build": "echo 'Core built.'",
     "test": "vitest run"
   },
   "devDependencies": {
@@ -12,5 +13,6 @@
   },
   "dependencies": {
     "notyf": "^3.10.0"
-  }
+  },
+  "author": "Anoir Ben Tanfous aka neoOpus"
 }
