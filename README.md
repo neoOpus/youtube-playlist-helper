@@ -1,30 +1,23 @@
-# YouTube Playlist Helper
+# Monorepo: Multiple SOTA Projects
 
-| :warning: WARNING: This extension is currently discontinued. The source code is still available under the [MIT license](https://opensource.org/license/mit) |
-| ---------------------------------------------------------------------------------------------------- |
+This repository contains two distinct, high-performance projects architected for the 2026 tech landscape.
 
-A YouTube playlist creator for [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-playlist-helper/) and [Google Chrome](https://chrome.google.com/webstore/detail/youtube-playlist-helper/ibdakohjhchaagmccfedeejmeillongg).
+## 1. Phoenix Form Recovery Suite
+**Location:** `form-recovery-suite/`
 
-## Features
+A state-of-the-art form recovery system designed by **Anoir Ben Tanfous aka neoOpus**. It features:
+- **Phoenix SOTA Userscript**: High-performance, heuristic-driven recovery.
+- **Phoenix Extension (MV3)**: Next-gen browser extension.
+- **Robustness Engine**: Multi-signal fingerprinting (V-Hash) and Nano-Delta compression.
+- **Production Analysis**: Deep evaluation of legacy tools (Typio, Lazarus) and robustness strategies.
 
-- A complete playlist editor: add, delete, reorder, reverse, remove duplicates, import and export videos
+## 2. YouTube Playlist Helper
+**Location:** `youtube-playlist-helper/`
 
-- Queue up videos from any page (with the right-click context menu) and play or save them using the playlist builder.
+A comprehensive tool for managing and enhancing YouTube playlists.
+- Advanced playlist editor with Svelte dashboard.
+- Intelligent de-duplication and metadata enrichment.
+- AI-driven categorization and alternatives tracking.
 
-- Save playlists using your browser's sync storage
-
-- Create a playlist from a bookmark folder
-
-- Create a playlist from a list of links
-
-- Combine YouTube tabs and create playlist
-
-- Scan current tab for YouTube links and create a playlist (including thumbnails)
-
-- Convert current YouTube playlist tab to YouTube queue
-
-## Build instructions
-
-1. Install Node.js and npm.
-2. Run `npm run build`.
-3. The extension final sources are found in the `src` directory.
+---
+**Maintained by neoOpus**
