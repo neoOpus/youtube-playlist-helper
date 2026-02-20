@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { storage } from '../../services/core/storage-service';
   import { replace } from "svelte-spa-router";
   import { flip } from "svelte/animate";
   import { expoOut } from "svelte/easing";
@@ -157,7 +156,7 @@
 
   async function pageSizeChanged() {
     currentPage = 1;
-    storage.set("page-size", pageSize);
+    window.storeObject("page-size", pageSize);
     await loadPageVideos(currentPage);
   }
 
@@ -169,7 +168,7 @@
       const url = new URL(document.URL);
       const id = url.searchParams.get("id");
       if (id) {
-        playlist = await storage.getPlaylist(id);
+        playlist = await window.getPlaylist(id);
         history.replaceState({ playlist }, "", url.pathname + url.hash);
       } else {
         const videoIds = url.searchParams.get("videoIds");
@@ -180,7 +179,7 @@
       }
     }
     if (!playlist) { replace("/"); return; }
-    pageSize = await storage.get("page-size", defaultPageSize);
+    pageSize = await window.fetchObject("page-size", defaultPageSize);
     await Promise.all(playlist.videos.map((id) => videoService.fetchVideo(id, true))).then(async (loadedVideos) => {
       videos = [...loadedVideos];
       await loadPageVideos(currentPage);
@@ -206,7 +205,7 @@
   let exportTextArea: HTMLTextAreaElement;
 
   let disableThumbnails = false;
-  storage.getSettings().then((settings) => disableThumbnails = settings.disableThumbnails);
+  window.getSettings().then((settings) => disableThumbnails = settings.disableThumbnails);
 
   const drop = (event, target) => {
     event.dataTransfer.dropEffect = "move";
@@ -276,7 +275,7 @@
   async function savePlaylist() {
     const videoIds = videos.map((video) => video.videoId.toString());
     playlist = { ...playlist, videos: videoIds };
-    const id = await storage.savePlaylist(playlist);
+    const id = await window.savePlaylist(playlist);
     playlist = { ...playlist, id };
     if (isPlaylistBuilder) await browser.runtime.sendMessage({ cmd: "clear-playlist-builder" });
     window.success("Playlist saved");

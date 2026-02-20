@@ -1,27 +1,24 @@
-import { storage } from './storage-service';
 /// <reference path="../types/services.d.ts" />
 
 import type { Playlist } from "../../types/model.js";
 import { metadataService } from "../mega/metadata-service.js";
+import { storage } from "./storage-service.js";
+import { persistenceService } from "../mega/persistence-service";
 
-window.videoIdCount = 100;
-
-// Enhanced Regex for all YT variants including Shorts and Music
 const YOUTUBE_REGEX = /(?:https?:\/\/)?(?:www\.|m\.|music\.)?youtu(?:\.be\/|be\.com\/(?:watch\?v=|embed\/|shorts\/|v\/|live\/))([-a-zA-Z0-9_]{11,})/;
-window.youtubeRegexPattern = YOUTUBE_REGEX.source;
 
 class VideoService {
   YOUTUBE_URL_PREFIX = "https://www.youtube.com/watch?v=";
   THUMBNAIL_URL_PREFIX = "https://i.ytimg.com/vi/";
-  THUMBNAIL_URL_SUFFIX = "/mqdefault.jpg"; // mqdefault for better aspect ratio
+  THUMBNAIL_URL_SUFFIX = "/mqdefault.jpg";
 
   private requestQueue: Promise<any> = Promise.resolve();
   private cache = new Map();
+  private videoIdCount = 100;
 
-  youtubeServiceURL = globalThis.youtubeServiceURL;
-
-  // Rate-limited fetch with caching
   async fetchVideo(videoId: string, sessionOnly = false) {
+    const cached = await persistenceService.getCachedVideo(videoId);
+    if (cached) return cached;
     if (this.cache.has(videoId)) return this.cache.get(videoId);
 
     const metadata = await metadataService.getVideoMetadata(videoId);
@@ -29,7 +26,6 @@ class VideoService {
     let channel = "";
 
     if (!sessionOnly) {
-        // Enqueue request to avoid burst rate-limiting
         const videoData = await (this.requestQueue = this.requestQueue.then(async () => {
             try {
                 const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
@@ -39,7 +35,6 @@ class VideoService {
             } catch {
                 return { title: "Private or Unavailable Video", channel: "Unknown" };
             } finally {
-                // Throttle: 200ms between requests
                 await new Promise(r => setTimeout(r, 200));
             }
         }));
@@ -48,7 +43,7 @@ class VideoService {
     }
 
     const videoObj = {
-      id: window.videoIdCount++,
+      id: this.videoIdCount++,
       videoId,
       url: this.YOUTUBE_URL_PREFIX + videoId,
       title,
@@ -58,6 +53,7 @@ class VideoService {
     };
 
     if (title) this.cache.set(videoId, videoObj);
+    if (title) persistenceService.cacheVideo(videoObj);
     return videoObj;
   }
 
@@ -71,17 +67,21 @@ class VideoService {
   }
 
   parseYoutubeIds(text: string) {
-    const regex = new RegExp(window.youtubeRegexPattern, "ig");
+    const regex = new RegExp(YOUTUBE_REGEX.source, "ig");
     const videoIds: string[] = [];
     let match;
     while ((match = regex.exec(text))) {
       videoIds.push(match[1]);
     }
-    return [...new Set(videoIds)]; // De-duplicate during parse
+    return [...new Set(videoIds)];
+  }
+
+  async saveVideoMetadata(videoId: string, metadata: any) {
+    await metadataService.saveVideoMetadata(videoId, metadata);
   }
 
   async generatePlaylist(videoIds?: string[], title?: string) {
-    const id = await window.generatePlaylistId();
+    const id = await storage.generatePlaylistId();
     const date = new Date();
     return {
       id,
@@ -108,7 +108,7 @@ class VideoService {
 
     for (const chunk of chunks) {
         const video_ids = chunk.join(",");
-        let url = `${this.youtubeServiceURL}/watch_videos?video_ids=${video_ids}`;
+        let url = `https://www.youtube.com/watch_videos?video_ids=${video_ids}`;
 
         try {
             const data = await (await fetch(url)).text();
@@ -127,12 +127,10 @@ class VideoService {
                 window.open(url, "_blank");
             }
         } catch (e) {
-            window.error("Failed to generate YouTube player session.");
+            console.error("Failed to generate YouTube player session.");
         }
     }
   }
 }
 
-window.videoService = new VideoService();
-
-export type { VideoService };
+export const videoService = new VideoService();

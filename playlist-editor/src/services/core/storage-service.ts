@@ -1,7 +1,6 @@
 /// <reference path="../../node_modules/@types/firefox-webext-browser/index.d.ts" />
 
 import type { Playlist, Settings } from "../../types/model.js";
-
 import LZString from "lz-string";
 
 const PLAYLIST_KEY_PREFIX = "playlist_";
@@ -17,7 +16,6 @@ function playlistToDto(playlist: Playlist) {
   return dto;
 }
 
-// Advanced Storage Layer with Compression and Cross-Tab Sync
 export const storage: any = {
     async get(key: string, defaultValue: any = null) {
         let raw;

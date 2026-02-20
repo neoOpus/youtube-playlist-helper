@@ -1,4 +1,3 @@
-import { storage } from './storage-service';
 import type { Video, Playlist } from "../../types/model";
 
 export const playlistService = {
@@ -28,7 +27,7 @@ export const playlistService = {
   },
 
   async deduplicateAll() {
-      const playlists = await storage.getPlaylists();
+      const playlists = await window.getPlaylists();
       let totalRemoved = 0;
 
       for (const p of playlists) {
@@ -36,7 +35,7 @@ export const playlistService = {
           const { uniqueVideos, duplicatesCount } = this.removeDuplicates(loadedVideos);
           if (duplicatesCount > 0) {
               p.videos = uniqueVideos.map(v => v.videoId);
-              await storage.savePlaylist(p);
+              await window.savePlaylist(p);
               totalRemoved += duplicatesCount;
           }
       }
@@ -44,7 +43,7 @@ export const playlistService = {
   },
 
   async findVideoInAllPlaylists(videoId: string) {
-      const playlists = await storage.getPlaylists();
+      const playlists = await window.getPlaylists();
       return playlists.filter(p => p.videos.includes(videoId));
   }
 };

@@ -86,3 +86,21 @@ textarea {
   border: 1px solid var(--border-color);
   border-radius: 2px;
 }
+
+:root {
+    --dynamic-accent: var(--sidebar-bg-color);
+    --dynamic-accent-subtle: rgba(0, 0, 0, 0.1);
+}
+
+.app-layout {
+    transition: background-color 0.5s ease;
+}
+
+.super-button.primary {
+    background-color: var(--dynamic-accent) !important;
+}
+
+.progress-pill {
+    background-color: var(--dynamic-accent-subtle) !important;
+    color: var(--dynamic-accent) !important;
+}

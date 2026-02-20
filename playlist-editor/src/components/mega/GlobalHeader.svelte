@@ -1,26 +1,22 @@
 <script lang="ts">
-  import { link, push } from "svelte-spa-router";
+  import { link } from "svelte-spa-router";
   import Fa from "svelte-fa";
-  import { faSearch, faMoon, faSun, faCog, faLifeRing, faUserCircle, faKeyboard } from "@fortawesome/free-solid-svg-icons";
+  import { faSearch, faMoon, faSun, faCog, faLifeRing, faUserCircle, faBoxOpen } from "@fortawesome/free-solid-svg-icons";
   import SuperButton from "../ui/SuperButton.svelte";
   import { themeStore } from "../../stores/theme.store";
   import { onMount } from "svelte";
   import { supabaseService } from "../../services/mega/supabase-service";
+  import { stashService } from "../../services/mega/stash-service";
 
   let searchQuery = "";
   let user: any = null;
+  const stash = stashService.stashStore;
 
   onMount(async () => {
     if (supabaseService.isConfigured) {
         user = await supabaseService.getUser();
     }
   });
-
-  function handleSearch(e: KeyboardEvent) {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      console.log("Global search:", searchQuery);
-    }
-  }
 
   function toggleTheme() {
     themeStore.update(current => current === 'dark' ? 'light' : 'dark');
@@ -32,6 +28,10 @@
           ctrlKey: true,
           bubbles: true
       }));
+  }
+
+  function toggleStash() {
+      window.dispatchEvent(new CustomEvent("toggleStash"));
   }
 </script>
 
@@ -52,6 +52,13 @@
   </div>
 
   <div class="right">
+    <SuperButton on:click={toggleStash} title="Open Stash" variant="ghost" className="header-icon">
+      <Fa icon={faBoxOpen} />
+      {#if $stash.length > 0}
+        <span class="stash-badge">{$stash.length}</span>
+      {/if}
+    </SuperButton>
+
     <SuperButton on:click={toggleTheme} title="Toggle Theme" variant="ghost" className="header-icon">
       <Fa icon={$themeStore === 'dark' ? faSun : faMoon} />
     </SuperButton>
@@ -88,7 +95,7 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
   }
 
   .left .logo {
@@ -109,9 +116,7 @@
     vertical-align: super;
   }
 
-  .center {
-    flex: 0 1 450px;
-  }
+  .center { flex: 0 1 450px; }
 
   .search-bar {
     background: rgba(255, 255, 255, 0.1);
@@ -124,38 +129,29 @@
     transition: background 0.2s;
   }
 
-  .search-bar:hover {
-      background: rgba(255, 255, 255, 0.15);
-  }
+  .search-bar:hover { background: rgba(255, 255, 255, 0.15); }
+  .search-placeholder { flex: 1; color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+  .kbd { background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
 
-  .search-placeholder {
-      flex: 1;
-      color: rgba(255,255,255,0.6);
-      font-size: 0.9rem;
-  }
+  .right { display: flex; gap: 10px; align-items: center; }
+  :global(.header-icon) { color: white !important; box-shadow: none !important; position: relative; }
 
-  .kbd {
-      background: rgba(255,255,255,0.2);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.7rem;
+  .stash-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: #f59e0b;
+      color: white;
+      font-size: 0.6rem;
       font-weight: bold;
-  }
-
-  .right {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-
-  :global(.header-icon) {
-    color: white !important;
-    box-shadow: none !important;
-  }
-
-  .avatar-small {
-      width: 24px;
-      height: 24px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--sidebar-bg-color);
   }
+
+  .avatar-small { width: 24px; height: 24px; border-radius: 50%; }
 </style>

@@ -4,11 +4,11 @@
   import AdvancedPlaylistView from "../components/mega/AdvancedPlaylistView.svelte";
   import Sidebar from "../components/core/Sidebar.svelte";
 
-  const playlistsAsync = storage.getPlaylists();
+  const playlistsAsync = window.getPlaylists();
   let viewMode = "simple";
 
   onMount(async () => {
-    const settings = await storage.getSettings();
+    const settings = await window.getSettings();
     viewMode = settings.viewMode || "simple";
   });
 </script>

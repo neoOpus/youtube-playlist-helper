@@ -1,70 +1,86 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  import SmartElement from "./SmartElement.svelte";
+  import { spring } from 'svelte/motion';
+  import { createEventDispatcher } from 'svelte';
+  import Fa from 'svelte-fa';
+  import { faCheck } from '@fortawesome/free-solid-svg-icons';
 
   export let checked = false;
-  export let disabled = false;
   export let label = "";
+  export let disabled = false;
 
   const dispatch = createEventDispatcher();
 
-  function toggle(event: MouseEvent) {
+  const checkScale = spring(checked ? 1 : 0, {
+    stiffness: 0.15,
+    damping: 0.4
+  });
+
+  $: checkScale.set(checked ? 1 : 0);
+
+  function toggle() {
     if (disabled) return;
     checked = !checked;
-    // Pass event for shiftKey detection
-    dispatch("change", {
-      checked,
-      shiftKey: (event as MouseEvent).shiftKey,
-    });
+    dispatch('change', checked);
   }
 </script>
 
-<SmartElement
-  className="super-checkbox-container"
-  {disabled}
-  on:click={(e) => toggle(e.detail)}
->
-  <div class="checkbox" class:is-checked={checked}>
-    {#if checked}
-      <svg viewBox="0 0 24 24" width="16" height="16">
-        <path fill="white" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
-      </svg>
-    {/if}
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="super-checkbox-container" class:disabled on:click={toggle}>
+  <div class="box" class:checked>
+    <div class="inner" style="transform: scale({$checkScale})">
+        <Fa icon={faCheck} size="xs" />
+    </div>
   </div>
   {#if label}
     <span class="label">{label}</span>
   {/if}
-</SmartElement>
+</div>
 
 <style>
-  :global(.super-checkbox-container) {
-    display: flex;
+  .super-checkbox-container {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: transparent !important;
-    padding: 4px;
-    border-radius: 4px;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
   }
 
-  .checkbox {
+  .box {
     width: 20px;
     height: 20px;
-    border: 2px solid var(--border-color);
-    border-radius: 4px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    flex-shrink: 0;
+    background: white;
   }
 
-  .checkbox.is-checked {
-    background-color: var(--sidebar-bg-color);
+  .box.checked {
+    background: var(--sidebar-bg-color);
     border-color: var(--sidebar-bg-color);
+    color: white;
+  }
+
+  .inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .label {
-    font-size: 0.9rem;
-    user-select: none;
+    font-size: 0.95rem;
+    color: #4b5563;
+  }
+
+  .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .super-checkbox-container:hover .box:not(.checked) {
+      border-color: var(--sidebar-bg-color);
   }
 </style>

@@ -84,23 +84,6 @@ class SyncService {
 
     if (!response.ok) throw new Error(`WebDAV error: ${response.status}`);
   }
-
-  async pullFromCloud() {
-    const config = await this.getSyncConfig();
-    if (!config.enabled) throw new Error("Sync not configured");
-
-    if (config.type === "supabase") {
-        const remote = await supabaseService.fetchRemotePlaylists();
-        if (remote.length > 0) {
-            // storage.savePlaylist handles updates
-            for (const p of remote) {
-                await storage.savePlaylist(p);
-            }
-            return true;
-        }
-    }
-    return false;
-  }
 }
 
 export const syncService = new SyncService();

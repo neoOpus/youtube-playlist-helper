@@ -1,7 +1,0 @@
-<<<<<<< SEARCH
-  <div class="palette-overlay" on:click={close} on:keydown={(e) => e.key === 'Escape' && close()} transition:fade={{ duration: 150 }} role="presentation">
-    <div class="palette-content" on:click|stopPropagation transition:fly={{ y: -20, duration: 200 }} role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
-=======
-  <div class="palette-overlay" on:click={close} on:keydown={(e) => e.key === 'Escape' && close()} transition:fade={{ duration: 150 }} role="button" aria-label="Close Palette" tabindex="-1">
-    <div class="palette-content" on:click|stopPropagation on:keydown|stopPropagation transition:fly={{ y: -20, duration: 200 }} role="dialog" aria-modal="true" aria-labelledby="command-palette-title" tabindex="-1">
->>>>>>> REPLACE

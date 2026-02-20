@@ -7,11 +7,15 @@
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
   import OmniView from "./views/OmniView.svelte";
+  import Curriculum from "./views/Curriculum.svelte";
   import PlaylistComparison from "./components/mega/PlaylistComparison.svelte";
   import UndoNotification from "./components/mega/UndoNotification.svelte";
   import GlobalHeader from "./components/mega/GlobalHeader.svelte";
   import StatusBar from "./components/mega/StatusBar.svelte";
   import CommandPalette from "./components/mega/CommandPalette.svelte";
+  import DebugOverlay from "./components/mega/DebugOverlay.svelte";
+  import StashDrawer from "./components/mega/StashDrawer.svelte";
+  import { videoService } from "./services/core/video-service";
 
   const routes = {
     "/new": New,
@@ -22,22 +26,30 @@
     "/compare": PlaylistComparison,
     "/support": Support,
     "/omni": OmniView,
+    "/curriculum/:id": Curriculum,
     "*": Saved,
   };
 
   let paletteOpen = false;
+  let stashOpen = false;
 
   onMount(() => {
       const syncChannel = new BroadcastChannel("yph_sync_channel");
-      syncChannel.onmessage = (event) => {
-          console.log("Storage changed in another tab:", event.data);
-          // For now, we show a success message or we could trigger a global store refresh
-          if (event.data.type === 'UPDATE') {
-              // window.info("Data synchronized from another tab");
-          }
+      const handleToggleStash = () => { stashOpen = !stashOpen; };
+      window.addEventListener("toggleStash", handleToggleStash);
+
+      return () => {
+          syncChannel.close();
+          window.removeEventListener("toggleStash", handleToggleStash);
       };
-      return () => syncChannel.close();
   });
+
+  async function handleCreateFromStash(e) {
+      const videos = e.detail;
+      const ids = videos.map(v => v.videoId);
+      const playlist = await videoService.generatePlaylist(ids, "Stashed Collection");
+      videoService.openPlaylistEditor(playlist);
+  }
 </script>
 
 <div class="app-layout">
@@ -50,6 +62,8 @@
   <StatusBar />
   <UndoNotification />
   <CommandPalette bind:isOpen={paletteOpen} />
+  <DebugOverlay />
+  <StashDrawer bind:open={stashOpen} on:createPlaylist={handleCreateFromStash} />
 </div>
 
 <style>

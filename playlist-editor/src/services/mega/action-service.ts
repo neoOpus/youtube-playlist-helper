@@ -1,4 +1,3 @@
-import { storage } from '../core/storage-service';
 import { writable } from "svelte/store";
 import type { Video, Playlist } from "../../types/model";
 import { metadataService } from "./metadata-service";
@@ -47,13 +46,13 @@ class ActionService {
                 handler: async ({ playlist, videos, refresh }) => {
                     const unwatched = videos.filter(v => !v.watched).map(v => v.videoId);
                     playlist.videos = unwatched;
-                    await storage.savePlaylist(playlist);
+                    await window.savePlaylist(playlist);
                     await refresh();
                 }
             }
         ];
 
-        const saved = await storage.get(this.STORAGE_KEY, []);
+        const saved = await window.fetchObject(this.STORAGE_KEY, []);
         const customized = saved.map(a => ({
             ...a,
             handler: a.handlerStr ? new Function('context', `return (async (context) => { ${a.handlerStr} })(context)`) : null
@@ -63,7 +62,7 @@ class ActionService {
     }
 
     public async registerAction(action: CustomAction) {
-        const saved = await storage.get(this.STORAGE_KEY, []);
+        const saved = await window.fetchObject(this.STORAGE_KEY, []);
         saved.push({
             id: action.id,
             label: action.label,
@@ -72,7 +71,7 @@ class ActionService {
             scope: action.scope,
             handlerStr: action.handlerStr
         });
-        await storage.set(this.STORAGE_KEY, saved);
+        await window.storeObject(this.STORAGE_KEY, saved);
         await this.loadActions();
     }
 

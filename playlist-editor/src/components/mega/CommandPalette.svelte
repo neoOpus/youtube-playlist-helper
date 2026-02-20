@@ -114,7 +114,7 @@
             </div>
             <div class="action-info">
               <span class="label">{action.label}</span>
-              <span class="scope">Scope: {action.scope}</span>
+              <span class="scope: {action.scope}">Scope: {action.scope}</span>
             </div>
             {#if i === selectedIndex}
                 <span class="enter-badge">⏎ Enter</span>

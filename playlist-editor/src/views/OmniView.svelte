@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { storage } from '../services/core/storage-service';
   import { onMount } from "svelte";
   import type { Playlist, Video } from "../types/model";
   import Sidebar from "../components/core/Sidebar.svelte";
   import PlaylistVideo from "../components/core/PlaylistVideo.svelte";
-import { metadataService } from "../services/mega/metadata-service";
   import BulkActionBar from "../components/mega/BulkActionBar.svelte";
   import VirtualList from "svelte-virtual-list";
   import Fa from "svelte-fa";
   import { faGlobe, faSearch, faLayerGroup, faSync } from "@fortawesome/free-solid-svg-icons";
+  import { storage } from '../services/core/storage-service';
+  import { videoService } from '../services/core/video-service';
+  import { smartFilterService } from "../services/mega/smart-filter-service";
 
   let allPlaylists: Playlist[] = [];
   let allVideos: (Video & { sourcePlaylistId: string })[] = [];
@@ -30,11 +31,9 @@ import { metadataService } from "../services/mega/metadata-service";
         const p = allPlaylists[i];
         indexingProgress = Math.round(((i + 1) / allPlaylists.length) * 100);
 
-        // Chunked loading to prevent UI freeze
-        const loaded = await Promise.all(p.videos.map(vid => window.videoService.fetchVideo(vid)));
+        const loaded = await Promise.all(p.videos.map(vid => videoService.fetchVideo(vid)));
         videoData.push(...loaded.map(v => ({ ...v, sourcePlaylistId: p.id })));
 
-        // Yield to browser
         if (i % 5 === 0) await new Promise(r => setTimeout(r, 0));
     }
 
@@ -44,11 +43,7 @@ import { metadataService } from "../services/mega/metadata-service";
   }
 
   function handleSearch() {
-    const q = query.toLowerCase();
-    filteredVideos = allVideos.filter(v =>
-        v.title.toLowerCase().includes(q) ||
-        v.channel.toLowerCase().includes(q)
-    );
+    filteredVideos = smartFilterService.applyFilter(allVideos, query) as any;
   }
 
   function clearSelection() {
@@ -60,9 +55,8 @@ import { metadataService } from "../services/mega/metadata-service";
       const selected = allVideos.filter(v => v.selected);
       for (const v of selected) {
           v.watched = watched;
-          await metadataService.saveVideoMetadata(v.videoId, { watched });
+          await videoService.saveVideoMetadata(v.videoId, { watched });
       }
-      window.success(`Updated ${selected.length} videos across all playlists`);
       handleSearch();
   }
 </script>
@@ -86,7 +80,7 @@ import { metadataService } from "../services/mega/metadata-service";
   <div class="toolbar">
       <div class="search-wrap">
           <Fa icon={faSearch} />
-          <input bind:value={query} on:input={handleSearch} placeholder="Search {allVideos.length} videos instantly..." />
+          <input bind:value={query} on:input={handleSearch} placeholder="Search {allVideos.length} videos... Try 'is:unwatched' or 'channel:name'" />
       </div>
       <div class="stats">
           <Fa icon={faLayerGroup} />

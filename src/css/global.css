@@ -1,0 +1,19 @@
+
+:root {
+    --dynamic-accent: var(--sidebar-bg-color);
+    --dynamic-accent-subtle: rgba(0, 0, 0, 0.1);
+}
+
+.app-layout {
+    transition: background-color 0.5s ease;
+}
+
+/* Intelligent Accent Sync */
+.super-button.primary {
+    background-color: var(--dynamic-accent) !important;
+}
+
+.progress-pill {
+    background-color: var(--dynamic-accent-subtle) !important;
+    color: var(--dynamic-accent) !important;
+}

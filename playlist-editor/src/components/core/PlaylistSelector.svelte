@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { storage } from '../../services/core/storage-service';
   import type { Playlist } from "../../types/model.js";
   import PlaylistPreview from "./PlaylistPreview.svelte";
   import PlaylistsFilters from "./PlaylistsFilters.svelte";
@@ -8,7 +7,7 @@
   let filteredPlaylists = playlists;
 
   let disableThumbnails = true;
-  storage.getSettings().then((settings) => {
+  window.getSettings().then((settings) => {
     disableThumbnails = settings.disableThumbnails;
   });
 </script>

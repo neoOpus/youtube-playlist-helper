@@ -1,10 +1,9 @@
-import { storage } from '../core/storage-service';
 import type { Playlist } from "../../types/model";
 
 export const backupService = {
   async performAutoBackup() {
     try {
-      const allData = await storage.getAll();
+      const allData = await window.fetchAllObjects();
       const playlists = Object.keys(allData)
         .filter((key) => key.startsWith("playlist_"))
         .map((key) => JSON.parse(allData[key]));
@@ -17,7 +16,7 @@ export const backupService = {
       };
 
       const backupKey = `backup_${new Date().toISOString().split("T")[0]}`;
-      await storage.set(backupKey, backup);
+      await window.storeObject(backupKey, backup);
       console.log("Auto-backup performed successfully.");
     } catch (error) {
       console.error("Failed to perform auto-backup:", error);
@@ -25,7 +24,7 @@ export const backupService = {
   },
 
   async getBackups() {
-    const allData = await storage.getAll();
+    const allData = await window.fetchAllObjects();
     return Object.keys(allData)
       .filter((key) => key.startsWith("backup_"))
       .map((key) => ({
@@ -36,11 +35,11 @@ export const backupService = {
   },
 
   async deleteBackup(key: string) {
-    await storage.remove(key);
+    await window.removeObject(key);
   },
 
   async restoreBackup(key: string) {
-    const allData = await storage.getAll();
+    const allData = await window.fetchAllObjects();
     const backup = JSON.parse(allData[key]);
     if (backup && backup.playlists) {
        await window.importPlaylists(backup.playlists);
