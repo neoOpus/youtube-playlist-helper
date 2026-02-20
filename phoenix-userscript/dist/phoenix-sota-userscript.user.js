@@ -11,7 +11,7 @@
 // @run-at       document-start
 // ==/UserScript==
 
-(e=>{if(typeof GM_addStyle=="function"){GM_addStyle(e);return}const t=document.createElement("style");t.textContent=e,document.head.append(t)})(" .phoenix-menu.svelte-10hlut0{position:absolute;background:#fff;border:1px solid #ccc;box-shadow:0 2px 10px #0003;z-index:1000000;max-height:300px;overflow-y:auto;width:300px;border-radius:8px;padding:8px;font-family:sans-serif}ul.svelte-10hlut0{list-style:none;padding:0;margin:0}li.svelte-10hlut0{padding:8px;border-bottom:1px solid #eee;cursor:pointer;display:flex;flex-direction:column}li.svelte-10hlut0:hover{background:#f0f0f0}.value.svelte-10hlut0{font-weight:700;font-size:14px;color:#333}.date.svelte-10hlut0{font-size:11px;color:#666;margin-top:4px}.no-entries.svelte-10hlut0{padding:10px;color:#999}.ghost.svelte-10u4ojw{color:#ccc;pointer-events:none;font-family:sans-serif;font-size:14px;padding-left:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;position:absolute;top:50%;transform:translateY(-50%);left:10px;pointer-events:auto;cursor:pointer} ");
+(e=>{if(typeof GM_addStyle=="function"){GM_addStyle(e);return}const t=document.createElement("style");t.textContent=e,document.head.append(t)})(" .phoenix-menu.svelte-10hlut0{position:absolute;background:#121212;color:#fff;border:1px solid #333;box-shadow:0 8px 32px #00000080;z-index:2147483647;width:340px;border-radius:16px;padding:12px;font-family:Inter,system-ui,sans-serif}.header.svelte-10hlut0{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#666}.toggle.svelte-10hlut0{background:#222;color:#aaa;border:1px solid #444;padding:4px 10px;border-radius:20px;cursor:pointer;font-size:10px;transition:all .2s}.toggle.svelte-10hlut0:hover{color:#fff;border-color:#666}ul.svelte-10hlut0{list-style:none;padding:0;margin:0}li.svelte-10hlut0{padding:12px;border-radius:12px;cursor:pointer;margin-bottom:6px;background:#1a1a1a;transition:transform .2s,background .2s}li.svelte-10hlut0:hover{background:#252525;transform:translateY(-1px)}.value.svelte-10hlut0{font-size:13px;line-height:1.5;color:#ddd;display:block}.date.svelte-10hlut0{font-size:10px;color:#555;margin-top:8px;font-variant-numeric:tabular-nums}.time-machine.svelte-10hlut0{padding:4px}.preview.svelte-10hlut0{background:#000;padding:15px;border-radius:10px;min-height:100px;max-height:200px;overflow-y:auto;font-size:13px;color:#0f0;font-family:monospace;margin-bottom:15px;border:1px solid #111}.controls.svelte-10hlut0{display:flex;flex-direction:column;gap:10px}input[type=range].svelte-10hlut0{width:100%;accent-color:#0f0}.timestamp.svelte-10hlut0{font-size:11px;text-align:center;color:#888}.restore-btn.svelte-10hlut0{background:#0f0;color:#000;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer;transition:opacity .2s}.restore-btn.svelte-10hlut0:hover{opacity:.8}.no-entries.svelte-10hlut0{padding:30px;text-align:center;color:#444;font-size:13px}.ghost.svelte-10u4ojw{color:#ccc;pointer-events:none;font-family:sans-serif;font-size:14px;padding-left:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;position:absolute;top:50%;transform:translateY(-50%);left:10px;pointer-events:auto;cursor:pointer} ");
 
 (function () {
   'use strict';
@@ -35,6 +35,7 @@
   var array_from = Array.from;
   var define_property = Object.defineProperty;
   var get_descriptor = Object.getOwnPropertyDescriptor;
+  var get_descriptors = Object.getOwnPropertyDescriptors;
   var object_prototype = Object.prototype;
   var array_prototype = Array.prototype;
   var get_prototype_of = Object.getPrototypeOf;
@@ -202,13 +203,18 @@
     run_all(tasks);
   }
   function queue_micro_task(fn) {
-    if (micro_tasks.length === 0 && true) {
+    if (micro_tasks.length === 0 && !is_flushing_sync) {
       var tasks = micro_tasks;
       queueMicrotask(() => {
         if (tasks === micro_tasks) run_micro_tasks();
       });
     }
     micro_tasks.push(fn);
+  }
+  function flush_tasks() {
+    while (micro_tasks.length > 0) {
+      run_micro_tasks();
+    }
   }
   function handle_error(error) {
     var effect = active_effect;
@@ -273,10 +279,12 @@
   }
   const batches = /* @__PURE__ */ new Set();
   let current_batch = null;
+  let previous_batch = null;
   let batch_values = null;
   let queued_root_effects = [];
   let last_scheduled_effect = null;
   let is_flushing = false;
+  let is_flushing_sync = false;
   const _Batch = class _Batch {
     constructor() {
       __privateAdd(this, _Batch_instances);
@@ -395,9 +403,11 @@
         if (__privateGet(this, _pending) === 0) {
           __privateMethod(this, _Batch_instances, commit_fn).call(this);
         }
+        previous_batch = this;
         current_batch = null;
         flush_queued_effects(render_effects);
         flush_queued_effects(effects);
+        previous_batch = null;
         (_a2 = __privateGet(this, _deferred)) == null ? void 0 : _a2.resolve();
       }
       batch_values = null;
@@ -495,7 +505,7 @@
       if (current_batch === null) {
         const batch = current_batch = new _Batch();
         batches.add(current_batch);
-        {
+        if (!is_flushing_sync) {
           queue_micro_task(() => {
             if (current_batch !== batch) {
               return;
@@ -624,6 +634,30 @@
     batches.delete(this);
   };
   let Batch = _Batch;
+  function flushSync(fn) {
+    var was_flushing_sync = is_flushing_sync;
+    is_flushing_sync = true;
+    try {
+      var result;
+      if (fn) ;
+      while (true) {
+        flush_tasks();
+        if (queued_root_effects.length === 0) {
+          current_batch == null ? void 0 : current_batch.flush();
+          if (queued_root_effects.length === 0) {
+            last_scheduled_effect = null;
+            return (
+              /** @type {T} */
+              result
+            );
+          }
+        }
+        flush_effects();
+      }
+    } finally {
+      is_flushing_sync = was_flushing_sync;
+    }
+  }
   function flush_effects() {
     is_flushing = true;
     try {
@@ -1153,12 +1187,12 @@
     var previous_effect = active_effect;
     var previous_reaction = active_reaction;
     var previous_component_context = component_context;
-    var previous_batch = current_batch;
+    var previous_batch2 = current_batch;
     return function restore(activate_batch = true) {
       set_active_effect(previous_effect);
       set_active_reaction(previous_reaction);
       set_component_context(previous_component_context);
-      if (activate_batch) previous_batch == null ? void 0 : previous_batch.activate();
+      if (activate_batch) previous_batch2 == null ? void 0 : previous_batch2.activate();
     };
   }
   function unset_context() {
@@ -1289,6 +1323,12 @@
       }
       next(promise);
     });
+  }
+  // @__NO_SIDE_EFFECTS__
+  function user_derived(fn) {
+    const d = /* @__PURE__ */ derived(fn);
+    push_reaction_value(d);
+    return d;
   }
   // @__NO_SIDE_EFFECTS__
   function derived_safe_equal(fn) {
@@ -1775,6 +1815,31 @@
       document.createElementNS(NAMESPACE_HTML, tag, options)
     );
   }
+  let listening_to_form_reset = false;
+  function add_form_reset_listener() {
+    if (!listening_to_form_reset) {
+      listening_to_form_reset = true;
+      document.addEventListener(
+        "reset",
+        (evt) => {
+          Promise.resolve().then(() => {
+            var _a2;
+            if (!evt.defaultPrevented) {
+              for (
+                const e of
+                /**@type {HTMLFormElement} */
+                evt.target.elements
+              ) {
+                (_a2 = e.__on_r) == null ? void 0 : _a2.call(e);
+              }
+            }
+          });
+        },
+        // In the capture phase to guarantee we get noticed of it (no possibility of stopPropagation)
+        { capture: true }
+      );
+    }
+  }
   function without_reactive_context(fn) {
     var previous_reaction = active_reaction;
     var previous_effect = active_effect;
@@ -1786,6 +1851,19 @@
       set_active_reaction(previous_reaction);
       set_active_effect(previous_effect);
     }
+  }
+  function listen_to_event_and_reset_event(element, event, handler, on_reset = handler) {
+    element.addEventListener(event, () => without_reactive_context(handler));
+    const prev = element.__on_r;
+    if (prev) {
+      element.__on_r = () => {
+        prev();
+        on_reset(true);
+      };
+    } else {
+      element.__on_r = () => on_reset(true);
+    }
+    add_form_reset_listener();
   }
   function validate_effect(rune) {
     if (active_effect === null) {
@@ -2364,6 +2442,10 @@
       is_updating_effect = was_updating_effect;
       active_effect = previous_effect;
     }
+  }
+  async function tick() {
+    await Promise.resolve();
+    flushSync();
   }
   function get(signal) {
     var flags2 = signal.f;
@@ -3235,6 +3317,117 @@
     } else {
       next.prev = prev;
     }
+  }
+  const IS_CUSTOM_ELEMENT = Symbol("is custom element");
+  const IS_HTML = Symbol("is html");
+  function set_attribute(element, attribute, value, skip_warning) {
+    var attributes = get_attributes(element);
+    if (attributes[attribute] === (attributes[attribute] = value)) return;
+    if (value == null) {
+      element.removeAttribute(attribute);
+    } else if (typeof value !== "string" && get_setters(element).includes(attribute)) {
+      element[attribute] = value;
+    } else {
+      element.setAttribute(attribute, value);
+    }
+  }
+  function get_attributes(element) {
+    return (
+      /** @type {Record<string | symbol, unknown>} **/
+      // @ts-expect-error
+      element.__attributes ?? (element.__attributes = {
+        [IS_CUSTOM_ELEMENT]: element.nodeName.includes("-"),
+        [IS_HTML]: element.namespaceURI === NAMESPACE_HTML
+      })
+    );
+  }
+  var setters_cache = /* @__PURE__ */ new Map();
+  function get_setters(element) {
+    var cache_key = element.getAttribute("is") || element.nodeName;
+    var setters = setters_cache.get(cache_key);
+    if (setters) return setters;
+    setters_cache.set(cache_key, setters = []);
+    var descriptors;
+    var proto = element;
+    var element_proto = Element.prototype;
+    while (element_proto !== proto) {
+      descriptors = get_descriptors(proto);
+      for (var key in descriptors) {
+        if (descriptors[key].set) {
+          setters.push(key);
+        }
+      }
+      proto = get_prototype_of(proto);
+    }
+    return setters;
+  }
+  function bind_value(input, get2, set2 = get2) {
+    var batches2 = /* @__PURE__ */ new WeakSet();
+    listen_to_event_and_reset_event(input, "input", async (is_reset) => {
+      var value = is_reset ? input.defaultValue : input.value;
+      value = is_numberlike_input(input) ? to_number(value) : value;
+      set2(value);
+      if (current_batch !== null) {
+        batches2.add(current_batch);
+      }
+      await tick();
+      if (value !== (value = get2())) {
+        var start = input.selectionStart;
+        var end = input.selectionEnd;
+        var length = input.value.length;
+        input.value = value ?? "";
+        if (end !== null) {
+          var new_length = input.value.length;
+          if (start === end && end === length && new_length > length) {
+            input.selectionStart = new_length;
+            input.selectionEnd = new_length;
+          } else {
+            input.selectionStart = start;
+            input.selectionEnd = Math.min(end, new_length);
+          }
+        }
+      }
+    });
+    if (
+      // If we are hydrating and the value has since changed,
+      // then use the updated value from the input instead.
+      // If defaultValue is set, then value == defaultValue
+      // TODO Svelte 6: remove input.value check and set to empty string?
+      untrack(get2) == null && input.value
+    ) {
+      set2(is_numberlike_input(input) ? to_number(input.value) : input.value);
+      if (current_batch !== null) {
+        batches2.add(current_batch);
+      }
+    }
+    render_effect(() => {
+      var value = get2();
+      if (input === document.activeElement) {
+        var batch = (
+          /** @type {Batch} */
+          previous_batch ?? current_batch
+        );
+        if (batches2.has(batch)) {
+          return;
+        }
+      }
+      if (is_numberlike_input(input) && value === to_number(input.value)) {
+        return;
+      }
+      if (input.type === "date" && !value && !input.value) {
+        return;
+      }
+      if (value !== input.value) {
+        input.value = value ?? "";
+      }
+    });
+  }
+  function is_numberlike_input(input) {
+    var type = input.type;
+    return type === "number" || type === "range";
+  }
+  function to_number(value) {
+    return value === "" ? null : +value;
   }
   function prop(props, key, flags2, fallback) {
     var fallback_value = (
@@ -6323,9 +6516,9 @@
   }
   const db = new PhoenixDB();
   function generateHeuristicId(el) {
-    var _a2, _b2, _c2;
+    var _a2, _b2, _c2, _d;
     const parts = [];
-    if (el.id) parts.push(`id:${el.id}`);
+    if (el.id && !el.id.match(/\d{5,}/)) parts.push(`id:${el.id}`);
     const name = el.getAttribute("name");
     if (name) parts.push(`name:${name}`);
     const label = el.getAttribute("aria-label") || el.getAttribute("placeholder") || "";
@@ -6333,23 +6526,29 @@
     if (el instanceof HTMLInputElement && ((_a2 = el.labels) == null ? void 0 : _a2[0])) {
       parts.push(`text:${(_b2 = el.labels[0].textContent) == null ? void 0 : _b2.trim().slice(0, 20)}`);
     }
+    const parent = el.parentElement;
+    if (parent) {
+      const siblings = Array.from(parent.children);
+      const tagSequence = siblings.map((s) => s.tagName.toLowerCase()).join(",");
+      parts.push(`struct:${tagSequence.slice(0, 50)}`);
+      const surroundingText = (_c2 = parent.textContent) == null ? void 0 : _c2.replace(/\s+/g, " ").trim().slice(0, 30);
+      if (surroundingText) parts.push(`context:${surroundingText}`);
+    }
     const root2 = el.getRootNode();
-    if (root2 instanceof ShadowRoot && ((_c2 = root2.host) == null ? void 0 : _c2.id)) {
+    if (root2 instanceof ShadowRoot && ((_d = root2.host) == null ? void 0 : _d.id)) {
       parts.push(`shadow-host:${root2.host.id}`);
     }
     const form = el.closest("form");
     if (form) {
       const inputs = Array.from(form.querySelectorAll("input, textarea, [contenteditable]"));
       parts.push(`form-idx:${inputs.indexOf(el)}`);
-    } else {
-      const sameType = Array.from(document.querySelectorAll(el.tagName.toLowerCase()));
-      parts.push(`page-idx:${sameType.indexOf(el)}`);
     }
     return btoa(unescape(encodeURIComponent(parts.join("|") || "fallback"))).replace(/=/g, "");
   }
   function getFieldName(el) {
     var _a2, _b2, _c2;
-    return el.getAttribute("aria-label") || el.getAttribute("placeholder") || el instanceof HTMLInputElement && ((_c2 = (_b2 = (_a2 = el.labels) == null ? void 0 : _a2[0]) == null ? void 0 : _b2.textContent) == null ? void 0 : _c2.trim()) || el.getAttribute("name") || "Unnamed Field";
+    const raw = el.getAttribute("aria-label") || el.getAttribute("placeholder") || el instanceof HTMLInputElement && ((_c2 = (_b2 = (_a2 = el.labels) == null ? void 0 : _a2[0]) == null ? void 0 : _b2.textContent) == null ? void 0 : _c2.trim()) || el.getAttribute("name") || "Unnamed Field";
+    return raw.length > 30 ? raw.slice(0, 27) + "..." : raw;
   }
   function initInterceptor(onSubmission) {
     const originalFetch = window.fetch;
@@ -6372,41 +6571,82 @@
   if (typeof window !== "undefined") {
     ((_c = window.__svelte ?? (window.__svelte = {})).v ?? (_c.v = /* @__PURE__ */ new Set())).add(PUBLIC_VERSION);
   }
+  function maskPII(text) {
+    if (!text) return "";
+    return text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "***@***.***").replace(/(?:[0-9]{4}-){3}[0-9]{4}/g, "****-****-****-****").replace(/(?:\b[a-fA-F0-9]{32,}\b)/g, (match) => match.slice(0, 4) + "..." + match.slice(-4));
+  }
   var root_1$1 = /* @__PURE__ */ from_html(`<div class="no-entries svelte-10hlut0">No history found</div>`);
-  var root_3 = /* @__PURE__ */ from_html(`<li class="svelte-10hlut0"><span class="value svelte-10hlut0"> </span> <span class="date svelte-10hlut0"> </span></li>`);
-  var root_2 = /* @__PURE__ */ from_html(`<ul class="svelte-10hlut0"></ul>`);
-  var root = /* @__PURE__ */ from_html(`<div class="phoenix-menu svelte-10hlut0"><!></div>`);
+  var root_2 = /* @__PURE__ */ from_html(`<div class="time-machine svelte-10hlut0"><div class="preview svelte-10hlut0"> </div> <div class="controls svelte-10hlut0"><input type="range" min="0" class="svelte-10hlut0"/> <div class="timestamp svelte-10hlut0"> </div> <button class="restore-btn svelte-10hlut0">Restore this point</button></div></div>`);
+  var root_4 = /* @__PURE__ */ from_html(`<li class="svelte-10hlut0"><span class="value svelte-10hlut0"> </span> <span class="date svelte-10hlut0"> </span></li>`);
+  var root_3 = /* @__PURE__ */ from_html(`<ul class="svelte-10hlut0"></ul>`);
+  var root = /* @__PURE__ */ from_html(`<div class="phoenix-menu svelte-10hlut0"><div class="header svelte-10hlut0"><span>Phoenix SOTA Recovery</span> <button class="toggle svelte-10hlut0"> </button></div> <!></div>`);
   function RecoveryMenu($$anchor, $$props) {
     push($$props, true);
     let entries = /* @__PURE__ */ state(proxy([]));
+    let historyIndex = /* @__PURE__ */ state(0);
+    let showTimeMachine = /* @__PURE__ */ state(false);
     user_effect(() => {
       db.entries.where({ domain: window.location.hostname, fieldId: $$props.fieldId }).reverse().sortBy("timestamp").then((res) => {
         set(entries, res, true);
       });
     });
+    const currentEntry = /* @__PURE__ */ user_derived(() => get(entries)[get(historyIndex)]);
     var div = root();
-    var node = child(div);
+    var div_1 = child(div);
+    var button = sibling(child(div_1), 2);
+    var text = child(button);
+    var node = sibling(div_1, 2);
     {
       var consequent = ($$anchor2) => {
-        var div_1 = root_1$1();
-        append($$anchor2, div_1);
+        var div_2 = root_1$1();
+        append($$anchor2, div_2);
+      };
+      var consequent_1 = ($$anchor2) => {
+        var div_3 = root_2();
+        var div_4 = child(div_3);
+        var text_1 = child(div_4);
+        var div_5 = sibling(div_4, 2);
+        var input = child(div_5);
+        var div_6 = sibling(input, 2);
+        var text_2 = child(div_6);
+        var button_1 = sibling(div_6, 2);
+        template_effect(
+          ($0, $1) => {
+            set_text(text_1, $0);
+            set_attribute(input, "max", get(entries).length - 1);
+            set_text(text_2, $1);
+          },
+          [
+            () => {
+              var _a2;
+              return maskPII(((_a2 = get(currentEntry)) == null ? void 0 : _a2.value) || "");
+            },
+            () => {
+              var _a2;
+              return new Date(((_a2 = get(currentEntry)) == null ? void 0 : _a2.timestamp) || 0).toLocaleString();
+            }
+          ]
+        );
+        bind_value(input, () => get(historyIndex), ($$value) => set(historyIndex, $$value));
+        delegated("click", button_1, () => $$props.onRestore(get(currentEntry).value));
+        append($$anchor2, div_3);
       };
       var alternate = ($$anchor2) => {
-        var ul = root_2();
-        each(ul, 21, () => get(entries), index, ($$anchor3, entry) => {
-          var li = root_3();
+        var ul = root_3();
+        each(ul, 21, () => get(entries).slice(0, 10), index, ($$anchor3, entry) => {
+          var li = root_4();
           var span = child(li);
-          var text = child(span);
+          var text_3 = child(span);
           var span_1 = sibling(span, 2);
-          var text_1 = child(span_1);
+          var text_4 = child(span_1);
           template_effect(
             ($0, $1) => {
-              set_text(text, `${$0 ?? ""}...`);
-              set_text(text_1, $1);
+              set_text(text_3, $0);
+              set_text(text_4, $1);
             },
             [
-              () => get(entry).value.slice(0, 50),
-              () => new Date(get(entry).timestamp).toLocaleString()
+              () => maskPII(get(entry).value.slice(0, 80)),
+              () => new Date(get(entry).timestamp).toLocaleTimeString()
             ]
           );
           delegated("click", li, () => $$props.onRestore(get(entry).value));
@@ -6416,9 +6656,12 @@
       };
       if_block(node, ($$render) => {
         if (get(entries).length === 0) $$render(consequent);
+        else if (get(showTimeMachine)) $$render(consequent_1, 1);
         else $$render(alternate, false);
       });
     }
+    template_effect(() => set_text(text, get(showTimeMachine) ? "List" : "Time Machine"));
+    delegated("click", button, () => set(showTimeMachine, !get(showTimeMachine)));
     append($$anchor, div);
     pop();
   }
@@ -6463,7 +6706,8 @@
     pop();
   }
   delegate(["click"]);
-  console.log("Phoenix SOTA Form Recovery: Initializing Robust Engine");
+  console.log("Phoenix SOTA Form Recovery: Robust Engine Active");
+  const fieldStates = /* @__PURE__ */ new Map();
   function restoreField(el, value) {
     var _a2;
     if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
@@ -6477,6 +6721,26 @@
       document.execCommand("insertHTML", false, value);
     }
     ["input", "change"].forEach((t) => el.dispatchEvent(new Event(t, { bubbles: true })));
+  }
+  async function handleFieldInput(el) {
+    const value = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? el.value : el.innerHTML;
+    const state2 = fieldStates.get(el) || { lastSavedValue: "", lastWriteTime: 0 };
+    const now = Date.now();
+    const timeSinceLastWrite = now - state2.lastWriteTime;
+    const valueChangedSignificantly = Math.abs(value.length - state2.lastSavedValue.length) > 20;
+    if (value.length > 2 && (valueChangedSignificantly || timeSinceLastWrite > 3e4)) {
+      const fieldId = generateHeuristicId(el);
+      await db.save({
+        domain: window.location.hostname,
+        url: window.location.href,
+        fieldId,
+        fieldName: getFieldName(el),
+        value,
+        timestamp: now,
+        isSubmitted: false
+      });
+      fieldStates.set(el, { lastSavedValue: value, lastWriteTime: now });
+    }
   }
   function attachToField(el) {
     if (el.dataset.phoenixAttached) return;
@@ -6529,20 +6793,7 @@
       document.addEventListener("mousedown", cleanup);
     });
     ["input", "change", "keyup"].forEach((evt) => {
-      el.addEventListener(evt, () => {
-        const value = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? el.value : el.innerHTML;
-        if (value.length > 2) {
-          db.save({
-            domain: window.location.hostname,
-            url: window.location.href,
-            fieldId,
-            fieldName: getFieldName(el),
-            value,
-            timestamp: Date.now(),
-            isSubmitted: false
-          });
-        }
-      });
+      el.addEventListener(evt, () => handleFieldInput(el));
     });
   }
   const globalObserver = new MutationObserver((mutations) => {
@@ -6554,15 +6805,25 @@
         }
       });
       const target = m.target;
-      if (target.isContentEditable) {
-        target.dispatchEvent(new Event("input", { bubbles: true }));
-      }
+      if (target.isContentEditable) handleFieldInput(target);
     });
   });
   globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
   document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach((el) => attachToField(el));
   initInterceptor((body) => {
     console.log("[Phoenix] Network submission detected.");
+  });
+  window.addEventListener("beforeunload", () => {
+    document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach((el) => {
+      handleFieldInput(el);
+    });
+  });
+  ["visibilitychange", "pagehide", "freeze"].forEach((evt) => {
+    window.addEventListener(evt, () => {
+      document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach((el) => {
+        handleFieldInput(el);
+      });
+    });
   });
 
 })();

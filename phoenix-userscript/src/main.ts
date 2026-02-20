@@ -7,17 +7,14 @@ import RecoveryMenu from './components/RecoveryMenu.svelte';
 // @ts-ignore
 import SmartGhost from './components/SmartGhost.svelte';
 
-console.log('Phoenix SOTA Form Recovery: Initializing Robust Engine');
+console.log('Phoenix SOTA Form Recovery: Robust Engine Active');
 
-/**
- * Robust Field Restoration Logic
- * Handles state-managed editors (DraftJS, Slate) using execCommand
- */
+const fieldStates = new Map<HTMLElement, { lastSavedValue: string, lastWriteTime: number }>();
+
 function restoreField(el: HTMLElement, value: string) {
   if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
     el.value = value;
   } else if (el.isContentEditable) {
-    // DraftJS Hack: Init state if empty
     if (!el.textContent?.trim()) {
       el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
     }
@@ -25,9 +22,31 @@ function restoreField(el: HTMLElement, value: string) {
     document.execCommand('selectAll', false);
     document.execCommand('insertHTML', false, value);
   }
-
-  // Trigger events for React/Vue listeners
   ['input', 'change'].forEach(t => el.dispatchEvent(new Event(t, { bubbles: true })));
+}
+
+async function handleFieldInput(el: HTMLElement) {
+  const value = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? el.value : el.innerHTML;
+  const state = fieldStates.get(el) || { lastSavedValue: '', lastWriteTime: 0 };
+
+  const now = Date.now();
+  const timeSinceLastWrite = now - state.lastWriteTime;
+  const valueChangedSignificantly = Math.abs(value.length - state.lastSavedValue.length) > 20;
+
+  // Throttled significant write (Clever Trick #2)
+  if (value.length > 2 && (valueChangedSignificantly || timeSinceLastWrite > 30000)) {
+    const fieldId = generateHeuristicId(el);
+    await db.save({
+      domain: window.location.hostname,
+      url: window.location.href,
+      fieldId,
+      fieldName: getFieldName(el),
+      value,
+      timestamp: now,
+      isSubmitted: false
+    });
+    fieldStates.set(el, { lastSavedValue: value, lastWriteTime: now });
+  }
 }
 
 function attachToField(el: HTMLElement) {
@@ -36,11 +55,9 @@ function attachToField(el: HTMLElement) {
 
   const fieldId = generateHeuristicId(el);
 
-  // Focus: Show UI
   el.addEventListener('focus', () => {
     const rect = el.getBoundingClientRect();
 
-    // 1. Recovery Menu (Shadow DOM)
     const menuHost = document.createElement('div');
     Object.assign(menuHost.style, {
       position: 'absolute',
@@ -62,7 +79,6 @@ function attachToField(el: HTMLElement) {
       }
     });
 
-    // 2. Smart Ghost (Predictive UX)
     const ghostHost = document.createElement('div');
     Object.assign(ghostHost.style, {
       position: 'absolute',
@@ -91,49 +107,44 @@ function attachToField(el: HTMLElement) {
     document.addEventListener('mousedown', cleanup);
   });
 
-  // Aggressive Monitoring: Multiple events + MutationObserver (handled globally)
   ['input', 'change', 'keyup'].forEach(evt => {
-    el.addEventListener(evt, () => {
-      const value = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? el.value : el.innerHTML;
-      if (value.length > 2) {
-        db.save({
-          domain: window.location.hostname,
-          url: window.location.href,
-          fieldId,
-          fieldName: getFieldName(el),
-          value,
-          timestamp: Date.now(),
-          isSubmitted: false
-        });
-      }
-    });
+    el.addEventListener(evt, () => handleFieldInput(el));
   });
 }
 
-// Global Mutation Observer for dynamic nodes and subtree changes
+// Global Observers
 const globalObserver = new MutationObserver((mutations) => {
   mutations.forEach(m => {
-    // Detect new fields
     m.addedNodes.forEach(node => {
       if (node instanceof HTMLElement) {
         node.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach(f => attachToField(f as HTMLElement));
         if (node.matches('input[type="text"], textarea, [contenteditable="true"]')) attachToField(node);
       }
     });
-    // Handle rich text mutations directly
     const target = m.target as HTMLElement;
-    if (target.isContentEditable) {
-        target.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    if (target.isContentEditable) handleFieldInput(target);
   });
 });
 globalObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
 
-// Initial injection
 document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach(el => attachToField(el as HTMLElement));
 
-// Submission Interceptor
 initInterceptor((body) => {
-    // Logic to mark entries as submitted if body contains field content
     console.log('[Phoenix] Network submission detected.');
+});
+
+// Emergency Save Logic (Clever Trick #3)
+window.addEventListener('beforeunload', () => {
+    document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach(el => {
+        handleFieldInput(el as HTMLElement);
+    });
+});
+
+// Extended Emergency Save Logic (Clever Trick #3)
+['visibilitychange', 'pagehide', 'freeze'].forEach(evt => {
+  window.addEventListener(evt, () => {
+    document.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]').forEach(el => {
+      handleFieldInput(el as HTMLElement);
+    });
+  });
 });

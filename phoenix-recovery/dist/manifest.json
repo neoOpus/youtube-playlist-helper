@@ -13,7 +13,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.ts-DVocXAsw.js"
+        "assets/index.ts-BYv-B4Zp.js"
       ],
       "matches": [
         "<all_urls>"
@@ -35,7 +35,7 @@
         "<all_urls>"
       ],
       "resources": [
-        "assets/index.ts-DVocXAsw.js"
+        "assets/index.ts-BYv-B4Zp.js"
       ],
       "use_dynamic_url": false
     }
