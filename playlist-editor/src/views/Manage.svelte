@@ -5,6 +5,7 @@
     faUser, faSignOutAlt, faKey, faCogs, faPlusCircle, faTerminal, faMagic, faRobot, faTrash
   } from "@fortawesome/free-solid-svg-icons";
   import { onMount } from "svelte";
+  import LibraryHeatmap from "../components/mega/LibraryHeatmap.svelte";
   import Sidebar from "../components/core/Sidebar.svelte";
   import SuperButton from "../components/ui/SuperButton.svelte";
   import SuperCheckbox from "../components/ui/SuperCheckbox.svelte";
@@ -128,6 +129,10 @@
         </div>
     </section>
 
+  <section class="mega-section">
+      <LibraryHeatmap />
+  </section>
+
     <!-- Action Marketplace Section -->
     <section class="card">
         <div class="card-header">
@@ -140,6 +145,10 @@
             <p>Register custom scripts and buttons to the global Action Hub.</p>
         </div>
     </section>
+
+  <section class="mega-section">
+      <LibraryHeatmap />
+  </section>
 
     <!-- Trash Bin Section -->
     <section class="card">
@@ -163,6 +172,10 @@
         </div>
     </section>
 
+  <section class="mega-section">
+      <LibraryHeatmap />
+  </section>
+
     <!-- Backups Section -->
     <section class="card">
       <div class="card-header">
@@ -178,6 +191,10 @@
           {/each}
       </div>
     </section>
+
+  <section class="mega-section">
+      <LibraryHeatmap />
+  </section>
 
     <!-- Supabase & Cloud Section -->
     <section class="card wide-card">
@@ -202,6 +219,10 @@
         </div>
     </section>
 
+  <section class="mega-section">
+      <LibraryHeatmap />
+  </section>
+
     <!-- Danger Zone -->
     <section class="card danger-card">
       <div class="card-header">
@@ -213,6 +234,10 @@
         </SuperButton>
       </div>
     </section>
+
+  <section class="mega-section">
+      <LibraryHeatmap />
+  </section>
   </div>
 
   <Modal bind:display={showActionModal}>

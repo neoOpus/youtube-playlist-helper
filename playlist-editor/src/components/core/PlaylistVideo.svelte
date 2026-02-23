@@ -14,7 +14,7 @@
   import { stashService } from "../../services/mega/stash-service";
   import { alternativesService } from "../../services/mega/alternatives-service";
   import Fa from "svelte-fa";
-  import { faExclamationTriangle, faPlusCircle, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
+  import { faExclamationTriangle, faMask, faPlusCircle, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 
   export let video: Video;
   export let active: boolean;
@@ -103,6 +103,9 @@
   </div>
 
   <div class="video-btns" on:click|stopPropagation on:keydown|stopPropagation role="toolbar" aria-label="Video actions" tabindex="0">
+    <SuperButton on:click={() => window.dispatchEvent(new CustomEvent("openTheater", { detail: video }))} title="Theater Mode" variant="ghost" className="video-action-btn">
+        <Fa icon={faMask} />
+    </SuperButton>
     <SuperButton on:click={() => stashService.addToStash(video)} title="Add to Stash" variant="ghost" className="video-action-btn">
         <Fa icon={faPlusCircle} />
     </SuperButton>

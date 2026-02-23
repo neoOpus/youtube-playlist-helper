@@ -1,19 +1,21 @@
 import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
+import { storage } from '../core/storage-service';
 
 const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
 
 class SupabaseService {
-  private client: SupabaseClient | null = null;
+  public client: SupabaseClient | null = null;
   private channel: RealtimeChannel | null = null;
+  private presenceChannel: RealtimeChannel | null = null;
 
   constructor() {
     this.init();
   }
 
   async init() {
-    const url = await window.fetchObject("supabase_url", SUPABASE_URL);
-    const key = await window.fetchObject("supabase_key", SUPABASE_ANON_KEY);
+    const url = await storage.get("supabase_url", SUPABASE_URL);
+    const key = await storage.get("supabase_key", SUPABASE_ANON_KEY);
 
     if (url && key) {
       this.client = createClient(url, key);
@@ -25,6 +27,7 @@ class SupabaseService {
   }
 
   async healthCheck() {
+    if (!this.client) return { error: 'Not configured' };
     return await this.client.from("playlists").select("id", { count: "exact", head: true });
   }
 
@@ -82,6 +85,37 @@ class SupabaseService {
     return data.map(item => item.data);
   }
 
+  // Live Presence for Collaborators
+  joinWorkspace(playlistId: string, onPresenceUpdate: (presences: any) => void) {
+      if (!this.client) return;
+      const user = this.getUser(); // Async but presence uses sync state often
+
+      this.presenceChannel = this.client.channel(`playlist:${playlistId}`, {
+          config: { presence: { key: playlistId } }
+      });
+
+      this.presenceChannel
+          .on('presence', { event: 'sync' }, () => {
+              const state = this.presenceChannel?.presenceState();
+              onPresenceUpdate(state);
+          })
+          .subscribe(async (status) => {
+              if (status === 'SUBSCRIBED') {
+                  const u = await this.getUser();
+                  await this.presenceChannel?.track({
+                      user: u?.email || 'Anonymous',
+                      online_at: new Date().toISOString(),
+                  });
+              }
+          });
+  }
+
+  leaveWorkspace() {
+      if (this.presenceChannel) {
+          this.presenceChannel.unsubscribe();
+      }
+  }
+
   subscribeToChanges(callback: (payload: any) => void) {
       if (!this.client) return;
 
@@ -91,7 +125,6 @@ class SupabaseService {
               'postgres_changes',
               { event: '*', schema: 'public', table: 'playlists' },
               (payload) => {
-                  console.log('Change received!', payload);
                   callback(payload);
               }
           )
@@ -99,9 +132,7 @@ class SupabaseService {
   }
 
   unsubscribe() {
-      if (this.channel) {
-          this.channel.unsubscribe();
-      }
+      if (this.channel) this.channel.unsubscribe();
   }
 }
 

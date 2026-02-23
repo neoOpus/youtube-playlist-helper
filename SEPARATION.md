@@ -1,26 +1,26 @@
-# Intelligent YouTube Companion - Modular Architecture
+# Sovereign YouTube Ecosystem - Modular Architecture v2
 
-This project is divided into two distinct domains to ensure high performance and stability.
+The project has evolved into a "Sovereign Ecosystem" where data ownership, intelligence, and high-performance UI converge.
 
-## 1. Core Module (Stable Engine)
-The core engine handles the essential playlist and video operations. It is designed to be lean, fast, and bulletproof.
-- **Storage Service**: Transactional WAL-based storage with LZ-compression and Soft Delete (Trash Bin).
-- **Video Service**: Rate-limited YT metadata fetching and URL parsing.
-- **Playlist Service**: High-speed de-duplication, merging, and CRUD operations.
-- **I18n Service**: Global localization (EN/FR).
+## 1. Core Module (The Foundation)
+- **Engine**: Transactional WAL-based storage with LZ-String compression.
+- **Cache**: IndexedDB cold-start mirror for sub-second library loading.
+- **Reliability**: Soft Delete (Trash Bin) and auto-repair diagnostic engine.
 
-## 2. Mega Module (Intelligence & UX Layer)
-The Mega layer provides the "standalone project" features that make this extension unique.
-- **AI Agent Framework**: Categorizers, deleted video watchdogs, and the custom Action Architect.
-- **Sync Engine**: Multi-backend sync (Supabase/WebDAV) with AES-GCM credential encryption.
-- **Smart Precursor UI**: Advanced UI components with spring physics and context-aware menus.
-- **Insights & Dashboard**: Omni-View, Curriculum Architect, and Logigrams for visualization.
-- **Performance Layer**: IndexedDB cold-start mirror and virtualization for 10k+ video streams.
+## 2. Mega Module (Intelligence & Experience)
+- **AI Agents**: Autonomous agents for clickbait guarding, insights synthesis, and action architecting.
+- **Integrated Theater**: Immersive view mode with integrated timestamped annotations.
+- **Collaboration**: Real-time presence for shared workspaces via Supabase.
+- **Visualization**: Ecosystem Heatmaps and SVG Logigrams for library health and logic.
+- **UI Kit**: Spring-physics "Smart Precursor" components with dynamic theme orchestration.
 
-## Security & Privacy
-- **Global Stealth Mode**: Metadata blurring and session isolation.
-- **Encrypted Sync**: Credentials and sensitive data never leave the device in plain text.
+## Features At a Glance
+- **Omni-View (Ctrl+G)**: Instant global search across 10k+ videos.
+- **Action Hub (Ctrl+K)**: Command palette for custom AI actions.
+- **Stash Drawer**: Temporary holding zone for batch reorganization.
+- **Sync Diff**: Visual resolver for multi-device consistency.
+- **Curriculum Architect**: Automatic transformation of playlists into learning paths.
 
-## Debugging
-- **System Health Monitor (Ctrl+Shift+D)**: Real-time resource usage and error logging.
-- **Diagnostic Engine**: Self-healing checks for storage and sync integrity.
+## Security
+- AES-GCM local encryption for cloud credentials.
+- Global Stealth Mode for privacy-focused management.

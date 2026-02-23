@@ -3,7 +3,7 @@
   import { fade } from "svelte/transition";
   import { themeOrchestrator } from "../../services/mega/theme-orchestrator";
 
-  export let videoId: string = "";
+  export let videoId = ""; // @ts-ignore
   export let thumbnailUrl: string;
 
   let isHovered = false;
