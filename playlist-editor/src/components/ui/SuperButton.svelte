@@ -2,6 +2,7 @@
   import { spring } from 'svelte/motion';
   import { createEventDispatcher } from 'svelte';
   import Fa from 'svelte-fa';
+  import { soundService } from "../../services/mega/sound-service";
 
   export let icon: any = null;
   export let variant: 'primary' | 'secondary' | 'danger' | 'ghost' | 'glass' = 'primary';
@@ -21,6 +22,13 @@
 
   function handleMouseDown() { if (!disabled) scale.set(0.95); }
   function handleMouseUp() { if (!disabled) scale.set(1); }
+
+  function handleClick(e: MouseEvent) {
+    if (!disabled && !loading) {
+        dispatch('click', e);
+        soundService.play('click');
+    }
+  }
 </script>
 
 <button
@@ -32,7 +40,7 @@
   on:mousedown={handleMouseDown}
   on:mouseup={handleMouseUp}
   on:mouseleave={handleMouseUp}
-  on:click={(e) => !disabled && !loading && dispatch('click', e)}
+  on:click={handleClick}
 >
   {#if loading}
     <div class="spinner"></div>
@@ -55,6 +63,7 @@
     transition: background 0.2s, box-shadow 0.2s, filter 0.2s;
     user-select: none;
     white-space: nowrap;
+    position: relative;
   }
 
   .primary { background: var(--sidebar-bg-color); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }

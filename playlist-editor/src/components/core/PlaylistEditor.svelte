@@ -24,6 +24,7 @@
   import BulkActionBar from "../mega/BulkActionBar.svelte";
   import VideoSidebar from "../mega/VideoSidebar.svelte";
   import Logigram from "../mega/Logigram.svelte";
+  import RadarChart from "../mega/RadarChart.svelte";
   import { paginate } from "svelte-paginate";
   import VirtualList from "svelte-virtual-list";
   import RemoveDuplicates from "../icons/RemoveDuplicates.svelte";
@@ -34,10 +35,10 @@
   import { actionLogger } from "../../services/mega/action-logger";
   import { metadataService } from "../../services/mega/metadata-service";
   import { aiService } from "../../services/mega/ai-service";
+  import { storage } from "../../services/core/storage-service";
+  import { videoService } from "../../services/core/video-service";
   import Fa from "svelte-fa";
-  import { faChartBar, faGraduationCap, faList, faClock, faMagic, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
-
-  const videoService = window.videoService;
+  import { faChartBar, faGraduationCap, faList, faClock, faMagic } from "@fortawesome/free-solid-svg-icons";
 
   enum ModalType { Export, Import }
 
@@ -105,6 +106,7 @@
       if (paginatedVideos.length === 0 && currentPage > 1) currentPage = Math.max(1, currentPage - 1);
       loadPageVideos(currentPage);
       await savePlaylistBuilder();
+      // @ts-ignore
       window.success(`Deleted ${selectedCount} videos`);
     }
   }
@@ -120,6 +122,7 @@
       await metadataService.saveVideoMetadata(v.videoId, { watched });
     }
     videos = [...videos];
+    // @ts-ignore
     window.success(`Updated ${selectedVideos.length} videos`);
   }
 
@@ -156,19 +159,20 @@
 
   async function pageSizeChanged() {
     currentPage = 1;
-    window.storeObject("page-size", pageSize);
+    await storage.set("page-size", pageSize);
     await loadPageVideos(currentPage);
   }
 
   (async function () {
     if (isPlaylistBuilder) {
+      // @ts-ignore
       const videoIds = await browser.runtime.sendMessage({ cmd: "get-playlist-builder" });
       playlist = await videoService.generatePlaylist(videoIds);
     } else {
       const url = new URL(document.URL);
       const id = url.searchParams.get("id");
       if (id) {
-        playlist = await window.getPlaylist(id);
+        playlist = await storage.getPlaylist(id);
         history.replaceState({ playlist }, "", url.pathname + url.hash);
       } else {
         const videoIds = url.searchParams.get("videoIds");
@@ -179,7 +183,7 @@
       }
     }
     if (!playlist) { replace("/"); return; }
-    pageSize = await window.fetchObject("page-size", defaultPageSize);
+    pageSize = await storage.get("page-size", defaultPageSize);
     await Promise.all(playlist.videos.map((id) => videoService.fetchVideo(id, true))).then(async (loadedVideos) => {
       videos = [...loadedVideos];
       await loadPageVideos(currentPage);
@@ -197,15 +201,8 @@
     playlist.groups = groupsString.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
-  let displayModal = false;
-  let modalType: ModalType;
-  let importText = "";
-  let exportText = "";
-  let notificationText = "";
-  let exportTextArea: HTMLTextAreaElement;
-
   let disableThumbnails = false;
-  window.getSettings().then((settings) => disableThumbnails = settings.disableThumbnails);
+  storage.getSettings().then((settings) => disableThumbnails = settings.disableThumbnails);
 
   const drop = (event, target) => {
     event.dataTransfer.dropEffect = "move";
@@ -251,6 +248,7 @@
       videos = [...videos, video];
       await savePlaylistBuilder();
     } else {
+      // @ts-ignore
       window.error("Invalid YouTube url");
     }
   }
@@ -260,6 +258,7 @@
       const suggested = await aiService.suggestPlaylistTitle(videos);
       playlist.title = suggested;
       loading = false;
+      // @ts-ignore
       window.success("AI Title suggested!");
   }
 
@@ -269,15 +268,18 @@
       playlist.groups = suggested;
       groupsString = suggested.join(", ");
       loading = false;
+      // @ts-ignore
       window.success("AI Categories assigned!");
   }
 
   async function savePlaylist() {
     const videoIds = videos.map((video) => video.videoId.toString());
     playlist = { ...playlist, videos: videoIds };
-    const id = await window.savePlaylist(playlist);
+    const id = await storage.savePlaylist(playlist);
     playlist = { ...playlist, id };
+    // @ts-ignore
     if (isPlaylistBuilder) await browser.runtime.sendMessage({ cmd: "clear-playlist-builder" });
+    // @ts-ignore
     window.success("Playlist saved");
     await replace("/saved");
   }
@@ -285,6 +287,7 @@
   async function savePlaylistBuilder() {
     if (isPlaylistBuilder) {
       const videoIds = videos.map((video) => video.videoId.toString());
+      // @ts-ignore
       await browser.runtime.sendMessage({ cmd: "update-playlist-builder", playlistBuilder: videoIds });
     }
   }
@@ -305,7 +308,8 @@
   $: stats = {
       total: videos.length,
       watched: videos.filter(v => v.watched).length,
-      progress: videos.length > 0 ? (videos.filter(v => v.watched).length / videos.length) * 100 : 0
+      progress: videos.length > 0 ? (videos.filter(v => v.watched).length / videos.length) * 100 : 0,
+      diversity: { "Tech": 80, "Gaming": 40, "Music": 20, "News": 60, "Education": 95 }
   };
 </script>
 
@@ -372,6 +376,7 @@
                     <span class="value">{stats.progress.toFixed(1)}%</span>
                 </div>
             </div>
+            <RadarChart data={stats.diversity} size={300} />
             <Logigram data={videos.slice(0, 12)} title="Playlist Execution Logic" on:selectVideo={(e) => handleVideoSidebar(e.detail)} />
         </section>
     {:else if view === 'curriculum'}

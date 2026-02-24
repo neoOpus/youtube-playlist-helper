@@ -10,6 +10,7 @@
   import { storage } from '../services/core/storage-service';
   import { videoService } from '../services/core/video-service';
   import { smartFilterService } from "../services/mega/smart-filter-service";
+  import { semanticSearchService } from "../services/mega/semantic-search-service";
 
   let allPlaylists: Playlist[] = [];
   let allVideos: (Video & { sourcePlaylistId: string })[] = [];
@@ -17,6 +18,7 @@
   let loading = true;
   let indexingProgress = 0;
   let query = "";
+  let searchMode: "smart" | "semantic" = "smart";
 
   onMount(async () => {
     await indexEcosystem();
@@ -43,8 +45,13 @@
   }
 
   function handleSearch() {
-    filteredVideos = smartFilterService.applyFilter(allVideos, query) as any;
+    if (searchMode === "semantic") {
+        filteredVideos = semanticSearchService.search(allVideos as any, query) as any;
+    } else {
+        filteredVideos = smartFilterService.applyFilter(allVideos, query) as any;
+    }
   }
+
 
   function clearSelection() {
       allVideos = allVideos.map(v => ({ ...v, selected: false }));
@@ -82,6 +89,11 @@
           <Fa icon={faSearch} />
           <input bind:value={query} on:input={handleSearch} placeholder="Search {allVideos.length} videos... Try 'is:unwatched' or 'channel:name'" />
       </div>
+            <div class="search-modes">
+          <button class:active={searchMode === 'smart'} on:click={() => { searchMode = 'smart'; handleSearch(); }}>Smart</button>
+          <button class:active={searchMode === 'semantic'} on:click={() => { searchMode = 'semantic'; handleSearch(); }}>Semantic AI</button>
+      </div>
+
       <div class="stats">
           <Fa icon={faLayerGroup} />
           <span>{filteredVideos.length} Results</span>
@@ -117,8 +129,9 @@
     on:clearSelection={clearSelection}
     on:markWatched={(e) => bulkMarkWatched(e.detail)}
 />
-
 <style>
+
+
   main { padding: 2rem 4rem; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; height: 100vh; }
   header h2 { display: flex; align-items: center; gap: 1rem; margin: 0; }
   header p { color: #888; }
@@ -143,4 +156,11 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .empty { padding: 4rem; text-align: center; color: #aaa; font-style: italic; }
+
+
+  .search-modes { display: flex; background: #eee; padding: 2px; border-radius: 8px; margin-right: 1rem; }
+  .search-modes button { border: none; background: none; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; color: #666; }
+  .search-modes button.active { background: white; color: var(--sidebar-bg-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+
 </style>

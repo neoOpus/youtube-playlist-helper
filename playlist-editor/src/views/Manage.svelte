@@ -15,8 +15,11 @@
   import { syncService, type SyncConfig } from "../services/mega/sync-service";
   import { backupService } from "../services/mega/backup-service";
   import { supabaseService } from "../services/mega/supabase-service";
+  import { archiveAgent, type ArchiveTask } from "../services/mega/archive-agent";
   import { actionService } from "../services/mega/action-service";
   import { aiService } from "../services/mega/ai-service";
+  import { storage } from "../services/core/storage-service";
+  import { soundService } from "../services/mega/sound-service";
 
   let playlists: (Playlist & { selected?: boolean })[] = [];
   let trashPlaylists: any[] = [];
@@ -25,6 +28,8 @@
   let settings: Settings;
   let loading = true;
   let user: any = null;
+  let archiveTasks: ArchiveTask[] = [];
+  let soundsEnabled = false;
 
   let showActionModal = false;
   let newAction = { label: '', handlerStr: '', color: '#6f42c1' };
@@ -36,6 +41,8 @@
     await refreshData();
     if (supabaseService.isConfigured) {
         user = await supabaseService.getUser();
+      archiveTasks = await archiveAgent.getTasks();
+      soundsEnabled = await storage.get("ui_sounds_enabled", false);
     }
   });
 
@@ -270,6 +277,38 @@
           </div>
       </div>
   </Modal>
+  <section class="mega-section">
+      <div class="section-header">
+          <h2>Proactive Archiver Agent</h2>
+          <SuperButton variant="secondary" size="sm" on:click={async () => { await archiveAgent.processQueue(); archiveTasks = await archiveAgent.getTasks(); }}>
+              Run Archiver Now
+          </SuperButton>
+      </div>
+      <div class="archive-list">
+          {#each archiveTasks as task}
+              <div class="archive-item status-{task.status}">
+                  <span class="title">{task.title}</span>
+                  <span class="status-badge">{task.status.toUpperCase()}</span>
+              </div>
+          {:else}
+              <p class="empty-msg">No videos scheduled for archival.</p>
+          {/each}
+      </div>
+  </section>
+
+  <section class="mega-section">
+      <div class="section-header">
+          <h2>UI Experience</h2>
+      </div>
+      <div class="setting-row">
+          <div class="text">
+              <h3>System Audio Feedback</h3>
+              <p>Subtle auditory cues for interface interactions.</p>
+          </div>
+          <SuperCheckbox checked={soundsEnabled} on:change={(e) => { soundsEnabled = e.detail; soundService.setEnabled(e.detail); }} />
+      </div>
+  </section>
+
 </main>
 
 <style>
@@ -306,4 +345,16 @@
   :global(.wide-btn) { width: 100%; }
   .action-form { min-width: 500px; display: flex; flex-direction: column; gap: 1.5rem; }
   :global(.wide) { width: 100%; }
+  .archive-list { display: flex; flex-direction: column; gap: 8px; }
+  .archive-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #cbd5e1; }
+  .archive-item.status-archived { border-left-color: #10b981; }
+  .archive-item.status-pending { border-left-color: #f59e0b; }
+  .status-badge { font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: #e2e8f0; color: #475569; }
+  .status-archived .status-badge { background: #d1fae5; color: #065f46; }
+
+  .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #f1f5f9; }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-row h3 { margin: 0; font-size: 1rem; color: #1e293b; }
+  .setting-row p { margin: 4px 0 0 0; font-size: 0.85rem; color: #64748b; }
+
 </style>

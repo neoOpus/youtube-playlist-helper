@@ -1,26 +1,24 @@
-# Sovereign YouTube Ecosystem - Modular Architecture v2
+# Omniscient YouTube Companion - Modular Architecture v3
 
-The project has evolved into a "Sovereign Ecosystem" where data ownership, intelligence, and high-performance UI converge.
+The final evolution into an **Omniscient Ecosystem** where AI, UI, and infrastructure reach peak synergy.
 
-## 1. Core Module (The Foundation)
-- **Engine**: Transactional WAL-based storage with LZ-String compression.
-- **Cache**: IndexedDB cold-start mirror for sub-second library loading.
-- **Reliability**: Soft Delete (Trash Bin) and auto-repair diagnostic engine.
+## 1. Core Module (Bulletproof Engine)
+- **Persistence**: Transactional WAL storage, LZ-compression, and IndexedDB mirroring.
+- **Resilience**: Diagnostic self-healing and Trash Bin recovery.
 
-## 2. Mega Module (Intelligence & Experience)
-- **AI Agents**: Autonomous agents for clickbait guarding, insights synthesis, and action architecting.
-- **Integrated Theater**: Immersive view mode with integrated timestamped annotations.
-- **Collaboration**: Real-time presence for shared workspaces via Supabase.
-- **Visualization**: Ecosystem Heatmaps and SVG Logigrams for library health and logic.
-- **UI Kit**: Spring-physics "Smart Precursor" components with dynamic theme orchestration.
+## 2. Mega Module (Omniscient Intelligence)
+- **Semantic Search**: AI-aware query expansion for concept-based discovery.
+- **Active Archiving**: Proactive backup to Wayback Machine for "At-Risk" nodes.
+- **Sensory Experience**: Soundscape-enabled UI and dynamic theme color-thief extraction.
+- **Education Stack**: Curriculum Architect for structured learning from raw streams.
+- **Ecosystem Analytics**: Radar Charts for library diversity and Heatmaps for health tracking.
 
-## Features At a Glance
-- **Omni-View (Ctrl+G)**: Instant global search across 10k+ videos.
-- **Action Hub (Ctrl+K)**: Command palette for custom AI actions.
-- **Stash Drawer**: Temporary holding zone for batch reorganization.
-- **Sync Diff**: Visual resolver for multi-device consistency.
-- **Curriculum Architect**: Automatic transformation of playlists into learning paths.
+## Core Philosophies
+- **Zero-Latency UI**: Every interaction is animated via spring physics and backed by background caching.
+- **Data Sovereignty**: End-to-end encryption for all cloud and WebDAV interactions.
+- **AI Agentic Design**: Agents don't just "show" data; they audit, architect, and archive it autonomously.
 
-## Security
-- AES-GCM local encryption for cloud credentials.
-- Global Stealth Mode for privacy-focused management.
+## Command & Control
+- `Ctrl+K`: Global Action Architect & Hub.
+- `Ctrl+G`: Omni-Stream High-Performance View.
+- `Ctrl+Shift+D`: Real-time System Metrics & Diagnostics.
