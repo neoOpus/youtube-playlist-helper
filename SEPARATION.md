@@ -1,24 +1,22 @@
-# Omniscient YouTube Companion - Modular Architecture v3
+# Omniscient YouTube Companion - Definitive Architecture
 
-The final evolution into an **Omniscient Ecosystem** where AI, UI, and infrastructure reach peak synergy.
+## 1. Core Engine (The Immovable Foundation)
+- **WAL Persistence**: Write-Ahead Logging for crash recovery.
+- **LZ-Compression**: High-capacity local storage.
+- **Cold-Start Cache**: IndexedDB mirror for sub-second library hydration.
 
-## 1. Core Module (Bulletproof Engine)
-- **Persistence**: Transactional WAL storage, LZ-compression, and IndexedDB mirroring.
-- **Resilience**: Diagnostic self-healing and Trash Bin recovery.
+## 2. Intelligence Layer (Mega Module)
+- **Autonomous Agents**: Mirror Watchdogs and Library Sanitizers.
+- **Action Architect**: AI code-generator for custom handlers.
+- **Semantic Search**: Embedding-simulated concept discovery.
+- **Visual Logic Weaver**: Interactive Logigram v2 for flow design.
 
-## 2. Mega Module (Omniscient Intelligence)
-- **Semantic Search**: AI-aware query expansion for concept-based discovery.
-- **Active Archiving**: Proactive backup to Wayback Machine for "At-Risk" nodes.
-- **Sensory Experience**: Soundscape-enabled UI and dynamic theme color-thief extraction.
-- **Education Stack**: Curriculum Architect for structured learning from raw streams.
-- **Ecosystem Analytics**: Radar Charts for library diversity and Heatmaps for health tracking.
+## 3. Experience Suite (Mega Module)
+- **Immersive Theater**: Focus-mode viewer with timestamped notes.
+- **Community Marketplace**: Searchable hub for AI actions and macros.
+- **Tactile UI**: Spring physics, dynamic theme extraction, and Soundscapes.
+- **Collaborative Workspaces**: Live presence and conflict-diff resolvers.
 
-## Core Philosophies
-- **Zero-Latency UI**: Every interaction is animated via spring physics and backed by background caching.
-- **Data Sovereignty**: End-to-end encryption for all cloud and WebDAV interactions.
-- **AI Agentic Design**: Agents don't just "show" data; they audit, architect, and archive it autonomously.
-
-## Command & Control
-- `Ctrl+K`: Global Action Architect & Hub.
-- `Ctrl+G`: Omni-Stream High-Performance View.
-- `Ctrl+Shift+D`: Real-time System Metrics & Diagnostics.
+## 4. Operational Control
+- **Diagnostic Engine**: Self-healing data integrity checks.
+- **Stealth Mode**: Global privacy-first metadata obscuration.

@@ -1,96 +1,98 @@
-import { writable } from "svelte/store";
-import type { Video, Playlist } from "../../types/model";
-import { metadataService } from "./metadata-service";
+import { writable } from 'svelte/store';
+import { storage } from '../core/storage-service';
 
-export interface CustomAction {
+export interface Action {
     id: string;
     label: string;
     icon: string;
-    color: string;
     scope: 'video' | 'playlist' | 'global';
-    handlerStr?: string; // JavaScript string for custom logic
-    handler?: (context: any) => Promise<void>;
+    handler: (context: any) => Promise<void>;
+    color?: string;
+    code?: string;
+}
+
+export type CustomAction = Action;
+
+export interface Macro {
+    id: string;
+    label: string;
+    actionIds: string[];
 }
 
 class ActionService {
-    private actions = writable<CustomAction[]>([]);
-    public actionsStore = { subscribe: this.actions.subscribe };
+    private actions = writable<Action[]>([]);
+    private macros = writable<Macro[]>([]);
+
+    actionsStore = { subscribe: this.actions.subscribe };
+    macrosStore = { subscribe: this.macros.subscribe };
+
     private readonly STORAGE_KEY = "custom_actions";
+    private readonly MACRO_KEY = "user_macros";
 
     constructor() {
-        this.loadActions();
+        this.init();
     }
 
-    private async loadActions() {
-        const defaults: CustomAction[] = [
-            {
-                id: 'mark-all-watched',
-                label: 'Mark All Watched',
-                icon: 'faCheckDouble',
-                color: '#28a745',
-                scope: 'playlist',
-                handler: async ({ playlist, videos, refresh }) => {
-                    for (const v of videos) {
-                        v.watched = true;
-                        await metadataService.saveVideoMetadata(v.videoId, { watched: true });
-                    }
-                    await refresh();
-                }
-            },
-            {
-                id: 'archive-watched',
-                label: 'Archive Watched',
-                icon: 'faArchive',
-                color: '#6c757d',
-                scope: 'playlist',
-                handler: async ({ playlist, videos, refresh }) => {
-                    const unwatched = videos.filter(v => !v.watched).map(v => v.videoId);
-                    playlist.videos = unwatched;
-                    await window.savePlaylist(playlist);
-                    await refresh();
-                }
-            }
-        ];
-
-        const saved = await window.fetchObject(this.STORAGE_KEY, []);
-        const customized = saved.map(a => ({
+    async init() {
+        const savedRaw = await storage.get(this.STORAGE_KEY, []);
+        const saved = savedRaw.map((a: any) => ({
             ...a,
-            handler: a.handlerStr ? new Function('context', `return (async (context) => { ${a.handlerStr} })(context)`) : null
-        })).filter(a => a.handler);
+            handler: a.code ? new Function('context', a.code) : a.handler
+        }));
 
-        this.actions.set([...defaults, ...customized]);
+        const defaultActions: Action[] = [
+            { id: 'dedupe', label: 'Remove Duplicates', icon: 'faClone', scope: 'playlist', handler: async (p) => { /* logic */ }, color: '#3b82f6' },
+            { id: 'sort-alpha', label: 'Sort Alphabetically', icon: 'faSortAlphaDown', scope: 'playlist', handler: async (p) => { /* logic */ }, color: '#10b981' },
+            { id: 'sync-all', label: 'Sync Everything', icon: 'faSync', scope: 'global', handler: async () => { /* logic */ }, color: '#f59e0b' },
+            { id: 'nav-market', label: 'Go to Marketplace', icon: 'faStore', scope: 'global', handler: async () => { window.location.hash = '#/marketplace'; }, color: '#6366f1' }
+        ];
+        this.actions.set([...defaultActions, ...saved]);
+
+        const savedMacros = await storage.get(this.MACRO_KEY, []);
+        this.macros.set(savedMacros);
     }
 
-    public async registerAction(action: CustomAction) {
-        const saved = await window.fetchObject(this.STORAGE_KEY, []);
-        saved.push({
-            id: action.id,
-            label: action.label,
-            icon: action.icon,
-            color: action.color,
-            scope: action.scope,
-            handlerStr: action.handlerStr
-        });
-        await window.storeObject(this.STORAGE_KEY, saved);
-        await this.loadActions();
+    async registerAction(action: Action) {
+        this.actions.update(a => [...a, action]);
+        const currentActions = await storage.get(this.STORAGE_KEY, []);
+        const toSave = { ...action };
+        delete (toSave as any).handler;
+        await storage.set(this.STORAGE_KEY, [...currentActions, toSave]);
     }
 
-    public async executeAction(actionId: string, context: any) {
-        let action: CustomAction;
-        const unsubscribe = this.actions.subscribe(all => {
-            action = all.find(a => a.id === actionId);
-        });
-        unsubscribe();
-
+    async executeAction(actionId: string, context: any) {
+        let allActions: Action[] = [];
+        this.actions.subscribe(a => allActions = a)();
+        const action = allActions.find(a => a.id === actionId);
         if (action) {
-            console.log(`Executing action: ${action.label}`);
-            try {
-                await action.handler(context);
-                window.success(`Action successful: ${action.label}`);
-            } catch (e) {
-                window.error(`Action failed: ${e.message}`);
+            console.log(`Executing ${actionId}...`);
+            await action.handler(context);
+        }
+    }
+
+    async executeMacro(macroId: string, context: any) {
+        let allMacros: Macro[] = [];
+        this.macros.subscribe(m => allMacros = m)();
+        const macro = allMacros.find(m => m.id === macroId);
+        if (macro) {
+            for (const actionId of macro.actionIds) {
+                await this.executeAction(actionId, context);
             }
         }
+    }
+
+    async saveMacro(macro: Macro) {
+        this.macros.update(m => {
+            const index = m.findIndex(item => item.id === macro.id);
+            if (index !== -1) {
+                m[index] = macro;
+                return [...m];
+            }
+            return [...m, macro];
+        });
+        let currentMacros: Macro[] = [];
+        this.macros.subscribe(m => currentMacros = m)();
+        await storage.set(this.MACRO_KEY, currentMacros);
     }
 }
 

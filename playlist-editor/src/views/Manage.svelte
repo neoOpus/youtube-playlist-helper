@@ -2,7 +2,7 @@
   import Fa from "svelte-fa";
   import {
     faFileExport, faFileImport, faTriangleExclamation, faHistory, faCloud, faSave,
-    faUser, faSignOutAlt, faKey, faCogs, faPlusCircle, faTerminal, faMagic, faRobot, faTrash
+    faUser, faSignOutAlt, faKey, faCogs, faPlusCircle, faTerminal, faMagic, faRobot, faTrash, faHeartbeat, faStore
   } from "@fortawesome/free-solid-svg-icons";
   import { onMount } from "svelte";
   import LibraryHeatmap from "../components/mega/LibraryHeatmap.svelte";
@@ -11,12 +11,13 @@
   import SuperCheckbox from "../components/ui/SuperCheckbox.svelte";
   import SuperInput from "../components/ui/SuperInput.svelte";
   import Modal from "../components/ui/Modal.svelte";
-  import type { Playlist, PlaylistExport, Settings } from "../types/model.js";
+  import type { Playlist, Settings } from "../types/model.js";
   import { syncService, type SyncConfig } from "../services/mega/sync-service";
   import { backupService } from "../services/mega/backup-service";
   import { supabaseService } from "../services/mega/supabase-service";
   import { archiveAgent, type ArchiveTask } from "../services/mega/archive-agent";
-  import { actionService } from "../services/mega/action-service";
+  import { agentOrchestrator } from "../services/mega/agent-orchestrator";
+  import { actionService, type Action } from "../services/mega/action-service";
   import { aiService } from "../services/mega/ai-service";
   import { storage } from "../services/core/storage-service";
   import { soundService } from "../services/mega/sound-service";
@@ -30,33 +31,35 @@
   let user: any = null;
   let archiveTasks: ArchiveTask[] = [];
   let soundsEnabled = false;
+  const activities = agentOrchestrator.activityStore;
 
   let showActionModal = false;
-  let newAction = { label: '', handlerStr: '', color: '#6f42c1' };
+  let newAction = { label: '', code: '', color: '#6f42c1' };
   let aiPrompt = "";
   let generatingCode = false;
 
   onMount(async () => {
-    settings = await window.getSettings();
+    settings = await storage.getSettings();
     await refreshData();
     if (supabaseService.isConfigured) {
         user = await supabaseService.getUser();
-      archiveTasks = await archiveAgent.getTasks();
-      soundsEnabled = await storage.get("ui_sounds_enabled", false);
     }
+    archiveTasks = await archiveAgent.getTasks();
+    soundsEnabled = await storage.get("ui_sounds_enabled", false);
   });
 
   async function refreshData() {
     loading = true;
-    playlists = await window.getPlaylists();
-    trashPlaylists = await window.getTrash();
+    playlists = await storage.getPlaylists();
+    trashPlaylists = await storage.getTrash();
     backups = await backupService.getBackups();
     syncConfig = await syncService.getSyncConfig();
     loading = false;
   }
 
   async function saveProjectSettings() {
-      await window.storeObject('viewMode', settings.viewMode);
+      await storage.set('viewMode', settings.viewMode);
+      // @ts-ignore
       window.success("Project settings saved.");
   }
 
@@ -69,8 +72,9 @@
       generatingCode = true;
       try {
           const code = await aiService.generateActionHandler(aiPrompt);
-          newAction.handlerStr = code;
+          newAction.code = code;
           if (!newAction.label) newAction.label = aiPrompt.substring(0, 20);
+          // @ts-ignore
           window.success("AI Agent has architected your action!");
       } finally {
           generatingCode = false;
@@ -78,37 +82,36 @@
   }
 
   async function addCustomAction() {
-      await actionService.registerAction({
+      const action: Action = {
           id: 'custom-' + Date.now(),
           label: newAction.label || 'Unnamed Action',
           icon: 'faBolt',
           color: newAction.color,
           scope: 'playlist',
-          handlerStr: newAction.handlerStr
-      });
+          code: newAction.code,
+          handler: new Function('context', newAction.code) as any
+      };
+      await actionService.registerAction(action);
       showActionModal = false;
-      newAction = { label: '', handlerStr: '', color: '#6f42c1' };
+      newAction = { label: '', code: '', color: '#6f42c1' };
       aiPrompt = "";
+      // @ts-ignore
       window.success("Custom action registered to Marketplace");
   }
 
   async function restorePlaylist(id: string) {
-      await window.restoreFromTrash(id);
+      await storage.restoreFromTrash(id);
+      // @ts-ignore
       window.success("Playlist restored!");
       await refreshData();
   }
 
   async function manualBackup() {
     await backupService.performAutoBackup();
+    // @ts-ignore
     window.success("Manual backup created");
     await refreshData();
   }
-
-  function toggleAll(checked: boolean) {
-    playlists = playlists.map(p => ({ ...p, selected: checked }));
-  }
-
-  $: allSelected = playlists.length > 0 && playlists.every(p => p.selected);
 </script>
 
 <Sidebar />
@@ -120,12 +123,12 @@
   </header>
 
   <div class="grid">
-    <!-- Project Mode Section -->
     <section class="card">
         <div class="card-header">
             <h2>Project Configuration</h2>
         </div>
         <div class="card-content">
+            {#if settings}
             <div class="form-group">
                 <label for="view-mode">Active Experience</label>
                 <select id="view-mode" bind:value={settings.viewMode} on:change={saveProjectSettings}>
@@ -133,14 +136,10 @@
                     <option value="advanced">Mega (Power-User Dashboard)</option>
                 </select>
             </div>
+            {/if}
         </div>
     </section>
 
-  <section class="mega-section">
-      <LibraryHeatmap />
-  </section>
-
-    <!-- Action Marketplace Section -->
     <section class="card">
         <div class="card-header">
             <h2><Fa icon={faTerminal} /> Action Marketplace</h2>
@@ -150,14 +149,14 @@
         </div>
         <div class="card-content">
             <p>Register custom scripts and buttons to the global Action Hub.</p>
+            <a href="#/marketplace" class="text-btn">Browse Community Marketplace →</a>
         </div>
     </section>
 
-  <section class="mega-section">
-      <LibraryHeatmap />
-  </section>
+    <section class="card wide-card">
+        <LibraryHeatmap />
+    </section>
 
-    <!-- Trash Bin Section -->
     <section class="card">
         <div class="card-header">
             <h2><Fa icon={faTrash} /> Trash Bin</h2>
@@ -179,11 +178,6 @@
         </div>
     </section>
 
-  <section class="mega-section">
-      <LibraryHeatmap />
-  </section>
-
-    <!-- Backups Section -->
     <section class="card">
       <div class="card-header">
         <h2><Fa icon={faHistory} /> Snapshots</h2>
@@ -199,11 +193,6 @@
       </div>
     </section>
 
-  <section class="mega-section">
-      <LibraryHeatmap />
-  </section>
-
-    <!-- Supabase & Cloud Section -->
     <section class="card wide-card">
         <div class="card-header">
             <h2><Fa icon={faUser} /> Account & Cloud Sync</h2>
@@ -225,58 +214,8 @@
             {/if}
         </div>
     </section>
-
-  <section class="mega-section">
-      <LibraryHeatmap />
-  </section>
-
-    <!-- Danger Zone -->
-    <section class="card danger-card">
-      <div class="card-header">
-        <h2 class="danger-text"><Fa icon={faTriangleExclamation} /> Danger Zone</h2>
-      </div>
-      <div class="card-content">
-        <SuperButton on:click={() => window.removeSavedPlaylists()} variant="danger" className="wide-btn">
-          Wipe All Saved Data
-        </SuperButton>
-      </div>
-    </section>
-
-  <section class="mega-section">
-      <LibraryHeatmap />
-  </section>
   </div>
 
-  <Modal bind:display={showActionModal}>
-      <div class="action-form">
-          <h3><Fa icon={faRobot} /> AI Action Architect</h3>
-
-          <div class="ai-generator-box">
-              <label for="ai-prompt">Describe your action (e.g. "Export to Notion")</label>
-              <div class="prompt-input">
-                  <input id="ai-prompt" bind:value={aiPrompt} placeholder="Type a prompt..." />
-                  <SuperButton on:click={generateAiAction} loading={generatingCode} disabled={!aiPrompt} bgcolor="#6f42c1">
-                      <Fa icon={faMagic} /> Generate
-                  </SuperButton>
-              </div>
-          </div>
-
-          <div class="divider"><span>OR CONFIGURE MANUALLY</span></div>
-
-          <SuperInput label="Button Label" bind:value={newAction.label} placeholder="e.g. My Custom Tool" />
-
-          <div class="form-group">
-              <label for="action-handler">Handler Logic (JavaScript Code)</label>
-              <textarea id="action-handler" bind:value={newAction.handlerStr} placeholder="const logic = context.videos..."></textarea>
-          </div>
-
-          <div class="modal-footer">
-              <SuperButton on:click={addCustomAction} variant="primary" className="wide">
-                  Register to Global Marketplace
-              </SuperButton>
-          </div>
-      </div>
-  </Modal>
   <section class="mega-section">
       <div class="section-header">
           <h2>Proactive Archiver Agent</h2>
@@ -309,6 +248,54 @@
       </div>
   </section>
 
+  <section class="mega-section">
+      <div class="section-header">
+          <h2>Live Agent Activity Feed</h2>
+          <div class="live-indicator"><span class="dot"></span> Monitoring</div>
+      </div>
+      <div class="activity-feed">
+          {#each $activities as entry}
+              <div class="activity-row status-{entry.status}">
+                  <div class="agent-tag">{entry.agentName}</div>
+                  <div class="action-text">{entry.action}</div>
+                  <div class="time">{new Date(entry.timestamp).toLocaleTimeString()}</div>
+              </div>
+          {:else}
+              <p class="empty-msg">Waiting for agent orchestration...</p>
+          {/each}
+      </div>
+  </section>
+
+  <Modal bind:display={showActionModal}>
+      <div class="action-form">
+          <h3><Fa icon={faRobot} /> AI Action Architect</h3>
+
+          <div class="ai-generator-box">
+              <label for="ai-prompt">Describe your action (e.g. "Export to Notion")</label>
+              <div class="prompt-input">
+                  <input id="ai-prompt" bind:value={aiPrompt} placeholder="Type a prompt..." />
+                  <SuperButton on:click={generateAiAction} loading={generatingCode} disabled={!aiPrompt} bgcolor="#6f42c1">
+                      <Fa icon={faMagic} /> Generate
+                  </SuperButton>
+              </div>
+          </div>
+
+          <div class="divider"><span>OR CONFIGURE MANUALLY</span></div>
+
+          <SuperInput label="Button Label" bind:value={newAction.label} placeholder="e.g. My Custom Tool" />
+
+          <div class="form-group">
+              <label for="action-handler">Handler Logic (JavaScript Code)</label>
+              <textarea id="action-handler" bind:value={newAction.code} placeholder="const logic = context.videos..."></textarea>
+          </div>
+
+          <div class="modal-footer">
+              <SuperButton on:click={addCustomAction} variant="primary" className="wide">
+                  Register to Hub
+              </SuperButton>
+          </div>
+      </div>
+  </Modal>
 </main>
 
 <style>
@@ -339,12 +326,13 @@
 
   .backup-list { display: flex; flex-direction: column; gap: 8px; }
   .backup-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #fafafa; border-radius: 8px; }
-  .text-btn { background: none; border: none; color: var(--sidebar-bg-color); cursor: pointer; font-weight: bold; }
+  .text-btn { background: none; border: none; color: var(--sidebar-bg-color); cursor: pointer; font-weight: bold; font-size: 0.9rem; }
   .label { font-size: 0.9rem; font-weight: 600; }
-  .danger-text { color: #dc3545; }
-  :global(.wide-btn) { width: 100%; }
-  .action-form { min-width: 500px; display: flex; flex-direction: column; gap: 1.5rem; }
-  :global(.wide) { width: 100%; }
+  .hint { color: #94a3b8; font-style: italic; font-size: 0.9rem; }
+
+  .mega-section { background: white; padding: 2rem; border-radius: 20px; border: 1px solid #eee; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+
   .archive-list { display: flex; flex-direction: column; gap: 8px; }
   .archive-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #cbd5e1; }
   .archive-item.status-archived { border-left-color: #10b981; }
@@ -357,4 +345,21 @@
   .setting-row h3 { margin: 0; font-size: 1rem; color: #1e293b; }
   .setting-row p { margin: 4px 0 0 0; font-size: 0.85rem; color: #64748b; }
 
+  .live-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #10b981; font-weight: bold; text-transform: uppercase; }
+  .live-indicator .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite; }
+
+  .activity-feed { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+  .activity-row { display: flex; align-items: center; gap: 1rem; padding: 10px 15px; background: #f8fafc; border-radius: 10px; font-size: 0.85rem; border-left: 3px solid #cbd5e1; }
+  .activity-row.status-success { border-left-color: #10b981; }
+  .activity-row.status-working { border-left-color: #3b82f6; }
+
+  .agent-tag { font-weight: bold; color: #1e293b; min-width: 120px; }
+  .action-text { flex: 1; color: #64748b; }
+  .activity-row .time { font-size: 0.7rem; color: #94a3b8; }
+
+  .action-form { min-width: 500px; display: flex; flex-direction: column; gap: 1.5rem; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
+  :global(.wide) { width: 100%; }
+
+  @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
 </style>

@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { fade } from "svelte/transition";
   import { themeOrchestrator } from "../../services/mega/theme-orchestrator";
 
-  export let videoId = ""; // @ts-ignore
+  export let videoId: string = "";
   export let thumbnailUrl: string;
 
   let isHovered = false;
@@ -12,6 +11,7 @@
 
   async function handleMouseEnter() {
     isHovered = true;
+    console.log("Peeking at node:", videoId);
     themeOrchestrator.extractDominantColor(thumbnailUrl).then(color => {
         if (color) themeOrchestrator.applyDynamicAccent(color);
     });

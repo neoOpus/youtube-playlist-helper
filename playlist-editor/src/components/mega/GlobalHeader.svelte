@@ -10,6 +10,8 @@
 
   let searchQuery = "";
   let user: any = null;
+  let currentWorkspace = "Default Sovereign";
+  const workspaces = ["Default Sovereign", "Research", "Leisure", "Deep Work"];
   const stash = stashService.stashStore;
 
   onMount(async () => {
@@ -43,7 +45,16 @@
     </a>
   </div>
 
-  <div class="center">
+      <div class="workspace-switcher">
+        <select bind:value={currentWorkspace}>
+            {#each workspaces as ws}
+                <option value={ws}>{ws}</option>
+            {/each}
+        </select>
+        <span class="pulse-light"></span>
+    </div>
+
+    <div class="center">
     <div class="search-bar" on:click={openPalette} role="button" tabindex="0" on:keydown={(e) => e.key === 'Enter' && openPalette()}>
       <Fa icon={faSearch} />
       <span class="search-placeholder">Press Ctrl+K to search actions...</span>
@@ -154,4 +165,8 @@
   }
 
   .avatar-small { width: 24px; height: 24px; border-radius: 50%; }
+  .workspace-switcher { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 30px; margin-right: 1.5rem; position: relative; }
+  .workspace-switcher select { background: transparent; border: none; color: white; font-size: 0.75rem; font-weight: bold; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; }
+  .pulse-light { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 5px #10b981; }
+
 </style>

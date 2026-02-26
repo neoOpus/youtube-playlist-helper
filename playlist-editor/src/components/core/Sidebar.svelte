@@ -1,15 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { storage } from "../../services/core/storage-service";
   import type { Settings, ViewMode } from "../../types/model";
   import { link, location } from "svelte-spa-router";
   import Fa from "svelte-fa";
   import {
-    faPlus, faList, faHistory, faCog, faLifeRing, faGlobe, faExchangeAlt, faLayerGroup
+    faPlus, faList, faStore, faHistory, faCog, faLifeRing, faGlobe, faExchangeAlt, faLayerGroup
   } from "@fortawesome/free-solid-svg-icons";
 
   let viewMode: ViewMode = "simple";
   onMount(async () => {
-    const settings = await window.getSettings();
+    const settings = await storage.getSettings();
     viewMode = settings.viewMode || "simple";
   });
 
@@ -29,6 +30,10 @@
           <span>Saved Playlists</span>
         </a>
         <a href="/omni" use:link class:active={isActive('/omni')}>
+        <a href="/marketplace" use:link class:active={isActive("/marketplace")}>
+          <Fa icon={faStore} />
+          <span>Marketplace</span>
+        </a>
           <Fa icon={faGlobe} />
           <span>Omni View</span>
         </a>

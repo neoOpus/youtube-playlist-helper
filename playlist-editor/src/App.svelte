@@ -9,6 +9,7 @@
   import OmniView from "./views/OmniView.svelte";
   import Curriculum from "./views/Curriculum.svelte";
   import SyncDiff from "./views/SyncDiff.svelte";
+  import Marketplace from "./views/Marketplace.svelte";
   import PlaylistComparison from "./components/mega/PlaylistComparison.svelte";
   import UndoNotification from "./components/mega/UndoNotification.svelte";
   import GlobalHeader from "./components/mega/GlobalHeader.svelte";
@@ -31,6 +32,7 @@
     "/omni": OmniView,
     "/curriculum/:id": Curriculum,
     "/sync-resolve": SyncDiff,
+    "/marketplace": Marketplace,
     "*": Saved,
   };
 
