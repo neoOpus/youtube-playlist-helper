@@ -12,6 +12,14 @@
   import { syncService, type SyncConfig } from "../services/sync-service";
 
   let syncConfig: SyncConfig = { enabled: false, type: "webdav" };
+  // Add integration listener
+  const channel = new BroadcastChannel("neoopus_integration");
+  channel.onmessage = (event) => {
+    if (event.data.type === "IMPORT_DESCRIPTION") {
+      console.log("Phoenix Integration: Received description import", event.data.content);
+      window.success("Imported description from Phoenix Recovery");
+    }
+  };
   let syncing = false;
 
   onMount(async () => {

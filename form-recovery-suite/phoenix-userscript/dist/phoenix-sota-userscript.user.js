@@ -11,7 +11,7 @@
 // @run-at       document-start
 // ==/UserScript==
 
-(e=>{if(typeof GM_addStyle=="function"){GM_addStyle(e);return}const t=document.createElement("style");t.textContent=e,document.head.append(t)})(" :host{all:initial}.phoenix-shell.svelte-10hlut0{font-family:Inter,system-ui,-apple-system,sans-serif;color:#fff;pointer-events:auto}.glass-menu.svelte-10hlut0{background:#121214d9;-webkit-backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%);border:1px solid rgba(255,255,255,.1);box-shadow:0 12px 40px #0009;border-radius:20px;width:360px;padding:16px;overflow:hidden}.header.svelte-10hlut0{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.brand.svelte-10hlut0{font-size:12px;font-weight:800;letter-spacing:.2em;color:#888;display:flex;align-items:center;gap:4px}.brand.svelte-10hlut0 .p:where(.svelte-10hlut0){color:#0f8;text-shadow:0 0 8px rgba(0,255,136,.4)}.toggle-btn.svelte-10hlut0{background:#ffffff0d;border:1px solid rgba(255,255,255,.1);color:#ccc;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;transition:.2s}.toggle-btn.svelte-10hlut0:hover{background:#ffffff1a;color:#fff}.entry-list.svelte-10hlut0{list-style:none;padding:0;margin:0}li.svelte-10hlut0{background:#ffffff05;border-radius:14px;margin-bottom:8px;padding:14px;cursor:pointer;transition:.2s cubic-bezier(.4,0,.2,1);border:1px solid transparent}li.svelte-10hlut0:hover{background:#ffffff0f;transform:scale(1.02);border-color:#0f83}.val.svelte-10hlut0{font-size:13px;line-height:1.5;color:#ddd;display:block;word-break:break-word}.sub.svelte-10hlut0{font-size:10px;color:#555;margin-top:8px;display:block;font-variant-numeric:tabular-nums}.time-machine.svelte-10hlut0{display:flex;flex-direction:column;gap:16px}.preview-box.svelte-10hlut0{background:#0000004d;border-radius:12px;padding:16px;height:140px;overflow-y:auto;border:1px solid rgba(255,255,255,.05)}pre.svelte-10hlut0{margin:0;font-size:12px;color:#0f8;font-family:JetBrains Mono,monospace;white-space:pre-wrap}.tm-controls.svelte-10hlut0{display:flex;flex-direction:column;gap:12px}input[type=range].svelte-10hlut0{width:100%;accent-color:#00ff88;cursor:pointer}.meta.svelte-10hlut0{display:flex;justify-content:space-between;font-size:10px;color:#666}.restore-action.svelte-10hlut0{background:#0f8;color:#000;border:none;padding:12px;border-radius:12px;font-weight:700;cursor:pointer;transition:.2s}.restore-action.svelte-10hlut0:hover{transform:translateY(-2px);box-shadow:0 4px 15px #00ff884d}.fade-in.svelte-10hlut0{animation:svelte-10hlut0-fadeIn .3s ease-out}@keyframes svelte-10hlut0-fadeIn{0%{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.empty-state.svelte-10hlut0{padding:40px 20px;text-align:center;color:#444;font-size:14px}.footer.svelte-10hlut0{margin-top:16px;font-size:9px;color:#333;text-align:center;text-transform:uppercase;letter-spacing:.1em} ");
+(e=>{if(typeof GM_addStyle=="function"){GM_addStyle(e);return}const t=document.createElement("style");t.textContent=e,document.head.append(t)})(" :host{all:initial}.sr-only.svelte-10hlut0{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.phoenix-shell.svelte-10hlut0{font-family:Inter,system-ui,sans-serif;color:#fff;pointer-events:auto}.glass-menu.svelte-10hlut0{background:#121214f2;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.1);box-shadow:0 12px 60px #000000b3;border-radius:28px;width:360px;padding:18px;overflow:hidden}.header.svelte-10hlut0{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.brand.svelte-10hlut0{font-size:11px;font-weight:900;letter-spacing:.3em;color:#666;display:flex;align-items:center;gap:5px}.brand.svelte-10hlut0 .p:where(.svelte-10hlut0){color:#0f8;text-shadow:0 0 15px rgba(0,255,136,.6)}.toggle-btn.svelte-10hlut0{background:#ffffff0d;border:1px solid rgba(255,255,255,.1);color:#aaa;padding:8px 16px;border-radius:16px;font-size:10px;cursor:pointer;transition:.3s;font-weight:600}.toggle-btn.svelte-10hlut0:hover{background:#ffffff1a;color:#fff;transform:translateY(-1px)}.entry-list.svelte-10hlut0{list-style:none;padding:0;margin:0}.entry-button.svelte-10hlut0{width:100%;text-align:left;background:#ffffff08;border:1px solid transparent;border-radius:20px;margin-bottom:10px;padding:16px;cursor:pointer;transition:.3s;color:inherit}.entry-button.svelte-10hlut0:hover{background:#ffffff14;border-color:#00ff884d;transform:scale(1.02)}.val.svelte-10hlut0{font-size:13px;line-height:1.6;color:#ddd;display:block;word-break:break-word}.sub.svelte-10hlut0{font-size:9px;color:#444;margin-top:10px;display:block;font-variant-numeric:tabular-nums;font-weight:700;text-transform:uppercase}.time-machine.svelte-10hlut0{display:flex;flex-direction:column;gap:20px}.preview-box.svelte-10hlut0{background:#000;border-radius:18px;padding:20px;height:180px;overflow-y:auto;border:1px solid rgba(255,255,255,.05);box-shadow:inset 0 2px 10px #00000080}pre.svelte-10hlut0{margin:0;font-size:12px;color:#0f8;font-family:JetBrains Mono,monospace;white-space:pre-wrap}.tm-controls.svelte-10hlut0{display:flex;flex-direction:column;gap:15px}input[type=range].svelte-10hlut0{width:100%;accent-color:#00ff88;height:4px;border-radius:2px}.meta.svelte-10hlut0{display:flex;justify-content:space-between;font-size:9px;color:#444;font-weight:700}.actions-row.svelte-10hlut0{display:flex;gap:10px}.restore-action.svelte-10hlut0{flex:2;background:#0f8;color:#000;border:none;padding:14px;border-radius:16px;font-weight:900;cursor:pointer;transition:.3s;text-transform:uppercase;letter-spacing:.1em}.restore-action.svelte-10hlut0:hover{box-shadow:0 10px 30px #00ff8880;transform:translateY(-2px)}.integration-btn.svelte-10hlut0{flex:1;background:#2563eb;color:#fff;border:none;padding:14px;border-radius:16px;font-weight:900;cursor:pointer;transition:.3s;text-transform:uppercase;font-size:9px}.integration-btn.svelte-10hlut0:hover{box-shadow:0 10px 30px #2563eb66;transform:translateY(-2px)}.fade-in.svelte-10hlut0{animation:svelte-10hlut0-fadeIn .5s cubic-bezier(.2,1,.2,1)}@keyframes svelte-10hlut0-fadeIn{0%{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}.empty-state.svelte-10hlut0{padding:60px 20px;text-align:center;color:#333;font-size:14px;font-weight:800;letter-spacing:.05em}.footer.svelte-10hlut0{margin-top:25px;font-size:8px;color:#222;text-align:center;text-transform:uppercase;letter-spacing:.3em;font-weight:900} ");
 
 (function () {
   'use strict';
@@ -82,6 +82,7 @@
   const ASYNC = 1 << 22;
   const ERROR_VALUE = 1 << 23;
   const STATE_SYMBOL = Symbol("$state");
+  const LOADING_ATTR_SYMBOL = Symbol("");
   const STALE_REACTION = new class StaleReactionError extends Error {
     constructor() {
       super(...arguments);
@@ -3308,6 +3309,9 @@
   function set_attribute(element, attribute, value, skip_warning) {
     var attributes = get_attributes(element);
     if (attributes[attribute] === (attributes[attribute] = value)) return;
+    if (attribute === "loading") {
+      element[LOADING_ATTR_SYMBOL] = value;
+    }
     if (value == null) {
       element.removeAttribute(attribute);
     } else if (typeof value !== "string" && get_setters(element).includes(attribute)) {
@@ -10133,10 +10137,11 @@
     return text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "***@***.***").replace(/(?:[0-9]{4}-){3}[0-9]{4}/g, "****-****-****-****").replace(/(?:\b[a-fA-F0-9]{32,}\b)/g, (match) => match.slice(0, 4) + "..." + match.slice(-4));
   }
   var root_1 = /* @__PURE__ */ from_html(`<div class="empty-state svelte-10hlut0">No recovery path found</div>`);
-  var root_2 = /* @__PURE__ */ from_html(`<div class="time-machine fade-in svelte-10hlut0"><div class="preview-box svelte-10hlut0"><pre class="svelte-10hlut0"> </pre></div> <div class="tm-controls svelte-10hlut0"><input type="range" min="0" class="svelte-10hlut0"/> <div class="meta svelte-10hlut0"><span class="time"> </span> <span class="ver"> </span></div> <button class="restore-action svelte-10hlut0">Restore Snapshot</button></div></div>`);
-  var root_4 = /* @__PURE__ */ from_html(`<li class="svelte-10hlut0"><div class="entry-content"><span class="val svelte-10hlut0"> </span> <span class="sub svelte-10hlut0"> </span></div></li>`);
-  var root_3 = /* @__PURE__ */ from_html(`<ul class="entry-list fade-in svelte-10hlut0"></ul>`);
-  var root = /* @__PURE__ */ from_html(`<div class="phoenix-shell svelte-10hlut0"><div class="glass-menu svelte-10hlut0"><div class="header svelte-10hlut0"><div class="brand svelte-10hlut0"><span class="p svelte-10hlut0">P</span>HOENIX</div> <button class="toggle-btn svelte-10hlut0"> </button></div> <!> <div class="footer svelte-10hlut0">(c) 2026 neoOpus</div></div></div>`);
+  var root_3 = /* @__PURE__ */ from_html(`<button class="integration-btn svelte-10hlut0">Helper+</button>`);
+  var root_2 = /* @__PURE__ */ from_html(`<div class="time-machine fade-in svelte-10hlut0"><div class="preview-box svelte-10hlut0"><pre class="svelte-10hlut0"> </pre></div> <div class="tm-controls svelte-10hlut0"><label for="history-slider" class="sr-only svelte-10hlut0">History Slider</label> <input id="history-slider" type="range" min="0" class="svelte-10hlut0"/> <div class="meta svelte-10hlut0"><span class="time"> </span> <span class="ver"> </span></div> <div class="actions-row svelte-10hlut0"><button class="restore-action svelte-10hlut0">Restore</button> <!></div></div></div>`);
+  var root_5 = /* @__PURE__ */ from_html(`<li><button class="entry-button svelte-10hlut0"><div class="entry-content"><span class="val svelte-10hlut0"> </span> <span class="sub svelte-10hlut0"> </span></div></button></li>`);
+  var root_4 = /* @__PURE__ */ from_html(`<ul class="entry-list fade-in svelte-10hlut0"></ul>`);
+  var root = /* @__PURE__ */ from_html(`<div class="phoenix-shell svelte-10hlut0"><div class="glass-menu svelte-10hlut0" role="dialog" aria-label="Phoenix Recovery Menu"><div class="header svelte-10hlut0"><div class="brand svelte-10hlut0"><span class="p svelte-10hlut0">P</span>HOENIX</div> <button class="toggle-btn svelte-10hlut0"> </button></div> <!> <div class="footer svelte-10hlut0">(c) 2026 neoOpus</div></div></div>`);
   function RecoveryMenu($$anchor, $$props) {
     push($$props, true);
     let entries = /* @__PURE__ */ state(proxy([]));
@@ -10148,6 +10153,17 @@
       });
     });
     const currentEntry = /* @__PURE__ */ user_derived(() => get(entries)[get(historyIndex)]);
+    const isYouTube = /* @__PURE__ */ user_derived(() => window.location.hostname.includes("youtube.com"));
+    function handleKeydown(e, value) {
+      if (e.key === "Enter" || e.key === " ") {
+        $$props.onRestore(value);
+      }
+    }
+    function sendToPlaylistHelper(value) {
+      const channel = new BroadcastChannel("neoopus_integration");
+      channel.postMessage({ type: "IMPORT_DESCRIPTION", content: value });
+      alert("Sent to neoOpus Playlist Helper for safekeeping!");
+    }
     var div = root();
     var div_1 = child(div);
     var div_2 = child(div_1);
@@ -10159,19 +10175,31 @@
         var div_3 = root_1();
         append($$anchor2, div_3);
       };
-      var consequent_1 = ($$anchor2) => {
+      var consequent_2 = ($$anchor2) => {
         var div_4 = root_2();
         var div_5 = child(div_4);
         var pre = child(div_5);
         var text_1 = child(pre);
         var div_6 = sibling(div_5, 2);
-        var input = child(div_6);
+        var input = sibling(child(div_6), 2);
         var div_7 = sibling(input, 2);
         var span = child(div_7);
         var text_2 = child(span);
         var span_1 = sibling(span, 2);
         var text_3 = child(span_1);
-        var button_1 = sibling(div_7, 2);
+        var div_8 = sibling(div_7, 2);
+        var button_1 = child(div_8);
+        var node_1 = sibling(button_1, 2);
+        {
+          var consequent_1 = ($$anchor3) => {
+            var button_2 = root_3();
+            delegated("click", button_2, () => sendToPlaylistHelper(get(currentEntry).value));
+            append($$anchor3, button_2);
+          };
+          if_block(node_1, ($$render) => {
+            if (get(isYouTube)) $$render(consequent_1);
+          });
+        }
         template_effect(
           ($0, $1) => {
             var _a2;
@@ -10196,11 +10224,12 @@
         append($$anchor2, div_4);
       };
       var alternate = ($$anchor2) => {
-        var ul = root_3();
+        var ul = root_4();
         each(ul, 21, () => get(entries).slice(0, 8), index, ($$anchor3, entry) => {
-          var li = root_4();
-          var div_8 = child(li);
-          var span_2 = child(div_8);
+          var li = root_5();
+          var button_3 = child(li);
+          var div_9 = child(button_3);
+          var span_2 = child(div_9);
           var text_4 = child(span_2);
           var span_3 = sibling(span_2, 2);
           var text_5 = child(span_3);
@@ -10214,23 +10243,27 @@
               () => new Date(get(entry).timestamp).toLocaleString()
             ]
           );
-          delegated("click", li, () => $$props.onRestore(get(entry).value));
+          delegated("click", button_3, () => $$props.onRestore(get(entry).value));
+          delegated("keydown", button_3, (e) => handleKeydown(e, get(entry).value));
           append($$anchor3, li);
         });
         append($$anchor2, ul);
       };
       if_block(node, ($$render) => {
         if (get(entries).length === 0) $$render(consequent);
-        else if (get(showTimeMachine)) $$render(consequent_1, 1);
+        else if (get(showTimeMachine)) $$render(consequent_2, 1);
         else $$render(alternate, false);
       });
     }
-    template_effect(() => set_text(text, get(showTimeMachine) ? "View List" : "Time Machine"));
+    template_effect(() => {
+      set_attribute(button, "aria-pressed", get(showTimeMachine));
+      set_text(text, get(showTimeMachine) ? "View List" : "Time Machine");
+    });
     delegated("click", button, () => set(showTimeMachine, !get(showTimeMachine)));
     append($$anchor, div);
     pop();
   }
-  delegate(["click"]);
+  delegate(["click", "keydown"]);
   console.log("Phoenix SOTA Form Recovery: Engine Initialized");
   const debounces = /* @__PURE__ */ new Map();
   async function saveToDB(el) {

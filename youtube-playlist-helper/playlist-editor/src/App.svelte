@@ -21,6 +21,18 @@
 </script>
 
 <div class="app-container">
-  <Router {routes} />
+  <main>
+    <Router {routes} />
+  </main>
   <UndoNotification />
+
+  <footer class="neo-footer">
+    (c) 2026 <span>neoOpus</span> | Ultimate Monorepo Suite
+  </footer>
 </div>
+
+<style>
+  main {
+      flex: 1;
+  }
+</style>

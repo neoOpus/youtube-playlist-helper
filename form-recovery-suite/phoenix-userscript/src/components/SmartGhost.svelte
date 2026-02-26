@@ -17,30 +17,57 @@
       visible = false;
     }
   });
+
+  function acceptGhost() {
+    targetEl.value = ghostText;
+    visible = false;
+    targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Tab' && visible) {
+      e.preventDefault();
+      acceptGhost();
+    }
+  }
 </script>
 
 {#if visible && ghostText}
-  <div class="ghost" onclick={() => { targetEl.value = ghostText; visible = false; targetEl.dispatchEvent(new Event('input', { bubbles: true })); }}>
-    {ghostText.slice(0, 100)} (Tab to restore)
-  </div>
+  <button
+    class="ghost"
+    onclick={acceptGhost}
+    onkeydown={handleKeydown}
+    aria-label="Suggested form completion"
+    type="button"
+  >
+    {ghostText.slice(0, 100)} <span class="hint">(Tab to restore)</span>
+  </button>
 {/if}
 
 <style>
   .ghost {
-    color: #ccc;
-    pointer-events: none;
-    font-family: sans-serif;
-    font-size: 14px;
-    padding-left: 5px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0;
+    margin: 0;
+    text-align: left;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    left: 10px;
-    pointer-events: auto;
+    left: 12px;
     cursor: pointer;
+    pointer-events: auto;
+    z-index: 10;
+    display: block;
+    width: calc(100% - 24px);
   }
+  .hint { font-size: 0.8em; opacity: 0.6; margin-left: 8px; }
+  .ghost:hover { color: rgba(255, 255, 255, 0.5); }
+  .ghost:focus { outline: none; color: rgba(255, 255, 255, 0.6); }
 </style>
