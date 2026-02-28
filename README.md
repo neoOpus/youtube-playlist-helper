@@ -21,3 +21,10 @@ A comprehensive tool for managing and enhancing YouTube playlists.
 
 ---
 **Maintained by neoOpus**
+
+## Project Independence
+Although these projects reside in the same monorepo, they are **architecturally distinct and independent**:
+- **Isolated Build Chains**: Each project has its own `package.json`, build tools, and node_modules.
+- **Zero Runtime Dependencies**: No shared code is required at runtime between Form Recovery and Playlist Helper.
+- **Optional Integration**: The real-time data sharing via `BroadcastChannel` is strictly optional and fails gracefully if the other project is not present.
+- **Dedicated Documentation**: Each project maintains its own research, roadmaps, and technical analysis.

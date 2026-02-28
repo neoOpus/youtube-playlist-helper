@@ -1,16 +1,17 @@
 #!/bin/bash
 set -e
 
-echo "--- Building Phoenix SOTA Userscript ---"
-cd form-recovery-suite/phoenix-userscript
-npm run build
+if [ -d "form-recovery-suite" ]; then
+    echo "--- Building Phoenix Form Recovery Suite ---"
+    cd form-recovery-suite/phoenix-userscript && npm run build
+    cd ../phoenix-recovery && npm run build
+    cd ../..
+fi
 
-echo "--- Building Phoenix Extension (MV3) ---"
-cd ../phoenix-recovery
-npm run build
+if [ -d "youtube-playlist-helper" ]; then
+    echo "--- Building YouTube Playlist Helper ---"
+    cd youtube-playlist-helper/playlist-editor && npm run build
+    cd ../..
+fi
 
-echo "--- Building YouTube Playlist Helper ---"
-cd ../../youtube-playlist-helper/playlist-editor
-npm run build
-
-echo "--- All Projects Built Successfully ---"
+echo "--- All Available Projects Built Successfully ---"
