@@ -22,3 +22,6 @@ Run `npm run build` from the root. This will:
 ## Verification
 - Run `npm test --workspace=@yph/core` for logic verification.
 - Run `npm run build` and check that `projects/extension/editor/index.html` exists and has correct paths.
+
+## Note on Repository Structure
+Unrelated research projects (e.g., Form Recovery Suite) are isolated in the `form-recovery-suite/` directory and are excluded from the main development environment.
