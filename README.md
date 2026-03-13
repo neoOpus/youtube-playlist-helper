@@ -27,4 +27,4 @@ A YouTube playlist creator for [Firefox](https://addons.mozilla.org/en-US/firefo
 
 1. Install Node.js and npm.
 2. Run `npm run build`.
-3. The extension final sources are found in the `src` directory.
+3. The extension source files are in `projects/extension` and the built editor in `projects/extension/editor`.
