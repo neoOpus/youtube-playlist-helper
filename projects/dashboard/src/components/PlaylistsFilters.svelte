@@ -1,6 +1,6 @@
 <script lang="ts">
   import { get } from "svelte/store";
-  import { getPlaylistsSorter, aiService } from "@yph/core";
+  import { getPlaylistsSorter, aiService, debounce } from "@yph/core";
   import {
     playlistsSearch,
     playlistsSorting,
@@ -25,9 +25,13 @@
     filtersUpdated();
   }
 
-  function searchChanged() {
+  const debouncedFiltersUpdate = debounce(() => {
     playlistsSearch.set(search);
     filtersUpdated();
+  }, 300);
+
+  function searchChanged() {
+    debouncedFiltersUpdate();
   }
 
   function filtersUpdated() {
@@ -35,25 +39,14 @@
 
     let result = [...playlists];
 
-    if (sortBy === "relevance" as any) {
-        const keywords = search.split(/\s+/).filter(k => k.length > 2);
-        if (keywords.length > 0) {
-            result.sort((a, b) => {
-                const scoreA = aiService.calculatePlaylistRelevance(a, keywords);
-                const scoreB = aiService.calculatePlaylistRelevance(b, keywords);
-                return scoreB - scoreA;
-            });
-        }
-    } else {
-        result.sort(getPlaylistsSorter(sortBy));
-    }
-
+    // 1. Filter by Group
     if (selectedGroup !== "All") {
       result = result.filter((p) =>
         p.groups?.includes(selectedGroup)
       );
     }
 
+    // 2. Filter by Search
     if (search.trim()) {
         if (useRegex) {
             try {
@@ -72,6 +65,23 @@
                 keywords.every((k) => playlist.title?.toLowerCase().includes(k))
             );
         }
+    }
+
+    // 3. Sort the filtered results
+    if (sortBy === "relevance" as any) {
+        const keywords = search.split(/\s+/).filter(k => k.length > 2);
+        if (keywords.length > 0) {
+            // Schwartzian transform: pre-calculate relevance scores
+            result = result
+                .map(playlist => ({
+                    playlist,
+                    score: aiService.calculatePlaylistRelevance(playlist, keywords)
+                }))
+                .sort((a, b) => b.score - a.score)
+                .map(item => item.playlist);
+        }
+    } else {
+        result.sort(getPlaylistsSorter(sortBy));
     }
 
     filteredPlaylists = result;
