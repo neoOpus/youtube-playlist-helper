@@ -21,6 +21,7 @@ let sorterByType: Record<
   "date-created-desc": timestampSorter(true),
   "title-az": titleSorter(true),
   "title-za": titleSorter(false),
+  "relevance": () => 0,
 };
 
 export const getPlaylistsSorter = (sortBy: PlaylistsSorting) =>

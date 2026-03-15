@@ -10,7 +10,7 @@
   export let playlists: Playlist[] = [];
   export let filteredPlaylists: Playlist[] = [];
 
-  let sortBy = get(playlistsSorting);
+  let sortBy: PlaylistsSorting = get(playlistsSorting);
   let search = get(playlistsSearch);
   let selectedGroup = "All";
   let useRegex = false;
@@ -68,7 +68,7 @@
     }
 
     // 3. Sort the filtered result
-    if (sortBy === "relevance" as any) {
+    if (sortBy === "relevance") {
         const keywords = search.split(/\s+/).filter(k => k.length > 2);
         if (keywords.length > 0) {
             // Schwartzian transform: pre-calculate relevance scores
