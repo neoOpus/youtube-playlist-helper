@@ -25,13 +25,13 @@
     filtersUpdated();
   }
 
-  const debouncedFiltersUpdate = debounce(() => {
-    playlistsSearch.set(search);
+  const debouncedFiltersUpdated = debounce(() => {
     filtersUpdated();
   }, 300);
 
   function searchChanged() {
-    debouncedFiltersUpdate();
+    playlistsSearch.set(search);
+    debouncedFiltersUpdated();
   }
 
   function filtersUpdated() {
@@ -39,14 +39,14 @@
 
     let result = [...playlists];
 
-    // 1. Filter by Group
+    // 1. Filter by group
     if (selectedGroup !== "All") {
       result = result.filter((p) =>
         p.groups?.includes(selectedGroup)
       );
     }
 
-    // 2. Filter by Search
+    // 2. Filter by search
     if (search.trim()) {
         if (useRegex) {
             try {
@@ -67,18 +67,17 @@
         }
     }
 
-    // 3. Sort the filtered results
+    // 3. Sort the filtered result
     if (sortBy === "relevance" as any) {
         const keywords = search.split(/\s+/).filter(k => k.length > 2);
         if (keywords.length > 0) {
             // Schwartzian transform: pre-calculate relevance scores
-            result = result
-                .map(playlist => ({
-                    playlist,
-                    score: aiService.calculatePlaylistRelevance(playlist, keywords)
-                }))
-                .sort((a, b) => b.score - a.score)
-                .map(item => item.playlist);
+            const scoredResult = result.map((playlist) => ({
+                playlist,
+                score: aiService.calculatePlaylistRelevance(playlist, keywords)
+            }));
+            scoredResult.sort((a, b) => b.score - a.score);
+            result = scoredResult.map(item => item.playlist);
         }
     } else {
         result.sort(getPlaylistsSorter(sortBy));

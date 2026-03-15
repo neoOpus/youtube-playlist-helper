@@ -1,3 +1,3 @@
-## 2025-05-15 - [Efficient List Filtering and Sorting]
-**Learning:** Performing filtering before sorting reduces the computational complexity from $O(N \log N)$ to $O(M \log M)$, where $M$ is the size of the filtered set. For expensive sort criteria like AI-driven relevance, using a Schwartzian transform (pre-calculating scores) further reduces the number of expensive function calls to exactly $M$.
-**Action:** Always filter as early as possible in a processing pipeline and use Schwartzian transforms for expensive sort operations.
+## 2026-02-15 - [Playlist Filtering Efficiency]
+**Learning:** Filtering before sorting in Svelte reactive components significantly reduces the computational load for large datasets, especially when using expensive sorters like Smart Relevance. Combined with search debouncing and score pre-calculation, UI responsiveness improves from $O(N \log N)$ per keystroke to $O(M)$ with a delay, where $M$ is the filtered set size.
+**Action:** Always prefer filtering data sets before applying sort operations, and pre-calculate complex sort keys (like relevance scores) to avoid redundant computations during sorting.
