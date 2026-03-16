@@ -40,13 +40,15 @@ export const aiService = {
    */
   calculateVideoRelevance(video: Video, keywords: string[]): number {
     let score = 0;
-    const text = (video.title + " " + (video.aiSummary || "") + " " + (video.aiTags?.join(" ") || "")).toLowerCase();
+    const lowerTitle = video.title.toLowerCase();
+    const text = (lowerTitle + " " + (video.aiSummary?.toLowerCase() || "") + " " + (video.aiTags?.join(" ").toLowerCase() || ""));
 
-    keywords.forEach(word => {
-      if (text.includes(word)) score += 1;
+    for (const word of keywords) {
+      const lowerWord = word.toLowerCase();
+      if (text.includes(lowerWord)) score += 1;
       // Bonus for exact title matches
-      if (video.title.toLowerCase().includes(word)) score += 2;
-    });
+      if (lowerTitle.includes(lowerWord)) score += 2;
+    }
 
     return score;
   },
@@ -56,13 +58,14 @@ export const aiService = {
    */
   calculatePlaylistRelevance(playlist: Playlist, keywords: string[]): number {
       let score = 0;
-      const text = (playlist.title + " " + (playlist.groups?.join(" ") || "")).toLowerCase();
+      const lowerTitle = playlist.title.toLowerCase();
+      const text = (lowerTitle + " " + (playlist.groups?.join(" ").toLowerCase() || ""));
 
-      keywords.forEach(word => {
+      for (const word of keywords) {
           const lowerWord = word.toLowerCase();
           if (text.includes(lowerWord)) score += 1;
-          if (playlist.title.toLowerCase().includes(lowerWord)) score += 2;
-      });
+          if (lowerTitle.includes(lowerWord)) score += 2;
+      }
 
       return score;
   }

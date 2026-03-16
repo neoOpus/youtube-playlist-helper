@@ -61,15 +61,16 @@
               .filter((k) => k.length)
               .map((k) => k.toLowerCase());
 
-            result = result.filter((playlist) =>
-                keywords.every((k) => playlist.title?.toLowerCase().includes(k))
-            );
+            result = result.filter((playlist) => {
+                const lowerTitle = playlist.title?.toLowerCase() || "";
+                return keywords.every((k) => lowerTitle.includes(k));
+            });
         }
     }
 
     // 3. Sort the filtered result
     if (sortBy === "relevance" as any) {
-        const keywords = search.split(/\s+/).filter(k => k.length > 2);
+        const keywords = search.split(/\s+/).filter(k => k.length > 2).map(k => k.toLowerCase());
         if (keywords.length > 0) {
             // Schwartzian transform: pre-calculate relevance scores
             const scoredResult = result.map((playlist) => ({
