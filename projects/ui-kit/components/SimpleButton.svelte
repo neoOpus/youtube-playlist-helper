@@ -1,21 +1,18 @@
 <script lang="ts">
   import SmartElement from "./SmartElement.svelte";
   export let className = "";
-  export let title = "";
 </script>
 
-<SmartElement className="simple-btn {className}" {title} on:click>
+<SmartElement className="simple-btn {className}" on:click>
   <slot />
 </SmartElement>
 
 <style>
   :global(.simple-btn) {
-    padding: 4px;
-    border-radius: 4px;
-    border: none;
+    border: 1px solid var(--border-color);
     background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0.4em 0.8em;
+    border-radius: 4px;
+    cursor: pointer;
   }
 </style>
