@@ -1,17 +1,23 @@
 import { writable, derived } from "svelte/store";
-import type { Theme, ThemeChoice } from "@yph/core";
 import { storageService } from "@yph/core";
 
 const themeStorageKey = "theme-choice";
 
+export type ThemeName =
+  | "device"
+  | "github-light"
+  | "github-dark"
+  | "dracula"
+  | "sota-red";
+
 function createThemeChoice() {
-  const { subscribe, set } = writable<ThemeChoice>("device");
+  const { subscribe, set } = writable<ThemeName>("device");
 
   return {
     subscribe,
-    set: (themeChoice: ThemeChoice) => {
-      storageService.storeObject(themeStorageKey, themeChoice);
-      set(themeChoice);
+    set: (val: ThemeName) => {
+      storageService.storeObject(themeStorageKey, val);
+      set(val);
     },
   };
 }
@@ -19,20 +25,19 @@ function createThemeChoice() {
 export const themeChoice = createThemeChoice();
 
 export async function initTheme() {
-  const choice = await storageService
-    .fetchObject(themeStorageKey, "device");
-    themeChoice.set(choice);
+  const choice = await storageService.fetchObject(themeStorageKey, "device");
+  themeChoice.set(choice as ThemeName);
 }
 
-export const theme = derived(themeChoice, ($themeChoice) => {
+export const activeTheme = derived(themeChoice, ($themeChoice) => {
   if ($themeChoice === "device") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
+      ? "github-dark"
+      : "github-light";
   }
-  return $themeChoice as Theme;
+  return $themeChoice;
 });
 
-theme.subscribe(($theme) => {
+activeTheme.subscribe(($theme) => {
   document.documentElement.setAttribute("data-theme", $theme);
 });

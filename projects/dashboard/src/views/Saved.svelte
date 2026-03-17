@@ -3,20 +3,15 @@
   import PlaylistSelector from "../components/PlaylistSelector.svelte";
   import AdvancedPlaylistView from "../components/AdvancedPlaylistView.svelte";
   import { storageService } from "@yph/core";
+  import { viewMode } from "../stores/view-mode";
 
   const playlistsAsync = storageService.getPlaylists();
-  let viewMode = "simple";
-
-  onMount(async () => {
-    const settings = await storageService.getSettings();
-    viewMode = settings.viewMode || "simple";
-  });
 </script>
 
 
 <main>
   {#await playlistsAsync then playlists}
-    {#if viewMode === "advanced"}
+    {#if $viewMode === "advanced"}
       <AdvancedPlaylistView {playlists} />
     {:else}
       <PlaylistSelector {playlists} />
@@ -27,5 +22,7 @@
 <style>
   main {
     padding: 20px;
+    background-color: var(--background-color);
+    min-height: 100vh;
   }
 </style>

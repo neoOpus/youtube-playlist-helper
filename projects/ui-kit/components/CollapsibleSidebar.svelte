@@ -1,3 +1,4 @@
+<!-- REUSABLE SOTA COMPONENT: Glassmorphism Sidebar with CSS variable integration. -->
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
   import { CloseIcon, PencilIcon } from "./icons/index.ts";
@@ -39,7 +40,10 @@
     z-index: 10;
     top: 0;
     left: 0;
-    background-color: var(--sidebar-bg-color);
+    background-color: rgba(var(--sidebar-bg-color), 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-right: 1px solid var(--border-color);
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-x: hidden;
     display: flex;
