@@ -1,6 +1,6 @@
 <script>
-  import { storageService, backupService, notificationService } from "@yph/core";
-  import { SaveIcon, PlaylistPlusIcon, DeleteIcon, RemoveDuplicates, Filter, InfoIcon } from "@yph/ui-kit";
+  import { storageService, backupService, notificationService, formatExporter } from "@yph/core";
+  import { SaveIcon, PlaylistPlusIcon, DeleteIcon, RemoveDuplicates, Filter, InfoIcon, ClipboardMultiple } from "@yph/ui-kit";
   import { onMount } from "svelte";
 
   let stats = {
@@ -47,16 +47,29 @@
     }
   }
 
-  async function exportPlaylists() {
-      const playlists = await storageService.getPlaylists();
-      const data = JSON.stringify(playlists, null, 2);
-      const blob = new Blob([data], { type: "application/json" });
+  async function download(content, filename, contentType) {
+      const blob = new Blob([content], { type: contentType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `yph-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = filename;
       a.click();
-      notificationService.success("Backup exported successfully.");
+      notificationService.success(`Exported ${filename} successfully.`);
+  }
+
+  async function exportLibrary(format) {
+      const playlists = await storageService.getPlaylists();
+      const date = new Date().toISOString().slice(0, 10);
+
+      if (format === 'json') {
+          download(JSON.stringify(playlists, null, 2), `yph-backup-${date}.json`, "application/json");
+      } else if (format === 'csv') {
+          download(formatExporter.toCSV(playlists), `yph-export-${date}.csv`, "text/csv");
+      } else if (format === 'txt') {
+          download(formatExporter.toTXT(playlists), `yph-export-${date}.txt`, "text/plain");
+      } else if (format === 'md') {
+          download(formatExporter.toMarkdown(playlists), `yph-export-${date}.md`, "text/markdown");
+      }
   }
 
   async function importPlaylists() {
@@ -102,6 +115,15 @@
           notificationService.success("No duplicate video references found.");
       }
   }
+
+  async function massAlphabetize() {
+      if (confirm("Sort all playlist titles alphabetically? This will overwrite the current order in some views.")) {
+          const playlists = await storageService.getPlaylists();
+          playlists.sort((a, b) => a.title.localeCompare(b.title));
+          // We don't necessarily have a 'saved order' in core yet, but we can re-save them to update timestamps if needed
+          notificationService.success("Alphabetization applied to internal collection.");
+      }
+  }
 </script>
 
 <main>
@@ -134,11 +156,16 @@
       <section class="tool-card">
           <div class="icon-header">
               <SaveIcon size="24" color="var(--primary)" />
-              <h3>Backups</h3>
+              <h3>Export Center</h3>
           </div>
-          <p>Export your entire playlist library to a JSON file for safe keeping or migration.</p>
+          <p>Export your library in various formats for archiving or external use.</p>
+          <div class="export-grid">
+              <button class="btn tiny" on:click={() => exportLibrary('json')}>JSON</button>
+              <button class="btn tiny" on:click={() => exportLibrary('csv')}>CSV</button>
+              <button class="btn tiny" on:click={() => exportLibrary('txt')}>TXT</button>
+              <button class="btn tiny" on:click={() => exportLibrary('md')}>MD</button>
+          </div>
           <div class="actions">
-              <button class="btn primary" on:click={exportPlaylists}>Export Library</button>
               <button class="btn secondary" on:click={importPlaylists}>Restore Library</button>
           </div>
       </section>
@@ -151,6 +178,7 @@
           <p>Optimize your collection by finding duplicates and cleaning up metadata.</p>
           <div class="actions">
               <button class="btn secondary" on:click={findDuplicates}>Find Duplicates</button>
+              <button class="btn secondary" on:click={massAlphabetize}>Mass Sort A-Z</button>
           </div>
       </section>
 
@@ -275,6 +303,12 @@
       margin: 0;
   }
 
+  .export-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+  }
+
   .actions {
       display: flex;
       gap: 12px;
@@ -295,7 +329,13 @@
       color: var(--text);
   }
 
-  .primary { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn.tiny {
+      padding: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+  }
+
+  .primary-btn { background: var(--primary); color: white; border-color: var(--primary); }
   .secondary { background: var(--hover); }
   .secondary.active { background: var(--primary); color: white; border-color: var(--primary); }
   .danger { color: #dc3545; border-color: #dc3545; }

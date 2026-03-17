@@ -15,6 +15,7 @@
   let search = get(playlistsSearch);
   let selectedGroup = "All";
   let useRegex = false;
+  let searchInVideos = false;
   let showPowerFeatures = false;
 
   $: groups = [
@@ -50,22 +51,26 @@
 
     // 2. Filter by search
     if (search.trim()) {
+        const query = search.toLowerCase();
         if (useRegex) {
             try {
                 const regex = new RegExp(search, "i");
-                result = result.filter((p) => regex.test(p.title) || p.groups?.some(g => regex.test(g)));
-            } catch (e) {
-                // Invalid regex
-            }
+                result = result.filter((p) =>
+                    regex.test(p.title) ||
+                    p.groups?.some(g => regex.test(g)) ||
+                    (searchInVideos && p.loadedVideos?.some(v => regex.test(v.title)))
+                );
+            } catch (e) { /* Invalid regex */ }
         } else {
-            const keywords = search
-              .split(/\s+/)
-              .filter((k) => k.length)
-              .map((k) => k.toLowerCase());
+            const keywords = search.split(/\s+/).filter((k) => k.length).map((k) => k.toLowerCase());
 
-            result = result.filter((playlist) =>
-                keywords.every((k) => playlist.title?.toLowerCase().includes(k))
-            );
+            result = result.filter((p) => {
+                const matchesTitle = keywords.every((k) => p.title?.toLowerCase().includes(k));
+                const matchesVideos = searchInVideos && p.loadedVideos?.some(v =>
+                    keywords.every(k => v.title.toLowerCase().includes(k))
+                );
+                return matchesTitle || matchesVideos;
+            });
         }
     }
 
@@ -73,7 +78,6 @@
     if (sortBy === "relevance") {
         const keywords = search.split(/\s+/).filter(k => k.length > 2);
         if (keywords.length > 0) {
-            // Schwartzian transform: pre-calculate relevance scores
             const scoredResult = result.map((playlist) => ({
                 playlist,
                 score: aiService.calculatePlaylistRelevance(playlist, keywords)
@@ -146,10 +150,16 @@
   {#if showPowerFeatures}
   <div class="power-row">
       <div class="power-options">
-          <label class="regex-toggle">
-              <input type="checkbox" bind:checked={useRegex} on:change={filtersUpdated} />
-              <span>Regex Mode</span>
-          </label>
+          <div class="checks">
+              <label class="check-opt">
+                  <input type="checkbox" bind:checked={useRegex} on:change={filtersUpdated} />
+                  <span>Regex Mode</span>
+              </label>
+              <label class="check-opt">
+                  <input type="checkbox" bind:checked={searchInVideos} on:change={filtersUpdated} />
+                  <span>Deep Search (in videos)</span>
+              </label>
+          </div>
           <span class="power-hint">Powered by Multi-Signal Heuristics and AI Smart Sort.</span>
       </div>
   </div>
@@ -161,7 +171,7 @@
     padding: 1rem 0;
     position: sticky;
     top: 0;
-    background-color: var(--bg);
+    background-color: transparent;
     width: 100%;
     z-index: 5;
     border-bottom: 1px solid var(--border);
@@ -201,7 +211,7 @@
 
   .input-wrapper:focus-within {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(var(--primary), 0.1);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
   }
 
   .input-wrapper input {
@@ -251,18 +261,23 @@
       gap: 1rem;
   }
 
-  .power-hint {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-style: italic;
+  .checks {
+      display: flex;
+      gap: 1.5rem;
   }
 
-  .regex-toggle {
+  .check-opt {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 0.85rem;
-      font-weight: 500;
+      font-weight: 600;
+  }
+
+  .power-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-style: italic;
   }
 
   .filters {

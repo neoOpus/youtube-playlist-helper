@@ -18,7 +18,8 @@
     SuperCheckbox,
     SimpleButton,
     TagManager,
-    ResizablePanel
+    ResizablePanel,
+    SearchIcon
   } from "@yph/ui-kit";
   import LoadingModal from "./LoadingModal.svelte";
   import Modal from "./Modal.svelte";
@@ -50,6 +51,7 @@
   let videos = [] as Video[];
   let view: "list" | "timeline" = "list";
   let selectedVideo: Video | null = null;
+  let videoFilter = "";
 
   let allSelected = false;
   $: {
@@ -92,13 +94,17 @@
   async function loadPageVideos(page) {
     loading = true;
     let indicesToLoad = [];
+    // Note: Filtering is handled via reactive declaration below, but we need to load meta for filtered set
+    const items = filteredVideos;
     for (
       let videoIndex = (page - 1) * pageSize;
-      videoIndex < page * pageSize && videoIndex < videos.length;
+      videoIndex < page * pageSize && videoIndex < items.length;
       videoIndex++
     ) {
-      if (videos[videoIndex].title == "") {
-        indicesToLoad.push(videoIndex);
+      if (items[videoIndex].title == "") {
+        // Find index in original videos array
+        const originalIndex = videos.findIndex(v => v.videoId === items[videoIndex].videoId);
+        if (originalIndex !== -1) indicesToLoad.push(originalIndex);
       }
     }
     if (indicesToLoad.length > 0) {
@@ -122,8 +128,13 @@
   const defaultPageSize = 50;
   let currentPage = 1;
   let pageSize = defaultPageSize;
+
+  $: filteredVideos = videoFilter.trim()
+    ? videos.filter(v => v.title.toLowerCase().includes(videoFilter.toLowerCase()) || v.channel.toLowerCase().includes(videoFilter.toLowerCase()))
+    : videos;
+
   $: paginatedVideos = paginate({
-    items: videos,
+    items: filteredVideos,
     pageSize,
     currentPage,
   }) as Video[];
@@ -439,40 +450,67 @@
 </script>
 
 <main class="editor-main">
-  <div class="editor-header">
+  <div class="editor-header glass">
       {#if playlist}
-        <h2>
-          {#if !editingTitle}
-            <div style="line-height: 40px;">{playlist.title}</div>
-            <SimpleButton className="edit-title-btn" on:click={startTitleEdit}>
-              <PencilIcon />
-            </SimpleButton>
-          {:else}
-            <input
-              class="edit-title-input"
-              type="text"
-              bind:value={playlist.title}
-            />
-            <SimpleButton on:click={endTitleEdit}><CheckIcon /></SimpleButton>
-            <SimpleButton on:click={resetTitle}><CloseIcon /></SimpleButton>
-          {/if}
-        </h2>
-        <div class="groups-container">
-          <span>Groups:</span>
-          <TagManager tags={groups} on:change={handleGroupsChange} />
+        <div class="title-section">
+            <h2>
+              {#if !editingTitle}
+                <div class="title-text">{playlist.title}</div>
+                <button class="icon-btn" on:click={startTitleEdit}>
+                  <PencilIcon size="16" />
+                </button>
+              {:else}
+                <input
+                  class="edit-title-input"
+                  type="text"
+                  bind:value={playlist.title}
+                  on:keydown={(e) => e.key === 'Enter' && endTitleEdit()}
+                />
+                <button class="icon-btn success" on:click={endTitleEdit}><CheckIcon size="16" /></button>
+                <button class="icon-btn danger" on:click={resetTitle}><CloseIcon size="16" /></button>
+              {/if}
+            </h2>
+            <div class="groups-container">
+              <TagManager tags={groups} on:change={handleGroupsChange} />
+            </div>
         </div>
       {/if}
   </div>
 
   <div class="editor-body">
-    <ResizablePanel width={350} minWidth={250} maxWidth={600}>
+    <ResizablePanel width={320} minWidth={250} maxWidth={500}>
         <div class="sidebar-info">
-            <h3>Playlist Summary</h3>
-            <p>Total Videos: {videos.length}</p>
-            <p>Watched: {videos.filter(v => v.watched).length}</p>
-            <div class="quick-actions">
-                <button on:click={play}>Play All</button>
-                <button on:click={removeDuplicates}>Clean Dups</button>
+            <div class="summary-card">
+                <h3>Playlist Summary</h3>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <span class="label">VIDEOS</span>
+                        <span class="value">{videos.length}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">WATCHED</span>
+                        <span class="value">{videos.filter(v => v.watched).length}</span>
+                    </div>
+                </div>
+                <div class="quick-actions-v">
+                    <button class="btn primary" on:click={play}>
+                        <PlaylistPlayIcon size="18" /> Play All
+                    </button>
+                    <button class="btn secondary" on:click={removeDuplicates}>
+                        <RemoveDuplicates size="18" /> Clean Duplicates
+                    </button>
+                    <button class="btn secondary" on:click={reversePlaylist}>
+                        <ReverseIcon size="18" /> Reverse Order
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <p class="section-label">QUICK FILTER</p>
+                <div class="search-input-wrapper">
+                    <SearchIcon size="14" color="var(--text-muted)" />
+                    <input type="text" bind:value={videoFilter} placeholder="Filter videos..." />
+                </div>
             </div>
         </div>
     </ResizablePanel>
@@ -505,7 +543,7 @@
                 <FloatingButton
                   on:click={savePlaylist}
                   title="Save the playlist"
-                  bgcolor="#28a745"><SaveIcon /></FloatingButton
+                  bgcolor="var(--primary)"><SaveIcon /></FloatingButton
                 >
               {/if}
             </div>
@@ -517,11 +555,14 @@
                   on:change={toggleSelectAll}
                   label="Select All"
                 />
+                {#if videoFilter}
+                    <span class="filter-status">Showing {filteredVideos.length} of {videos.length} videos</span>
+                {/if}
               </div>
             {/if}
 
             {#if view === "timeline"}
-              <PlaylistTimeline {videos} />
+              <PlaylistTimeline videos={filteredVideos} />
             {:else}
               <div class="list">
                 {#each paginatedVideos as video, index (video.id)}
@@ -543,15 +584,17 @@
                   />
                 </div>
               {:else}
-                <p style="text-align: center">The playlist is empty</p>
+                <div class="empty-state">
+                    <p>{videoFilter ? 'No videos match your filter.' : 'The playlist is empty.'}</p>
+                </div>
                 {/each}
               </div>
             {/if}
 
             <div class="pagination">
-              {#if videos.length > pageSize}
+              {#if filteredVideos.length > pageSize}
                 <PaginationNav
-                  totalItems={videos.length}
+                  totalItems={filteredVideos.length}
                   {pageSize}
                   {currentPage}
                   limit={1}
@@ -559,8 +602,8 @@
                   on:setPage={updatePaginationPage}
                 />
               {/if}
-              {#if videos.length > 0}
-                <select bind:value={pageSize} on:change={pageSizeChanged}>
+              {#if filteredVideos.length > 0}
+                <select bind:value={pageSize} on:change={pageSizeChanged} class="page-size-select">
                   {#each possiblePageSizes as size}
                     <option value={size}>{size}</option>
                   {/each}
@@ -574,16 +617,26 @@
 
 <Modal bind:display={displayModal}>
   {#if modalType === ModalType.Export}
-    <textarea bind:value={exportText} bind:this={exportTextArea}></textarea>
-    <FloatingButton on:click={exportVideos} title="Copy to clipboard"
-      ><ClipboardMultiple /></FloatingButton
-    >
-    <span style="margin-left: 1rem">{notificationText}</span>
+    <div class="modal-content">
+        <h3>Export Video URLs</h3>
+        <textarea bind:value={exportText} bind:this={exportTextArea} readonly></textarea>
+        <div class="modal-actions">
+            <button class="btn primary" on:click={exportVideos}>
+                <ClipboardMultiple size="16" /> {notificationText || 'Copy to Clipboard'}
+            </button>
+        </div>
+    </div>
   {:else if modalType === ModalType.Import}
-    <textarea bind:value={importText}></textarea>
-    <FloatingButton on:click={importVideos} title="Import videos"
-      ><PlusMultiple /></FloatingButton
-    >
+    <div class="modal-content">
+        <h3>Import Videos</h3>
+        <p class="hint">Paste YouTube URLs or IDs (one per line)</p>
+        <textarea bind:value={importText} placeholder="https://youtube.com/watch?v=..."></textarea>
+        <div class="modal-actions">
+            <button class="btn primary" on:click={importVideos}>
+                <PlusMultiple size="16" /> Import Videos
+            </button>
+        </div>
+    </div>
   {/if}
 </Modal>
 
@@ -599,11 +652,25 @@
       height: 100vh;
       margin: 0;
       padding: 0;
+      background: transparent;
   }
 
   .editor-header {
-      padding: 1rem 2rem;
-      border-bottom: 1px solid var(--border-color);
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+  }
+
+  .title-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+  }
+
+  .title-text {
+      font-weight: 900;
+      font-size: 1.75rem;
+      letter-spacing: -0.5px;
   }
 
   .editor-body {
@@ -613,7 +680,98 @@
   }
 
   .sidebar-info {
-      padding: 20px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+  }
+
+  .summary-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 12px var(--shadow);
+  }
+
+  .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0 1.5rem;
+  }
+
+  .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+  }
+
+  .stat .label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--text-muted);
+  }
+
+  .stat .value {
+      font-size: 1.25rem;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+  }
+
+  .quick-actions-v {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+  }
+
+  .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+  }
+
+  .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn.secondary { background: var(--hover); color: var(--text); }
+
+  .filter-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+  }
+
+  .section-label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+  }
+
+  .search-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 12px;
+  }
+
+  .search-input-wrapper input {
+      border: none;
+      background: transparent;
+      padding: 10px 0;
+      width: 100%;
+      outline: none;
+      font-size: 0.9rem;
   }
 
   .video-list-container {
@@ -627,80 +785,103 @@
 
   h2 {
     display: flex;
-    justify-content: center;
-    width: 100%;
-    font-size: 24px;
-    margin-bottom: 5px;
+    align-items: center;
+    gap: 12px;
   }
 
   .edit-title-input {
-    width: 100%;
     text-align: center;
-    margin: 0;
-    margin-right: 5px;
-    padding: 0;
-    font-weight: bold;
+    font-weight: 900;
+    font-size: 1.5rem;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    padding: 4px 12px;
   }
 
-  :global(.edit-title-btn) {
-    margin-left: 20px;
+  .icon-btn {
+      background: var(--hover);
+      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
   }
 
-  .groups-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
-  }
+  .icon-btn.success { color: #28a745; border-color: #28a745; }
+  .icon-btn.danger { color: #dc3545; border-color: #dc3545; }
 
   .platlist-btns {
     display: flex;
-    padding-bottom: 20px;
-    gap: 10px;
+    padding-bottom: 2rem;
+    gap: 12px;
   }
 
   .batch-controls {
-    padding-bottom: 10px;
+    padding-bottom: 1rem;
     width: 100%;
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .filter-status {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
   }
 
   .list {
     width: 100%;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px var(--shadow);
+    overflow: hidden;
   }
 
   .list > div:not(:last-child) {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .empty-state {
+      padding: 4rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-style: italic;
   }
 
   textarea {
-    min-width: 30rem;
-    height: 50vh;
+    width: 100%;
+    height: 40vh;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    background: var(--hover);
+    color: var(--text);
   }
+
+  .modal-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 400px;
+  }
+
+  .hint { font-size: 0.8rem; color: var(--text-muted); }
 
   .pagination {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 20px;
+    gap: 1rem;
+    padding-top: 2rem;
   }
 
-  .quick-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
-  }
-
-  .quick-actions button {
-      padding: 10px;
-      background: var(--sidebar-bg-color);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+  .page-size-select {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
   }
 </style>

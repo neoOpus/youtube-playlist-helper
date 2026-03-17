@@ -10,3 +10,4 @@ export * from "./services/playlists-sorter";
 export * from "./services/utils";
 export * from "./services/webdav-service";
 export * from "./types/model";
+export * from "./services/format-exporter";
