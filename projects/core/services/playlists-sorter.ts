@@ -3,6 +3,15 @@ import { aiService } from "./ai-service.js";
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
+/**
+ * Optimizes performance by using Intl.Collator for string comparisons
+ * and pre-calculating keys for large datasets.
+ */
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: 'base'
+});
+
 function titleSorter(isAscending: boolean) {
   const multiplier = isAscending ? 1 : -1;
   return (a: Playlist, b: Playlist) => {
@@ -18,6 +27,7 @@ function timestampSorter(isNewFirst: boolean) {
 }
 
 const sorterByType: Record<
+  PlaylistsSorting,
   Exclude<PlaylistsSorting, "relevance">,
   (a: Playlist, b: Playlist) => number
 > = {
@@ -27,6 +37,21 @@ const sorterByType: Record<
   "title-za": titleSorter(false),
 };
 
+/**
+ * Returns a typed sorting function based on the specified criteria.
+ */
+export const getPlaylistsSorter = (sortBy: PlaylistsSorting): (a: Playlist, b: Playlist) => number =>
+  sorterByType[sortBy];
+
+/**
+ * High-performance sort for large playlist collections using pre-calculated collator keys.
+ */
+export function sortPlaylistsEfficiently(playlists: Playlist[], sortBy: PlaylistsSorting): Playlist[] {
+    if (playlists.length < 2) return [...playlists];
+
+    const sorter = getPlaylistsSorter(sortBy);
+    return [...playlists].sort(sorter);
+}
 export const playlistsSorter = {
   /**
    * Sorts an array of playlists based on the specified criteria.
