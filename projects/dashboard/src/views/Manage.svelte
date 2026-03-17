@@ -1,356 +1,124 @@
-<script>
-  import { storageService, backupService, notificationService, formatExporter } from "@yph/core";
-  import { SaveIcon, PlaylistPlusIcon, DeleteIcon, RemoveDuplicates, Filter, InfoIcon, ClipboardMultiple } from "@yph/ui-kit";
+<script lang="ts">
   import { onMount } from "svelte";
+  import { fade, fly } from "svelte/transition";
+  import { storageService, notificationService, actionLogger } from "@yph/core";
+  import {
+    DeleteIcon,
+    SaveIcon,
+    TerminalIcon,
+    PlusMultiple,
+    CheckIcon,
+    InfoIcon
+  } from "@yph/ui-kit";
+  import LibraryAuditor from "../components/LibraryAuditor.svelte";
+  import NeuralMap from "../components/NeuralMap.svelte";
+  import ThemeArchitect from "../components/ThemeArchitect.svelte";
+  import ImportWizard from "../components/ImportWizard.svelte";
 
-  let stats = {
-      playlistCount: 0,
-      videoCount: 0,
-      storageUsed: "0 KB",
-      groupCount: 0
-  };
+  let showImport = false;
 
-  let experimentalEnabled = false;
-
-  onMount(async () => {
-      await refreshStats();
-      experimentalEnabled = await storageService.fetchObject("experimental_features", false);
-  });
-
-  async function refreshStats() {
+  async function exportData() {
       const playlists = await storageService.getPlaylists();
-      stats.playlistCount = playlists.length;
-      stats.videoCount = playlists.reduce((acc, p) => acc + (p.videos?.length || 0), 0);
-
-      const allObjects = await storageService.fetchAllObjects();
-      const bytes = new TextEncoder().encode(JSON.stringify(allObjects)).length;
-      stats.storageUsed = (bytes / 1024).toFixed(2) + " KB";
-
-      const groups = new Set(playlists.flatMap(p => p.groups || []));
-      stats.groupCount = groups.size;
-  }
-
-  async function toggleExperimental() {
-      experimentalEnabled = !experimentalEnabled;
-      await storageService.storeObject("experimental_features", experimentalEnabled);
-      notificationService.info(`Experimental features ${experimentalEnabled ? 'enabled' : 'disabled'}.`);
-  }
-
-  async function clearAll() {
-    if (confirm("⚠️ CRITICAL ACTION: Are you sure you want to delete ALL saved playlists? This cannot be undone.")) {
-        const playlists = await storageService.getPlaylists();
-        for (const p of playlists) {
-            await storageService.removePlaylist(p);
-        }
-        notificationService.success("All playlists wiped successfully.");
-        window.location.reload();
-    }
-  }
-
-  async function download(content, filename, contentType) {
-      const blob = new Blob([content], { type: contentType });
+      const blob = new Blob([JSON.stringify(playlists, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename;
+      a.download = `yph-infrastructure-export-${Date.now()}.json`;
       a.click();
-      notificationService.success(`Exported ${filename} successfully.`);
+      notificationService.success("Infrastructure snapshot exported.");
   }
 
-  async function exportLibrary(format) {
-      const playlists = await storageService.getPlaylists();
-      const date = new Date().toISOString().slice(0, 10);
-
-      if (format === 'json') {
-          download(JSON.stringify(playlists, null, 2), `yph-backup-${date}.json`, "application/json");
-      } else if (format === 'csv') {
-          download(formatExporter.toCSV(playlists), `yph-export-${date}.csv`, "text/csv");
-      } else if (format === 'txt') {
-          download(formatExporter.toTXT(playlists), `yph-export-${date}.txt`, "text/plain");
-      } else if (format === 'md') {
-          download(formatExporter.toMarkdown(playlists), `yph-export-${date}.md`, "text/markdown");
-      }
-  }
-
-  async function importPlaylists() {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".json";
-      input.onchange = async (e) => {
-          const file = e.target.files[0];
-          const text = await file.text();
-          try {
-              const playlists = JSON.parse(text);
-              if (!Array.isArray(playlists)) throw new Error("Invalid backup format");
-
-              for (const p of playlists) {
-                  await storageService.savePlaylist(p);
-              }
-              notificationService.success(`Imported ${playlists.length} playlists.`);
-              window.location.reload();
-          } catch (err) {
-              notificationService.error("Failed to import playlists. Invalid file format.");
-          }
-      };
-      input.click();
-  }
-
-  async function findDuplicates() {
-      const playlists = await storageService.getPlaylists();
-      let allVideos = new Set();
-      let duplicates = [];
-
-      for (const p of playlists) {
-          for (const vid of p.videos) {
-              if (allVideos.has(vid)) {
-                  duplicates.push(vid);
-              }
-              allVideos.add(vid);
-          }
-      }
-
-      if (duplicates.length > 0) {
-          alert(`Found ${duplicates.length} duplicate video references across your playlists.`);
-      } else {
-          notificationService.success("No duplicate video references found.");
-      }
-  }
-
-  async function massAlphabetize() {
-      if (confirm("Sort all playlist titles alphabetically? This will overwrite the current order in some views.")) {
+  async function clearAll() {
+      if (confirm("DANGER: This will decommission the entire infrastructure. Proceed?")) {
           const playlists = await storageService.getPlaylists();
-          playlists.sort((a, b) => a.title.localeCompare(b.title));
-          // We don't necessarily have a 'saved order' in core yet, but we can re-save them to update timestamps if needed
-          notificationService.success("Alphabetization applied to internal collection.");
+          for (const pl of playlists) await storageService.removePlaylist(pl);
+          notificationService.success("Infrastructure purged.");
+          window.location.reload();
       }
   }
 </script>
 
-<main>
-  <div class="manage-header">
-      <div class="header-content">
-          <h1>Data Management & Power Tools</h1>
-          <p>Configure advanced settings, manage backups, and optimize your collection.</p>
-      </div>
-      <div class="health-overview">
-          <div class="stat-item">
-              <span class="label">PLAYLISTS</span>
-              <span class="value">{stats.playlistCount}</span>
-          </div>
-          <div class="stat-item">
-              <span class="label">VIDEOS</span>
-              <span class="value">{stats.videoCount}</span>
-          </div>
-          <div class="stat-item">
-              <span class="label">GROUPS</span>
-              <span class="value">{stats.groupCount}</span>
-          </div>
-          <div class="stat-item">
-              <span class="label">STORAGE</span>
-              <span class="value">{stats.storageUsed}</span>
-          </div>
-      </div>
-  </div>
+<div class="manage-view p-8" in:fade>
+    <header class="mb-12">
+        <h1 class="row items-center gap-4">
+            <div class="icon-blob"><TerminalIcon size="32" /></div>
+            <span>System Management Hub</span>
+        </h1>
+        <p class="muted mt-2">Oversee neural connections, library quality, and global aesthetics.</p>
+    </header>
 
-  <div class="grid">
-      <section class="tool-card">
-          <div class="icon-header">
-              <SaveIcon size="24" color="var(--primary)" />
-              <h3>Export Center</h3>
-          </div>
-          <p>Export your library in various formats for archiving or external use.</p>
-          <div class="export-grid">
-              <button class="btn tiny" on:click={() => exportLibrary('json')}>JSON</button>
-              <button class="btn tiny" on:click={() => exportLibrary('csv')}>CSV</button>
-              <button class="btn tiny" on:click={() => exportLibrary('txt')}>TXT</button>
-              <button class="btn tiny" on:click={() => exportLibrary('md')}>MD</button>
-          </div>
-          <div class="actions">
-              <button class="btn secondary" on:click={importPlaylists}>Restore Library</button>
-          </div>
-      </section>
+    <div class="manage-grid">
+        <div class="main-stats">
+            <NeuralMap />
+            <LibraryAuditor />
+        </div>
 
-      <section class="tool-card">
-          <div class="icon-header">
-              <RemoveDuplicates size="24" color="#28a745" />
-              <h3>Maintenance</h3>
-          </div>
-          <p>Optimize your collection by finding duplicates and cleaning up metadata.</p>
-          <div class="actions">
-              <button class="btn secondary" on:click={findDuplicates}>Find Duplicates</button>
-              <button class="btn secondary" on:click={massAlphabetize}>Mass Sort A-Z</button>
-          </div>
-      </section>
+        <aside class="actions-sidebar">
+            <div class="action-section pro-glass p-6">
+                <h3><SaveIcon size="18" /> Data Governance</h3>
+                <div class="btns-stack mt-6">
+                    <button class="btn secondary w-full" on:click={() => showImport = true}>
+                        <PlusMultiple size="18" /> Import Logic Snapshot
+                    </button>
+                    <button class="btn secondary w-full" on:click={exportData}>
+                        <SaveIcon size="18" /> Export Global Map (JSON)
+                    </button>
+                    <button class="btn danger-outline w-full mt-4" on:click={clearAll}>
+                        <DeleteIcon size="18" /> Decommission System
+                    </button>
+                </div>
+            </div>
 
-      <section class="tool-card">
-          <div class="icon-header">
-              <InfoIcon size="24" color="#ffc107" />
-              <h3>Experimental</h3>
-          </div>
-          <p>Enable cutting-edge features like AI-powered Smart Ghosting and predictive recovery.</p>
-          <div class="actions">
-              <button class="btn secondary" class:active={experimentalEnabled} on:click={toggleExperimental}>
-                  {experimentalEnabled ? 'Disable' : 'Enable'} Power Features
-              </button>
-          </div>
-      </section>
+            <ThemeArchitect />
 
-      <section class="tool-card danger">
-          <div class="icon-header">
-              <DeleteIcon size="24" color="#dc3545" />
-              <h3>Critical Actions</h3>
-          </div>
-          <p>Wipe your local data storage. This is permanent and irreversible.</p>
-          <div class="actions">
-              <button class="btn danger" on:click={clearAll}>Factory Reset</button>
-          </div>
-      </section>
-  </div>
-</main>
+            <div class="system-info pro-glass p-6 mt-8">
+                <h3><InfoIcon size="18" /> Infrastructure Core</h3>
+                <div class="v-list mt-4">
+                    <div class="v-row"><span>SOTA Version</span> <span class="v-val">2.1 Quantum</span></div>
+                    <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
+                    <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<ImportWizard bind:display={showImport} on:complete={() => window.location.reload()} />
 
 <style>
-  main {
-    padding: 2rem;
-    max-width: 1100px;
-    margin: 0 auto;
-    color: var(--text);
-  }
+    .manage-view { max-width: 1400px; margin: 0 auto; }
+    h1 { font-weight: 900; letter-spacing: -2px; font-size: 3rem; margin: 0; }
 
-  .manage-header {
-      margin-bottom: 2.5rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 2rem;
-  }
+    .icon-blob { background: var(--primary); color: white; padding: 12px; border-radius: 18px; box-shadow: 0 8px 24px rgba(255, 82, 82, 0.3); }
 
-  .health-overview {
-      display: flex;
-      gap: 1.5rem;
-      background: var(--hover);
-      padding: 1rem 1.5rem;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-  }
+    .manage-grid { display: grid; grid-template-columns: 1fr 350px; gap: 3rem; margin-top: 2rem; }
 
-  .stat-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-  }
+    .main-stats { display: flex; flex-direction: column; gap: 2rem; }
 
-  .stat-item .label {
-      font-size: 0.65rem;
-      font-weight: 800;
-      color: var(--text-muted);
-      letter-spacing: 1px;
-  }
+    .pro-glass { background: var(--card-bg-alpha, rgba(20, 25, 35, 0.6)); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 24px; }
+    h3 { margin: 0; font-weight: 800; display: flex; align-items: center; gap: 10px; font-size: 1.1rem; }
 
-  .stat-item .value {
-      font-size: 1.25rem;
-      font-weight: 900;
-      font-family: 'JetBrains Mono', monospace;
-  }
+    .btns-stack { display: flex; flex-direction: column; gap: 12px; }
+    .btn { padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text); background: var(--hover); }
+    .btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
+    .btn.danger-outline { color: #dc3545; border-color: rgba(220, 53, 69, 0.3); }
+    .btn.danger-outline:hover { background: #dc3545; color: white; }
 
-  h1 {
-      margin-bottom: 0.5rem;
-      font-size: 2.2rem;
-      font-weight: 900;
-      letter-spacing: -1px;
-  }
+    .v-list { display: flex; flex-direction: column; gap: 8px; }
+    .v-row { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+    .v-val { color: var(--text); font-family: 'JetBrains Mono'; }
 
-  .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.5rem;
-  }
+    .row { display: flex; }
+    .items-center { align-items: center; }
+    .gap-4 { gap: 1rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
+    .mb-12 { margin-bottom: 3rem; }
+    .p-6 { padding: 1.5rem; }
+    .p-8 { padding: 2rem; }
+    .w-full { width: 100%; }
 
-  .tool-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .tool-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 32px var(--shadow);
-      border-color: var(--primary);
-  }
-
-  .icon-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-  }
-
-  .icon-header h3 {
-      margin: 0;
-      font-size: 1.3rem;
-      font-weight: 800;
-  }
-
-  p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin: 0;
-  }
-
-  .export-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-  }
-
-  .actions {
-      display: flex;
-      gap: 12px;
-      margin-top: auto;
-  }
-
-  .btn {
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      transition: all 0.2s;
-      flex-grow: 1;
-      text-align: center;
-      background: var(--card-bg);
-      color: var(--text);
-  }
-
-  .btn.tiny {
-      padding: 6px;
-      font-size: 0.75rem;
-      font-weight: 800;
-  }
-
-  .primary-btn { background: var(--primary); color: white; border-color: var(--primary); }
-  .secondary { background: var(--hover); }
-  .secondary.active { background: var(--primary); color: white; border-color: var(--primary); }
-  .danger { color: #dc3545; border-color: #dc3545; }
-  .danger:hover { background: #dc3545; color: white; }
-
-  .btn:hover { opacity: 0.9; }
-
-  @media (max-width: 900px) {
-      .manage-header {
-          flex-direction: column;
-          align-items: flex-start;
-      }
-      .health-overview {
-          width: 100%;
-          justify-content: space-between;
-      }
-  }
+    @media (max-width: 1100px) { .manage-grid { grid-template-columns: 1fr; } .actions-sidebar { order: -1; } }
 </style>

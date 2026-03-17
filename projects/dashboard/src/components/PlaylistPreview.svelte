@@ -1,179 +1,104 @@
 <script lang="ts">
-  import PlaylistCount from "./PlaylistCount.svelte";
-  import { SmartElement, PencilIcon, DeleteIcon, ClipboardMultiple } from "@yph/ui-kit";
-  import type { Playlist } from "@yph/core";
   import { createEventDispatcher } from "svelte";
-  import { storageService, notificationService } from "@yph/core";
+  import { DeleteIcon, PencilIcon, SuperButton } from "@yph/ui-kit";
+  import type { Playlist } from "@yph/core";
+  import { storageService, actionLogger } from "@yph/core";
+  import { scale } from "svelte/transition";
 
   export let playlist: Playlist;
-  export let active = false;
-
   const dispatch = createEventDispatcher();
 
-  function handleClick() {
-    dispatch("click", playlist);
+  async function deletePlaylist() {
+    if (confirm(`Delete "${playlist.title}"?`)) {
+        const previous = { ...playlist };
+        actionLogger.log(`Delete ${playlist.title}`, async () => {
+            await storageService.savePlaylist(previous);
+            dispatch("restored", previous);
+        });
+        await storageService.removePlaylist(playlist);
+        dispatch("deleted", playlist);
+    }
   }
 
-  async function deletePlaylist(e: MouseEvent) {
-      e.stopPropagation();
-      if (confirm(`Delete playlist "${playlist.title}"?`)) {
-          await storageService.removePlaylist(playlist);
-          notificationService.success("Playlist deleted.");
-          window.location.reload();
-      }
-  }
-
-  function copyId(e: MouseEvent) {
-      e.stopPropagation();
-      navigator.clipboard.writeText(playlist.id);
-      notificationService.info("Playlist ID copied to clipboard.");
+  function handleMouseMove(e: MouseEvent) {
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      target.style.setProperty("--x", `${x}px`);
+      target.style.setProperty("--y", `${y}px`);
   }
 </script>
 
-{#if playlist}
-<SmartElement {active} on:click={handleClick} className="playlist-preview-card">
-  <div class="content">
-    <div class="info">
-        <div class="title-row">
-            <span class="title">{playlist.title || 'Untitled'}</span>
-            <PlaylistCount count={playlist.videos?.length || 0} />
-        </div>
-        <div class="meta">
-            {#if playlist.groups && playlist.groups.length > 0}
-                <div class="tags">
-                    {#each playlist.groups.slice(0, 2) as group}
-                        <span class="tag">{group}</span>
-                    {/each}
-                    {#if playlist.groups.length > 2}
-                        <span class="tag-more">+${playlist.groups.length - 2}</span>
-                    {/if}
-                </div>
-            {/if}
-            <span class="date">{new Date(playlist.timestamp).toLocaleDateString()}</span>
-        </div>
+<div
+    class="playlist-card pro-glass luminous-hover"
+    on:mousemove={handleMouseMove}
+    in:scale={{ start: 0.95, duration: 400 }}
+    role="region"
+    aria-label="Playlist card: {playlist.title}"
+>
+  <div class="card-header">
+    <div class="title-row">
+        <a href="#/edit/{playlist.id}" class="title">{playlist.title}</a>
+        <div class="meta-badge">{(playlist.videos || []).length}</div>
     </div>
-    <div class="quick-actions">
-        <button on:click={copyId} title="Copy ID"><ClipboardMultiple size="14" /></button>
-        <button on:click={deletePlaylist} class="delete" title="Delete"><DeleteIcon size="14" /></button>
-    </div>
+    {#if playlist.groups?.length}
+      <div class="groups">
+        {#each playlist.groups as group}
+          <span class="group-tag">{group}</span>
+        {/each}
+      </div>
+    {/if}
   </div>
-</SmartElement>
-{/if}
+
+  <div class="card-actions">
+    <a href="#/edit/{playlist.id}" class="action-btn secondary" title="Edit infrastructure" aria-label="Edit {playlist.title}">
+        <PencilIcon size="16" />
+    </a>
+    <SuperButton
+        on:click={deletePlaylist}
+        circle
+        bgcolor="rgba(220, 53, 69, 0.1)"
+        className="action-btn danger"
+        title="Decommission"
+        ariaLabel="Delete {playlist.title}"
+    >
+      <DeleteIcon size="16" color="#dc3545" />
+    </SuperButton>
+  </div>
+
+  <div class="timestamp small muted">
+    Created: {new Date(playlist.timestamp).toLocaleDateString()}
+  </div>
+</div>
 
 <style>
-  :global(.playlist-preview-card) {
-    padding: 1.25rem;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--card-bg);
-    margin: 8px;
-    width: 280px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    color: var(--text);
-  }
-
-  :global(.playlist-preview-card:hover) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px var(--shadow);
-      border-color: var(--primary);
-  }
-
-  .content {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .info {
+  .playlist-card {
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    flex-grow: 1;
+    gap: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
     overflow: hidden;
   }
 
-  .title-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-  }
+  .playlist-card:hover { transform: translateY(-4px) scale(1.01); border-color: var(--primary); }
 
-  .title {
-    font-weight: 700;
-    font-size: 1rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--text);
-  }
+  .title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .title { font-size: 1.1rem; font-weight: 800; color: var(--text); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2; overflow: hidden; }
+  .title:hover { color: var(--primary); }
 
-  .meta {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-  }
+  .meta-badge { font-family: 'JetBrains Mono'; font-size: 0.7rem; font-weight: 900; background: var(--hover); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); color: var(--primary); }
 
-  .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-  }
+  .groups { display: flex; flex-wrap: wrap; gap: 6px; }
+  .group-tag { font-size: 0.65rem; font-weight: 800; background: var(--hover); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); text-transform: uppercase; }
 
-  .tag {
-      background: var(--hover);
-      color: var(--text-muted);
-      font-size: 0.7rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: 600;
-  }
+  .card-actions { display: flex; gap: 10px; margin-top: auto; }
 
-  .tag-more {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-  }
+  :global(.action-btn) { display: flex !important; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; transition: all 0.2s; background: var(--hover); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; text-decoration: none; }
+  :global(.action-btn:hover) { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; }
+  :global(.action-btn.danger:hover) { background: #dc3545 !important; }
 
-  .date {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-  }
-
-  .quick-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      opacity: 0;
-      transition: opacity 0.2s;
-  }
-
-  :global(.playlist-preview-card:hover) .quick-actions {
-      opacity: 1;
-  }
-
-  .quick-actions button {
-      background: var(--hover);
-      border: 1px solid var(--border);
-      padding: 6px;
-      border-radius: 6px;
-      cursor: pointer;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-  }
-
-  .quick-actions button:hover {
-      background: var(--active);
-      color: var(--text);
-  }
-
-  .quick-actions button.delete:hover {
-      background: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-      border-color: #dc3545;
-  }
+  .timestamp { font-size: 0.65rem; font-weight: 800; opacity: 0.6; }
 </style>

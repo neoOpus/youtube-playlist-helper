@@ -1,193 +1,306 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { storageService, notificationService } from "@yph/core";
-  import { CollapsibleSidebar } from "@yph/ui-kit";
-  import { viewMode } from "../stores/view-mode";
-  import { themeChoice } from "../stores/theme.store";
+  import { push } from "svelte-spa-router";
+  import { fade, fly } from "svelte/transition";
   import {
-    PlaylistPlayIcon,
     PlaylistPlusIcon,
+    PlaylistPlayIcon,
     SaveIcon,
-    PencilIcon,
-    SearchIcon,
-    Filter,
-    InfoIcon
+    CloudSyncIcon,
+    MergeIcon,
+    SupportIcon,
+    TerminalIcon,
+    type IconComponent
   } from "@yph/ui-kit";
+  import { activeTheme, themes } from "../stores/theme.store";
+  import { viewMode } from "../stores/view-mode";
 
-  let collapsed = false;
+  export let activeRoute = "/";
 
-  onMount(async () => {
-    collapsed = await storageService.fetchObject("sidebar_collapsed", false);
-  });
-
-  async function handleToggle(event: CustomEvent<boolean>) {
-      collapsed = event.detail;
-      await storageService.storeObject("sidebar_collapsed", collapsed);
+  interface NavItem {
+      id: string;
+      label: string;
+      icon: IconComponent;
+      color: string;
   }
 
-  async function resetToDefaults(e: MouseEvent) {
-      e.preventDefault();
-      if (confirm("Reset all settings, view modes, and themes to factory defaults?")) {
-          await storageService.storeObject("viewMode", "simple");
-          await storageService.storeObject("theme-choice", "device");
-          await storageService.storeObject("sidebar_collapsed", false);
-          await storageService.storeObject("experimental_features", false);
-          await storageService.storeObject("playlists-sorting", "date-created-desc");
-          notificationService.success("Settings reset. Reloading...");
-          setTimeout(() => window.location.reload(), 1000);
-      }
+  const navItems: NavItem[] = [
+    { id: "/", label: "Saved playlists", icon: PlaylistPlayIcon as any, color: "#ff5252" },
+    { id: "/new", label: "New playlist", icon: PlaylistPlusIcon as any, color: "#ff8a80" },
+    { id: "/manage", label: "Manage Hub", icon: SaveIcon as any, color: "#ff1744" },
+    { id: "/sync", label: "Cloud Sync", icon: CloudSyncIcon as any, color: "#b0bec5" },
+    { id: "/merge", label: "Merge Tool", icon: MergeIcon as any, color: "#ff80ab" },
+    { id: "/support", label: "Support", icon: SupportIcon as any, color: "#cfd8dc" },
+  ];
+
+  function navigate(id: string) {
+    push(id);
   }
 
-  function isActive(...pages: string[]) {
-    return pages.some(
-      (page) =>
-        location.href.endsWith(page) || location.href.endsWith(page + "/")
-    );
+  function handleMouseMove(e: MouseEvent) {
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      target.style.setProperty("--x", `${x}px`);
+      target.style.setProperty("--y", `${y}px`);
   }
 </script>
 
-<CollapsibleSidebar bind:collapsed on:toggle={handleToggle}>
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="logo" on:contextmenu={resetToDefaults} on:auxclick={resetToDefaults} title="Right-click to Reset Defaults">YPH</div>
-  <nav>
-    <a href="#/saved" class:active={isActive("saved")} title="Saved playlists">
-        <PlaylistPlayIcon size="20" /> {#if !collapsed}<span>Saved playlists</span>{/if}
-    </a>
-    <a href="#/new" class:active={isActive("new")} title="New playlist">
-        <PlaylistPlusIcon size="20" /> {#if !collapsed}<span>New playlist</span>{/if}
-    </a>
-    <a href="#/manage" class:active={isActive("manage")} title="Manage">
-        <Filter size="20" /> {#if !collapsed}<span>Manage</span>{/if}
-    </a>
-    <a href="#/sync" class:active={isActive("sync")} title="Cloud Sync">
-        <SaveIcon size="20" /> {#if !collapsed}<span>Cloud Sync</span>{/if}
-    </a>
-    <a href="#/compare" class:active={isActive("compare")} title="Merge Tool">
-        <SearchIcon size="20" /> {#if !collapsed}<span>Merge Tool</span>{/if}
-    </a>
-    <a href="#/support" class:active={isActive("support")} title="Support">
-        <InfoIcon size="20" /> {#if !collapsed}<span>Support</span>{/if}
-    </a>
-  </nav>
-
-  {#if !collapsed}
-    <div class="sidebar-footer">
-      <div class="theme-selector">
-          <p class="section-label">THEME</p>
-          <select bind:value={$themeChoice} class="theme-select">
-              <option value="device">Device Default</option>
-              <option value="github-light">GitHub Light</option>
-              <option value="github-dark">GitHub Dark</option>
-              <option value="dracula">Dracula</option>
-              <option value="sota-red">SOTA Red</option>
-          </select>
-      </div>
-
-      <div class="quick-actions">
-          <p class="section-label">QUICK ACTIONS</p>
-          <a href="#/new" class="quick-link">
-              <PencilIcon size="14" /> <span>Quick Builder</span>
-          </a>
-      </div>
-      <button on:click={viewMode.toggle} class="view-mode-btn">
-        Switch to {$viewMode === "simple" ? "Advanced" : "Simple"} Mode
-      </button>
+<nav class="sidebar glass pro-blur" in:fly={{ x: -20, duration: 600 }}>
+  <div class="sidebar-header">
+    <div class="logo-area">
+        <div class="logo-icon"><PlaylistPlayIcon size="24" /></div>
+        <h1 class="logo-text">YPH <span class="badge">PRO</span></h1>
     </div>
-  {/if}
-</CollapsibleSidebar>
+  </div>
+
+  <div class="nav-section">
+    <p class="section-label">NAVIGATE</p>
+    {#each navItems as item}
+      <button
+        class="nav-item luminous-hover"
+        class:active={activeRoute === item.id}
+        on:click={() => navigate(item.id)}
+        on:mousemove={handleMouseMove}
+      >
+        <div class="icon-wrapper" style="--icon-color: {item.color}">
+            <svelte:component this={item.icon} size="20" />
+        </div>
+        <span class="label">{item.label}</span>
+        {#if activeRoute === item.id}
+            <div class="active-indicator" in:fade></div>
+        {/if}
+      </button>
+    {/each}
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="sidebar-footer">
+    <div class="palette-hint">
+        <TerminalIcon size="12" />
+        <span>Ctrl + K for Commands</span>
+    </div>
+
+    <div class="theme-controls">
+        <p class="section-label">THEME</p>
+        <select bind:value={$activeTheme} class="theme-select">
+          {#each themes as theme}
+            <option value={theme.id}>{theme.name}</option>
+          {/each}
+        </select>
+    </div>
+
+    <div class="quick-actions">
+        <button class="btn mini w-full" on:click={viewMode.toggle}>
+            Switch to {$viewMode === 'simple' ? 'Advanced' : 'Simple'} View
+        </button>
+    </div>
+  </div>
+</nav>
 
 <style>
-  .logo {
-      color: white;
-      font-weight: bold;
-      font-size: 1.4rem;
-      padding: 1rem 0.5rem 2rem;
-      text-align: center;
-      font-family: 'JetBrains Mono', monospace;
-      cursor: help;
-      user-select: none;
-  }
-
-  nav {
-      display: flex;
-      flex-direction: column;
-      padding: 0 0.5rem;
-  }
-
-  a {
-    padding: 0.8rem 1rem;
-    margin-bottom: 0.4rem;
-    text-decoration: none;
-    font-size: 1rem;
-    color: var(--sidebar-text-color);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.2s;
-  }
-
-  a:hover {
-    background-color: var(--hover-color);
-    border-radius: 0.5rem;
-  }
-
-  a.active {
-    background-color: var(--active-bg-color);
-    color: var(--active-text-color);
-    font-weight: bold;
-    border-radius: 0.5rem;
-  }
-
-  .sidebar-footer {
-    margin-top: auto;
-    padding: 1rem;
+  .sidebar {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    padding: 1.5rem 1rem;
+    border-right: 1px solid var(--border);
+    position: relative;
+    z-index: 20;
+    color: var(--text);
+    background: var(--sidebar-bg, rgba(10, 15, 25, 0.7));
+  }
+
+  .pro-blur { backdrop-filter: blur(24px); }
+
+  .sidebar-header {
+    padding: 0.5rem 0.75rem 2rem;
+  }
+
+  .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+  }
+
+  .logo-icon {
+      background: var(--primary);
+      color: white;
+      padding: 6px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(255, 82, 82, 0.4);
+  }
+
+  .logo-text {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+  }
+
+  .badge {
+      font-size: 0.6rem;
+      background: var(--primary);
+      color: white;
+      padding: 2px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      font-weight: 800;
+  }
+
+  .nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   .section-label {
-      font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      padding-left: 0.75rem;
       margin-bottom: 0.5rem;
-      letter-spacing: 1px;
-      font-weight: bold;
+      text-transform: uppercase;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    text-align: left;
+    overflow: hidden;
+  }
+
+  .luminous-hover::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 82, 82, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+  }
+  .luminous-hover:hover::after { opacity: 1; }
+
+  .nav-item:hover {
+    background: var(--hover);
+    transform: translateX(4px);
+  }
+
+  .nav-item.active {
+    background: var(--hover);
+    color: var(--primary);
+  }
+
+  .icon-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--icon-color, var(--text-muted));
+      transition: all 0.3s;
+  }
+
+  .nav-item.active .icon-wrapper {
+      filter: drop-shadow(0 0 8px var(--icon-color));
+      transform: scale(1.1);
+  }
+
+  .active-indicator {
+      position: absolute;
+      left: 0;
+      top: 20%;
+      bottom: 20%;
+      width: 4px;
+      background: var(--primary);
+      border-radius: 0 4px 4px 0;
+      box-shadow: 0 0 10px var(--primary);
+  }
+
+  .spacer { flex-grow: 1; }
+
+  .sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem 0.75rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .palette-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--hover);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
   }
 
   .theme-select {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: white;
-      font-size: 0.8rem;
-  }
-
-  .quick-link {
-      padding: 0.5rem;
-      font-size: 0.85rem;
-      opacity: 0.8;
-      border: 1px dashed rgba(255, 255, 255, 0.2);
-      border-radius: 0.3rem;
-  }
-
-  .quick-link:hover {
-      opacity: 1;
-      border-color: rgba(255, 255, 255, 0.5);
-  }
-
-  .view-mode-btn {
     width: 100%;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    padding: 0.6rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--hover);
+    border: 1px solid var(--border);
+    color: var(--text);
     font-size: 0.85rem;
-    transition: background 0.2s;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
   }
 
-  .view-mode-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
+  .btn.mini {
+      padding: 8px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      background: var(--hover);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+  }
+
+  .btn.mini:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+  }
+
+  .w-full { width: 100%; }
+
+  @media (max-width: 768px) {
+    .label, .section-label, .logo-text, .palette-hint, .theme-controls, .quick-actions {
+      display: none;
+    }
+    .sidebar {
+      padding: 1.5rem 0.5rem;
+    }
+    .nav-item {
+      justify-content: center;
+      padding: 14px;
+    }
+    .logo-area {
+        justify-content: center;
+    }
   }
 </style>

@@ -1,7 +1,7 @@
 <!-- REUSABLE SOTA COMPONENT: Glassmorphism Sidebar with CSS variable integration. -->
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { CloseIcon, PencilIcon } from "./icons/index.ts";
+  import { CloseIcon, PencilIcon } from "./icons/index.js";
 
   export let collapsed = false;
   export let width = "240px";

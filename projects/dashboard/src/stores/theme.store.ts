@@ -10,6 +10,21 @@ export type ThemeName =
   | "dracula"
   | "sota-red";
 
+export interface ThemeDef {
+    id: ThemeName;
+    name: string;
+    primary: string;
+    accent: string;
+}
+
+export const themes: ThemeDef[] = [
+    { id: "device", name: "System Default", primary: "#ccc", accent: "#888" },
+    { id: "github-light", name: "GitHub Light", primary: "#ffffff", accent: "#0969da" },
+    { id: "github-dark", name: "GitHub Dark", primary: "#0d1117", accent: "#2f81f7" },
+    { id: "dracula", name: "Dracula Night", primary: "#282a36", accent: "#bd93f9" },
+    { id: "sota-red", name: "SOTA Red Edition", primary: "#121212", accent: "#ff5252" }
+];
+
 function createThemeChoice() {
   const { subscribe, set } = writable<ThemeName>("device");
 
@@ -31,6 +46,7 @@ export async function initTheme() {
 
 export const activeTheme = derived(themeChoice, ($themeChoice) => {
   if ($themeChoice === "device") {
+    if (typeof window === 'undefined') return "github-dark";
     return window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "github-dark"
       : "github-light";
@@ -38,6 +54,8 @@ export const activeTheme = derived(themeChoice, ($themeChoice) => {
   return $themeChoice;
 });
 
-activeTheme.subscribe(($theme) => {
-  document.documentElement.setAttribute("data-theme", $theme);
-});
+if (typeof document !== 'undefined') {
+    activeTheme.subscribe(($theme) => {
+        document.documentElement.setAttribute("data-theme", $theme);
+    });
+}

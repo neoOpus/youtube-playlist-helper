@@ -1,3 +1,6 @@
-<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-    <path fill="currentColor" d="M4 7H2V21C2 22.1 2.9 23 4 23H18V21H4M20 3H16.8C16.4 1.8 15.3 1 14 1C12.7 1 11.6 1.8 11.2 3H8C6.9 3 6 3.9 6 5V17C6 18.1 6.9 19 8 19H20C21.1 19 22 18.1 22 17V5C22 3.9 21.1 3 20 3M14 3C14.6 3 15 3.5 15 4C15 4.5 14.5 5 14 5C13.5 5 13 4.5 13 4C13 3.5 13.4 3 14 3Z" />
+<script lang="ts">
+  let { size = "24", color = "currentColor" } = $props();
+</script>
+<svg width={size} height={size} viewBox="0 0 24 24">
+    <path fill={color} d="M19,20H5V4H7V7H17V4H19V10H21V4A2,2 0 0,0 19,2H15.82C15.4,0.84 14.3,0 13,0C11.7,0 10.6,0.84 10.18,2H5A2,2 0 0,0 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V18H19V20M13,2A1,1 0 0,1 14,3A1,1 0 0,1 13,4A1,1 0 0,1 12,3A1,1 0 0,1 13,2M16,12V15H19V17H16V20H14V17H11V15H14V12H16Z" />
 </svg>
