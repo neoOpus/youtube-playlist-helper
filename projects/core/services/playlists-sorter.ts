@@ -1,20 +1,24 @@
 import type { Playlist, PlaylistsSorting } from "../types/model.js";
+import { aiService } from "./ai-service.js";
+
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
 function titleSorter(isAscending: boolean) {
-  var multiplier = isAscending ? 1 : -1;
+  const multiplier = isAscending ? 1 : -1;
   return (a: Playlist, b: Playlist) => {
-    return a.title.localeCompare(b.title) * multiplier;
+    return collator.compare(a.title, b.title) * multiplier;
   };
 }
+
 function timestampSorter(isNewFirst: boolean) {
-  var multiplier = isNewFirst ? -1 : 1;
+  const multiplier = isNewFirst ? -1 : 1;
   return (a: Playlist, b: Playlist) => {
     return (a.timestamp - b.timestamp) * multiplier;
   };
 }
 
-let sorterByType: Record<
-  PlaylistsSorting,
+const sorterByType: Record<
+  Exclude<PlaylistsSorting, "relevance">,
   (a: Playlist, b: Playlist) => number
 > = {
   "date-created-asc": timestampSorter(false),
@@ -23,5 +27,34 @@ let sorterByType: Record<
   "title-za": titleSorter(false),
 };
 
-export const getPlaylistsSorter = (sortBy: PlaylistsSorting) =>
-  sorterByType[sortBy];
+export const playlistsSorter = {
+  /**
+   * Sorts an array of playlists based on the specified criteria.
+   */
+  sort(playlists: Playlist[], sortBy: PlaylistsSorting, keywords: string[] = []): Playlist[] {
+    if (sortBy === "relevance") {
+      const normalizedKeywords = (keywords || []).map(k => k.toLowerCase());
+      if (normalizedKeywords.length === 0) {
+          return [...playlists].sort(sorterByType["date-created-desc"]);
+      }
+
+      return playlists
+        .map(playlist => ({
+            playlist,
+            score: aiService.calculatePlaylistRelevance(playlist, normalizedKeywords)
+        }))
+        .sort((a, b) => b.score - a.score)
+        .map(pair => pair.playlist);
+    }
+
+    return [...playlists].sort(sorterByType[sortBy as Exclude<PlaylistsSorting, "relevance">]);
+  }
+};
+
+/**
+ * @deprecated Use playlistsSorter.sort instead.
+ */
+export const getPlaylistsSorter = (sortBy: PlaylistsSorting) => {
+    if (sortBy === "relevance") return () => 0;
+    return sorterByType[sortBy as Exclude<PlaylistsSorting, "relevance">];
+};

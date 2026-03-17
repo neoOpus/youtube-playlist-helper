@@ -1,3 +1,3 @@
 ## 2026-02-15 - [Playlist Filtering Efficiency]
-**Learning:** Filtering before sorting in Svelte reactive components significantly reduces the computational load for large datasets, especially when using expensive sorters like Smart Relevance. Combined with search debouncing and score pre-calculation, UI responsiveness improves from (N \log N)$ per keystroke to (M)$ with a delay, where $ is the filtered set size.
-**Action:** Always prefer filtering data sets before applying sort operations, and pre-calculate complex sort keys (like relevance scores) to avoid redundant (N \log N)$ computations.
+**Learning:** Filtering before sorting in Svelte reactive components significantly reduces the computational load for large datasets, especially when using expensive sorters like Smart Relevance. Combined with search debouncing and score pre-calculation, UI responsiveness improves from $O(N \log N)$ per keystroke to $O(M)$ with a delay, where $M$ is the filtered set size.
+**Action:** Always prefer filtering data sets before applying sort operations, and pre-calculate complex sort keys (like relevance scores) to avoid redundant computations during sorting.

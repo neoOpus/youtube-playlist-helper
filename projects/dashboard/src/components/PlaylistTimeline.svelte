@@ -1,93 +1,140 @@
 <script lang="ts">
-  import type { Video } from "../types/model";
+  import type { Video } from "@yph/core";
+  import { fade } from "svelte/transition";
 
-  export let videos: Video[];
+  export let videos: Video[] = [];
 
   $: sortedVideos = [...videos].sort((a, b) => (b.dateAdded || 0) - (a.dateAdded || 0));
 
   function formatDate(ts: number | undefined) {
-    if (!ts) return "Unknown date";
-    return new Date(ts).toLocaleString();
+    if (!ts) return "Temporal Drift Detected";
+    return new Date(ts).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 </script>
 
-<div class="timeline">
-  {#each sortedVideos as video}
-    <div class="timeline-item">
-      <div class="time">{formatDate(video.dateAdded)}</div>
-      <div class="content">
-        <img src={video.thumbnailUrl} alt={video.title} />
-        <div class="details">
-          <span class="title">{video.title}</span>
-          <span class="channel">{video.channel}</span>
+<div class="timeline-container" in:fade>
+  <div class="timeline-v-line"></div>
+  {#each sortedVideos as video (video.videoId)}
+    <div class="timeline-item pro-glass">
+      <div class="timeline-marker"></div>
+      <div class="time-stamp">{formatDate(video.dateAdded)}</div>
+      <div class="node-content">
+        <img src={video.thumbnailUrl} alt={video.title} class="node-thumb" />
+        <div class="node-details">
+          <span class="node-title">{video.title}</span>
+          <span class="node-channel">{video.channel}</span>
         </div>
       </div>
     </div>
   {:else}
-    <p>No videos with timeline data.</p>
+    <div class="empty-timeline">
+      <p>No historical nodes detected in this sequence.</p>
+    </div>
   {/each}
 </div>
 
 <style>
-  .timeline {
+  .timeline-container {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-    border-left: 2px solid var(--border-color);
-    margin-left: 1rem;
+    gap: 1.5rem;
+    padding: 2rem;
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .timeline-v-line {
+    position: absolute;
+    left: 45px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, var(--primary), transparent);
+    opacity: 0.3;
   }
 
   .timeline-item {
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem;
+    border-radius: 12px;
     position: relative;
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
   }
 
-  .timeline-item::before {
-    content: "";
+  .timeline-item:hover {
+    transform: translateX(10px);
+    border-color: var(--primary);
+  }
+
+  .timeline-marker {
     position: absolute;
-    left: -1.4rem;
-    top: 0.5rem;
-    width: 0.8rem;
-    height: 0.8rem;
+    left: -13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background-color: var(--sidebar-bg-color);
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+    z-index: 2;
   }
 
-  .time {
-    font-size: 0.8rem;
-    color: #666;
-    min-width: 150px;
+  .time-stamp {
+    font-family: 'JetBrains Mono';
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--primary);
+    min-width: 120px;
+    text-transform: uppercase;
   }
 
-  .content {
+  .node-content {
     display: flex;
-    gap: 0.5rem;
-    background: rgba(0, 0, 0, 0.05);
-    padding: 0.5rem;
-    border-radius: 4px;
+    gap: 1rem;
+    align-items: center;
     flex-grow: 1;
   }
 
-  img {
-    width: 60px;
-    height: 34px;
+  .node-thumb {
+    width: 80px;
+    aspect-ratio: 16/9;
     object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
   }
 
-  .details {
+  .node-details {
     display: flex;
     flex-direction: column;
   }
 
-  .title {
-    font-weight: bold;
-    font-size: 0.9rem;
+  .node-title {
+    font-weight: 900;
+    font-size: 0.95rem;
+    color: var(--text);
+    line-height: 1.2;
   }
 
-  .channel {
+  .node-channel {
     font-size: 0.8rem;
-    opacity: 0.8;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .empty-timeline {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-muted);
+    font-weight: 800;
   }
 </style>

@@ -1,64 +1,143 @@
 :root {
-  color-scheme: light;
-  --background-color: #fff;
-  --text-color: #333;
-  --border-color: #ccc;
-  --hover-color: rgb(255, 154, 154);
-  --active-bg-color: rgb(255, 221, 221);
-  --active-text-color: rgb(74, 75, 105);
-  --shadow-color: #666;
-  --sidebar-bg-color: rgb(255, 82, 82);
-  --sidebar-text-color: #ffffff;
+  --primary: #ff5252;
+  --primary-rgb: 255, 82, 82;
+  --bg: #ffffff;
+  --bg-sidebar-rgb: 255, 82, 82;
+  --text: #24292e;
+  --text-muted: #586069;
+  --text-sidebar: #ffffff;
+  --border: #e1e4e8;
+  --hover: rgba(0, 0, 0, 0.05);
+  --active: rgba(0, 0, 0, 0.1);
+  --shadow: rgba(0, 0, 0, 0.1);
+  --card-bg: #ffffff;
 }
 
-[data-theme="dark"] {
-  color-scheme: dark;
-  --background-color: rgba(36, 56, 102);
-  --text-color: rgb(179, 201, 255);
-  --border-color: rgb(15, 23, 41);
-  --hover-color: rgba(179, 201, 255, 0.2);
-  --active-bg-color: rgba(179, 201, 255, 0.1);
-  --active-text-color: rgb(58, 191, 248);
-  --shadow-color: rgba(0, 0, 0, 0.5);
-  --sidebar-bg-color: rgb(26, 39, 71);
-  --sidebar-text-color: rgb(179, 201, 255);
+[data-theme="github-light"] {
+  --primary: #0366d6;
+  --primary-rgb: 3, 102, 214;
+  --bg: #ffffff;
+  --bg-sidebar-rgb: 246, 248, 250;
+  --text: #24292e;
+  --text-muted: #6a737d;
+  --text-sidebar: #24292e;
+  --border: #e1e4e8;
+  --hover: #f3f4f6;
+  --active: #e1e4e8;
+  --card-bg: #ffffff;
 }
 
-html,
-body {
-  position: relative;
+[data-theme="github-dark"] {
+  --primary: #58a6ff;
+  --primary-rgb: 88, 166, 255;
+  --bg: #0d1117;
+  --bg-sidebar-rgb: 22, 27, 34;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --text-sidebar: #c9d1d9;
+  --border: #30363d;
+  --hover: #21262d;
+  --active: #30363d;
+  --card-bg: #161b22;
+}
+
+[data-theme="dracula"] {
+  --primary: #bd93f9;
+  --primary-rgb: 189, 147, 249;
+  --bg: #282a36;
+  --bg-sidebar-rgb: 68, 71, 90;
+  --text: #f8f8f2;
+  --text-muted: #6272a4;
+  --text-sidebar: #f8f8f2;
+  --border: #44475a;
+  --hover: #44475a;
+  --active: #6272a4;
+  --card-bg: #282a36;
+}
+
+[data-theme="sota-red"] {
+  --primary: #ff5252;
+  --primary-rgb: 255, 82, 82;
+  --bg: #0f172a;
+  --bg-sidebar-rgb: 30, 41, 59;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-sidebar: #f8fafc;
+  --border: #334155;
+  --hover: #334155;
+  --active: #475569;
+  --card-bg: #1e293b;
+}
+
+html, body {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-body {
-  color: var(--text-color);
-  background-color: var(--background-color);
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-}
+* { box-sizing: border-box; }
 
-main {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  min-height: 100vh;
-}
-
-input,
-button,
-select,
-textarea {
+button, input, select {
   font-family: inherit;
-  font-size: inherit;
-  padding: 0.4em;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--background-color);
-  color: var(--text-color);
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+button:hover {
+  background: var(--hover);
+  border-color: var(--text-muted);
+}
+
+:root {
+    --background-color: var(--bg);
+    --text-color: var(--text);
+    --border-color: var(--border);
+    --hover-color: var(--hover);
+    --active-bg-color: var(--active);
+    --active-text-color: var(--primary);
+    --sidebar-bg-color: var(--bg-sidebar-rgb);
+    --sidebar-text-color: var(--text-sidebar);
+}
+
+/* Global Micro-interactions */
+button:active, .btn:active {
+    transform: scale(0.96);
+}
+
+.tool-card:hover {
+    box-shadow: 0 12px 32px var(--shadow);
+    border-color: var(--primary);
+}
+
+input:focus, select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+/* Glassmorphism utility */
+.glass {
+    background: rgba(var(--bg-sidebar-rgb), 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+}
+
+/* Page transitions */
+main {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }

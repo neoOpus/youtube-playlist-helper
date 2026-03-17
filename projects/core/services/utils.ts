@@ -1,35 +1,53 @@
 import { Notyf } from "notyf";
 
-const notify = new Notyf({
-  duration: 5000,
-  dismissible: true,
-});
+let notify: Notyf;
+let inform: Notyf;
 
-const inform = new Notyf({
-  duration: 5000,
-  dismissible: true,
-  types: [
-    {
-      type: "info",
-      background: "#007bff",
-      icon: false,
-    },
-  ],
-});
+function getNotyf() {
+  if (typeof window === "undefined") return null;
+  if (notify) return notify;
+
+  notify = new Notyf({
+    duration: 5000,
+    dismissible: true,
+  });
+  return notify;
+}
+
+function getInform() {
+  if (typeof window === "undefined") return null;
+  if (inform) return inform;
+
+  inform = new Notyf({
+    duration: 5000,
+    dismissible: true,
+    types: [
+      {
+        type: "info",
+        background: "#007bff",
+        icon: false,
+      },
+    ],
+  });
+  return inform;
+}
 
 export const notificationService = {
   error(message: string) {
-    notify.error(message);
-    return () => notify.dismissAll();
+    const n = getNotyf();
+    n?.error(message);
+    return () => n?.dismissAll();
   },
   success(message: string) {
-    notify.success(message);
-    return () => notify.dismissAll();
+    const n = getNotyf();
+    n?.success(message);
+    return () => n?.dismissAll();
   },
   info(message: string) {
-    inform.open({ type: "info", message });
-    return () => inform.dismissAll();
-  }
+    const i = getInform();
+    i?.open({ type: "info", message });
+    return () => i?.dismissAll();
+  },
 };
 
 /**

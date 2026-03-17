@@ -12,6 +12,11 @@ export interface Video {
   dateAdded?: number;
   aiSummary?: string;
   aiTags?: string[];
+  // Advanced metadata for exports
+  duration?: string;
+  author?: string;
+  views?: string;
+  publishedDate?: string;
 }
 
 export interface PlaylistExport {
@@ -53,7 +58,8 @@ export type PlaylistsSorting =
   | "date-created-asc"
   | "date-created-desc"
   | "title-az"
-  | "title-za";
+  | "title-za"
+  | "relevance";
 
 export type Theme = "light" | "dark";
 export type ThemeChoice = "device" | Theme;
