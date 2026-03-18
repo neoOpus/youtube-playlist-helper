@@ -15,6 +15,10 @@ export default defineConfig({
     outDir: '../extension/editor',
     emptyOutDir: true,
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        background: path.resolve(__dirname, '../extension/background.ts')
+      },
       output: {
         entryFileNames: 'build/[name].js',
         chunkFileNames: 'build/[name].js',
