@@ -15,3 +15,5 @@ export * from "./services/playlist-service.js";
 export * from "./services/sync-service.js";
 export * from "./services/webdav-service.js";
 export * from "./services/backup-service.js";
+export * from "./services/browser-service.js";
+export * from "./services/bookmark-service.js";

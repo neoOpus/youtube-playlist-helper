@@ -1,18 +1,21 @@
-# Memory: YouTube Playlist Helper Refactoring Prep - Phase 2
+# Memory: YouTube Playlist Helper Refactoring Prep - Phase 3 (Final)
 
 ## Project Structure Changes
-- **Legacy Isolation**: All Manifest V2 files (background, popup, options) and unrelated projects (form-recovery-suite) moved to a root `legacy/` folder.
-- **Manifest V3 Baseline**: `projects/extension/manifest.json` updated to V3, using a Svelte-based popup and a bundled TypeScript background worker.
-- **Build Unification**: Vite in `projects/dashboard` now handles bundling for both the main UI and the extension background script.
+- **Legacy Isolation**: All Manifest V2 files and unrelated projects moved to root `legacy/`.
+- **Manifest V3 Baseline**: Updated `manifest.json` to V3 with `scripting`, `contextMenus`, and `bookmarks` permissions.
+- **Service Layer**: Introduced `browserService` and `bookmarkService` to encapsulate Chrome-specific APIs, making them accessible to both the background script and the Svelte Dashboard.
 
-## Svelte 5 & Runes
-- **Legacy Compatibility**: Disabled global runes mode in `svelte.config.js` to allow the existing `export let` and reactive statement syntax while supporting the Svelte 5 runtime.
-- **UI-Kit Cleanup**: Converted rune-like syntax in icons (`$props()`) back to standard `export let` to maintain consistency with the rest of the application.
-
-## Lessons Learned
-- **Cross-Project Bundling**: Vite can handle multiple entry points (UI + Background) by specifying them in `build.rollupOptions.input`. This ensures both components share the same core logic and are bundled correctly.
-- **Dependency Management**: Monorepo workspace dependencies must be explicitly installed (e.g., `notyf`) to ensure the build pipeline has access to all required modules.
-- **Permissions**: Manifest V3 requires explicit `contextMenus` permission and `host_permissions` for YouTube interactions.
+## Feature Parity & Enhancements
+- **Quick Actions Hub**: Ported "Combine Workspace", "Scan Page", and "Convert to Queue" to a new `QuickActions.svelte` component.
+- **Bookmark Ingestion**: Implemented `BookmarkImporter.svelte` to allow one-click import of YouTube video folders from browser bookmarks.
+- **Content Scripts**: Legacy action scripts are now bundled and correctly deployed to `editor/scripts/` via a custom Vite plugin.
 
 ## Technical Patterns
-- **Unified Service Layer**: Both the background script and the dashboard UI import from `@yph/core`, ensuring consistent data handling (e.g., `storageService`, `videoService`).
+- **Unified Build Pipeline**: Vite now handles UI, background workers, and static script deployment in a single pass.
+- **Svelte 5 & Legacy Hybrids**: Successfully managed Svelte 5 runtime with legacy `export let` syntax and reactive statements by disabling global runes in `svelte.config.js`.
+- **Direct Service Integration**: Dashboard components now directly invoke core services (`@yph/core`) for all business logic, removing the need for fragile `chrome.runtime.sendMessage` hops for internal logic.
+
+## Summary of Sanitization
+- Removed all `node_modules` and reinstalled to ensure clean workspace links.
+- Verified 100% unit test success for core services.
+- Successfully isolated all non-essential files from the build path.

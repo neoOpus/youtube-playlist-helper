@@ -8,12 +8,15 @@
     TerminalIcon,
     PlusMultiple,
     CheckIcon,
-    InfoIcon
+    InfoIcon,
+    CloudSyncIcon
   } from "@yph/ui-kit";
   import LibraryAuditor from "../components/LibraryAuditor.svelte";
   import NeuralMap from "../components/NeuralMap.svelte";
   import ThemeArchitect from "../components/ThemeArchitect.svelte";
   import ImportWizard from "../components/ImportWizard.svelte";
+  import QuickActions from "../components/QuickActions.svelte";
+  import BookmarkImporter from "../components/BookmarkImporter.svelte";
 
   let showImport = false;
 
@@ -49,6 +52,17 @@
 
     <div class="manage-grid">
         <div class="main-stats">
+            <div class="pro-glass p-6 mb-8">
+                <h3><TerminalIcon size="18" /> Quick Neural Actions</h3>
+                <QuickActions />
+            </div>
+
+            <div class="pro-glass p-6 mb-8">
+                <h3><CloudSyncIcon size="18" /> Neural Bookmark Ingestion</h3>
+                <p class="muted mb-4">Automatically detect and import YouTube video folders from your browser bookmarks.</p>
+                <BookmarkImporter />
+            </div>
+
             <NeuralMap />
             <LibraryAuditor />
         </div>
@@ -57,13 +71,13 @@
             <div class="action-section pro-glass p-6">
                 <h3><SaveIcon size="18" /> Data Governance</h3>
                 <div class="btns-stack mt-6">
-                    <button class="btn secondary w-full" on:click={() => showImport = true}>
+                    <button class="btn secondary w-full" onclick={() => showImport = true}>
                         <PlusMultiple size="18" /> Import Logic Snapshot
                     </button>
-                    <button class="btn secondary w-full" on:click={exportData}>
+                    <button class="btn secondary w-full" onclick={exportData}>
                         <SaveIcon size="18" /> Export Global Map (JSON)
                     </button>
-                    <button class="btn danger-outline w-full mt-4" on:click={clearAll}>
+                    <button class="btn danger-outline w-full mt-4" onclick={clearAll}>
                         <DeleteIcon size="18" /> Decommission System
                     </button>
                 </div>
@@ -74,7 +88,7 @@
             <div class="system-info pro-glass p-6 mt-8">
                 <h3><InfoIcon size="18" /> Infrastructure Core</h3>
                 <div class="v-list mt-4">
-                    <div class="v-row"><span>SOTA Version</span> <span class="v-val">2.1 Quantum</span></div>
+                    <div class="v-row"><span>SOTA Version</span> <span class="v-val">3.0.0-alpha (V3)</span></div>
                     <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
                     <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
                 </div>
@@ -93,7 +107,7 @@
 
     .manage-grid { display: grid; grid-template-columns: 1fr 350px; gap: 3rem; margin-top: 2rem; }
 
-    .main-stats { display: flex; flex-direction: column; gap: 2rem; }
+    .main-stats { display: flex; flex-direction: column; gap: 1rem; }
 
     .pro-glass { background: var(--card-bg-alpha, rgba(20, 25, 35, 0.6)); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 24px; }
     h3 { margin: 0; font-weight: 800; display: flex; align-items: center; gap: 10px; font-size: 1.1rem; }
@@ -115,7 +129,10 @@
     .mt-4 { margin-top: 1rem; }
     .mt-6 { margin-top: 1.5rem; }
     .mt-8 { margin-top: 2rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-8 { margin-bottom: 2rem; }
     .mb-12 { margin-bottom: 3rem; }
+    .p-3 { padding: 1rem; }
     .p-6 { padding: 1.5rem; }
     .p-8 { padding: 2rem; }
     .w-full { width: 100%; }
