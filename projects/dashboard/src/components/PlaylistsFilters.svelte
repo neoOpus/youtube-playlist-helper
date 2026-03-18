@@ -136,6 +136,22 @@
         result.sort(getPlaylistsSorter(sortBy));
     }
 
+    // 3. Sort the filtered result
+    if (sortBy === "relevance" as any) {
+        const keywords = search.split(/\s+/).filter(k => k.length > 2);
+        if (keywords.length > 0) {
+            // Schwartzian transform: pre-calculate relevance scores
+            const scoredResult = result.map((playlist) => ({
+                playlist,
+                score: aiService.calculatePlaylistRelevance(playlist, keywords)
+            }));
+            scoredResult.sort((a, b) => b.score - a.score);
+            result = scoredResult.map(item => item.playlist);
+        }
+    } else {
+        result.sort(getPlaylistsSorter(sortBy));
+    }
+
     filteredPlaylists = result;
   }
 
