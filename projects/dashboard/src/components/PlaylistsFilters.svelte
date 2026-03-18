@@ -2,14 +2,12 @@
   import { debounce, getPlaylistsSorter, aiService, playlistsSorter } from "@yph/core";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
   import { SearchIcon, Filter } from "@yph/ui-kit";
-  import { playlistsSearch } from "../stores/playlists-filters";
+  import { playlistsSearch, playlistsSorting } from "../stores/playlists-filters";
 
   export let playlists: Playlist[] = [];
   export let filteredPlaylists: Playlist[] = [];
 
-  let search = "";
   let selectedGroup = "All";
-  let sortBy: PlaylistsSorting = "date-created-desc";
   let useRegex = false;
   let searchInVideos = false;
   let showPowerFeatures = false;
@@ -25,7 +23,6 @@
   }, 300);
 
   function searchChanged() {
-    playlistsSearch.set(search);
     debouncedFiltersUpdated();
   }
 
@@ -41,10 +38,11 @@
     }
 
     // 2. Search Filter
-    if (search.trim()) {
+    const searchStr = $playlistsSearch.trim();
+    if (searchStr) {
       if (useRegex) {
         try {
-          const regex = new RegExp(search, "i");
+          const regex = new RegExp(searchStr, "i");
           result = result.filter(
             (p) => regex.test(p.title || "") ||
                    p.groups?.some((g) => regex.test(g)) ||
@@ -54,7 +52,7 @@
           // Invalid regex
         }
       } else {
-        const keywords = search
+        const keywords = searchStr
           .split(/\s+/)
           .filter((k) => k.length)
           .map((k) => k.toLowerCase());
@@ -71,17 +69,25 @@
     }
 
     // 3. Sorting (Applied to the filtered subset)
-    if (sortBy === "relevance") {
-      const keywords = search.split(/\s+/).filter((k) => k.length > 2);
-      result = playlistsSorter.sort(result, sortBy, keywords);
+    if ($playlistsSorting === "relevance") {
+      const keywords = searchStr.split(/\s+/).filter((k) => k.length > 2);
+      result = playlistsSorter.sort(result, $playlistsSorting, keywords);
     } else {
-      result.sort(getPlaylistsSorter(sortBy));
+      result.sort(getPlaylistsSorter($playlistsSorting));
     }
 
     filteredPlaylists = result;
   }
 
-  $: if (playlists) filtersUpdated();
+  // Reactive dependencies for automatic filtering when state changes
+  $: if (playlists || $playlistsSorting || selectedGroup || useRegex || searchInVideos) {
+      filtersUpdated();
+  }
+
+  // Search is debounced to avoid O(N) filtering on every keystroke
+  $: if ($playlistsSearch) {
+      debouncedFiltersUpdated();
+  }
 </script>
 
 <aside>
@@ -97,7 +103,7 @@
               <SearchIcon size="16" color="var(--text-muted)" />
               <input
                 type="text"
-                bind:value={search}
+                bind:value={$playlistsSearch}
                 on:input={searchChanged}
                 placeholder={useRegex ? "Regex Search..." : "Search playlists... (Press / to focus)"}
               />
@@ -110,7 +116,7 @@
       <div class="filters">
           <label>
             <span>Group</span>
-            <select bind:value={selectedGroup} on:change={filtersUpdated}>
+            <select bind:value={selectedGroup}>
               {#each groups as group}
                 <option value={group}>{group}</option>
               {/each}
@@ -119,7 +125,7 @@
 
           <label>
             <span>Sort</span>
-            <select bind:value={sortBy} on:change={sortingChanged}>
+            <select bind:value={$playlistsSorting}>
               <optgroup label="Standard">
                   <option value="date-created-desc">Newest First</option>
                   <option value="date-created-asc">Oldest First</option>
@@ -141,11 +147,11 @@
       <div class="power-options">
           <div class="checks">
               <label class="check-opt">
-                  <input type="checkbox" bind:checked={useRegex} on:change={filtersUpdated} />
+                  <input type="checkbox" bind:checked={useRegex} />
                   <span>Regex Mode</span>
               </label>
               <label class="check-opt">
-                  <input type="checkbox" bind:checked={searchInVideos} on:change={filtersUpdated} />
+                  <input type="checkbox" bind:checked={searchInVideos} />
                   <span>Deep Search (in videos)</span>
               </label>
           </div>

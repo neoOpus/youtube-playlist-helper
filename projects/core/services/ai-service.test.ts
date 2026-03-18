@@ -51,6 +51,16 @@ describe("aiService", () => {
     });
   });
 
+  describe("summarizePlaylist", () => {
+    it("should generate a valid summary string", async () => {
+        const playlist = { title: "Test Playlist" } as Playlist;
+        const videos = [{}, {}] as Video[];
+        const summary = await aiService.summarizePlaylist(playlist, videos);
+        expect(summary).toContain("2 videos");
+        expect(summary).toContain("Test Playlist");
+    });
+  });
+
   describe("sortByRelevance", () => {
     const mockVideos: Video[] = [
       {
