@@ -1,40 +1,25 @@
 <script lang="ts">
-  import { get } from "svelte/store";
-  import { getPlaylistsSorter, aiService, debounce } from "@yph/core";
-  import {
-    playlistsSearch,
-    playlistsSorting,
-  } from "../stores/playlists-filters";
+  import { debounce, getPlaylistsSorter, aiService } from "@yph/core";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
-  import { Filter, SearchIcon } from "@yph/ui-kit";
+  import { SearchIcon, Filter } from "@yph/ui-kit";
+  import { playlistsSearch } from "../stores/playlists-filters";
 
   export let playlists: Playlist[] = [];
   export let filteredPlaylists: Playlist[] = [];
 
-  let sortBy: PlaylistsSorting = get(playlistsSorting);
-  let search = get(playlistsSearch);
+  let search = "";
   let selectedGroup = "All";
+  let sortBy: PlaylistsSorting = "date-created-desc";
   let useRegex = false;
   let searchInVideos = false;
   let showPowerFeatures = false;
 
-  $: groups = [
-    "All",
-    ...new Set((playlists || []).flatMap((p) => p.groups || []).filter(Boolean)),
-  ];
+  $: groups = ["All", ...new Set(playlists.flatMap((p) => p.groups || []))];
 
   function sortingChanged() {
-    playlistsSorting.set(sortBy);
     filtersUpdated();
   }
 
-  const debouncedSearchChanged = debounce(() => {
-    playlistsSearch.set(search);
-    filtersUpdated();
-  }, 300);
-
-  function searchChanged() {
-    debouncedSearchChanged();
   const debouncedFiltersUpdated = debounce(() => {
     filtersUpdated();
   }, 300);
@@ -47,12 +32,9 @@
   function filtersUpdated() {
     if (!playlists) return;
 
-    // ⚡ PERFORMANCE: Filter BEFORE sorting to minimize computational load on sort algorithms.
-    // O(M) where M is total playlists.
     let result = [...playlists];
 
     // 1. Group Filter
-    // 1. Filter by group
     if (selectedGroup !== "All") {
       result = result.filter((p) => p.groups?.includes(selectedGroup));
     }
@@ -63,7 +45,9 @@
         try {
           const regex = new RegExp(search, "i");
           result = result.filter(
-            (p) => regex.test(p.title) || p.groups?.some((g) => regex.test(g))
+            (p) => regex.test(p.title || "") ||
+                   p.groups?.some((g) => regex.test(g)) ||
+                   (searchInVideos && p.loadedVideos?.some(v => regex.test(v.title)))
           );
         } catch (e) {
           // Invalid regex
@@ -74,19 +58,21 @@
           .filter((k) => k.length)
           .map((k) => k.toLowerCase());
 
-        result = result.filter((playlist) =>
-          keywords.every((k) => playlist.title?.toLowerCase().includes(k))
-        );
+        result = result.filter((p) => {
+          const lowerTitle = (p.title || "").toLowerCase();
+          const matchesTitle = keywords.every((k) => lowerTitle.includes(k));
+          const matchesVideos = searchInVideos && p.loadedVideos?.some(v =>
+            keywords.every(k => v.title.toLowerCase().includes(k))
+          );
+          return matchesTitle || matchesVideos;
+        });
       }
     }
 
-    // 3. Sorting (Applied to the filtered subset)
-    // ⚡ PERFORMANCE: O(N log N) where N is the size of the filtered result (N <= M).
+    // 3. Sorting
     if (sortBy === ("relevance" as any)) {
       const keywords = search.split(/\s+/).filter((k) => k.length > 2);
       if (keywords.length > 0) {
-        // ⚡ PERFORMANCE: Schwartzian transform (pre-calculating sort scores)
-        // prevents redundant expensive AI relevance calculations during sort.
         const scoredPlaylists = result.map((p) => ({
           p,
           score: aiService.calculatePlaylistRelevance(p, keywords),
@@ -96,68 +82,6 @@
       }
     } else {
       result.sort(getPlaylistsSorter(sortBy));
-    // 2. Filter by search
-    if (search.trim()) {
-        const query = search.toLowerCase();
-        if (useRegex) {
-            try {
-                const regex = new RegExp(search, "i");
-                result = result.filter((p) =>
-                    regex.test(p.title) ||
-                    p.groups?.some(g => regex.test(g)) ||
-                    (searchInVideos && p.loadedVideos?.some(v => regex.test(v.title)))
-                );
-            } catch (e) { /* Invalid regex */ }
-        } else {
-            const keywords = search
-              .split(/\s+/)
-              .filter((k) => k.length)
-              .map((k) => k.toLowerCase());
-
-            result = result.filter((playlist) => {
-                const lowerTitle = playlist.title?.toLowerCase() || "";
-                return keywords.every((k) => lowerTitle.includes(k));
-            const keywords = search.split(/\s+/).filter((k) => k.length).map((k) => k.toLowerCase());
-
-            result = result.filter((p) => {
-                const matchesTitle = keywords.every((k) => p.title?.toLowerCase().includes(k));
-                const matchesVideos = searchInVideos && p.loadedVideos?.some(v =>
-                    keywords.every(k => v.title.toLowerCase().includes(k))
-                );
-                return matchesTitle || matchesVideos;
-            });
-        }
-    }
-
-    // 3. Sort the filtered result
-    if (sortBy === "relevance") {
-        const keywords = search.split(/\s+/).filter(k => k.length > 2);
-        if (keywords.length > 0) {
-            const scoredResult = result.map((playlist) => ({
-                playlist,
-                score: aiService.calculatePlaylistRelevance(playlist, keywords)
-            }));
-            scoredResult.sort((a, b) => b.score - a.score);
-            result = scoredResult.map(item => item.playlist);
-        }
-    } else {
-        result.sort(getPlaylistsSorter(sortBy));
-    }
-
-    // 3. Sort the filtered result
-    if (sortBy === "relevance" as any) {
-        const keywords = search.split(/\s+/).filter(k => k.length > 2).map(k => k.toLowerCase());
-        if (keywords.length > 0) {
-            // Schwartzian transform: pre-calculate relevance scores
-            const scoredResult = result.map((playlist) => ({
-                playlist,
-                score: aiService.calculatePlaylistRelevance(playlist, keywords)
-            }));
-            scoredResult.sort((a, b) => b.score - a.score);
-            result = scoredResult.map(item => item.playlist);
-        }
-    } else {
-        result.sort(getPlaylistsSorter(sortBy));
     }
 
     filteredPlaylists = result;
@@ -239,24 +163,24 @@
 
 <style>
   aside {
-    padding: 1rem 0;
+    padding: var(--space-4) 0;
     position: sticky;
     top: 0;
     background-color: transparent;
     width: 100%;
     z-index: 5;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1.5rem;
+      gap: var(--space-6);
       width: 100%;
   }
 
@@ -264,7 +188,7 @@
       flex-grow: 1;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--space-2);
       max-width: 500px;
   }
 
@@ -275,9 +199,8 @@
       align-items: center;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0 12px;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+      border-radius: var(--radius-md);
+      padding: 0 var(--space-3);
   }
 
   .input-wrapper:focus-within {
@@ -288,18 +211,18 @@
   .input-wrapper input {
       border: none;
       background: transparent;
-      padding: 8px 12px;
+      padding: var(--space-2) var(--space-3);
       width: 100%;
       outline: none;
-      font-size: 0.95rem;
+      font-size: var(--font-sm);
       color: var(--text);
   }
 
   .power-toggle {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: var(--radius-md);
+      padding: var(--space-2);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -319,9 +242,9 @@
   }
 
   .power-row {
-      padding: 0.5rem 1rem;
+      padding: var(--space-2) var(--space-4);
       background: var(--hover);
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       border: 1px dashed var(--border);
   }
 
@@ -329,44 +252,44 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
+      gap: var(--space-4);
   }
 
   .checks {
       display: flex;
-      gap: 1.5rem;
+      gap: var(--space-6);
   }
 
   .check-opt {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
+      gap: var(--space-2);
+      font-size: var(--font-xs);
       font-weight: 600;
   }
 
   .power-hint {
-      font-size: 0.75rem;
+      font-size: var(--font-xs);
       color: var(--text-muted);
       font-style: italic;
   }
 
   .filters {
       display: flex;
-      gap: 1rem;
+      gap: var(--space-4);
   }
 
   label {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
+      gap: var(--space-2);
+      font-size: var(--font-sm);
       color: var(--text-muted);
   }
 
   select {
-      padding: 6px 12px;
-      border-radius: 6px;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background-color: var(--card-bg);
       color: var(--text);
@@ -375,6 +298,16 @@
 
   h2 {
       font-weight: 800;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.02em;
+  }
+
+  @media (max-width: 900px) {
+      .header-row {
+          flex-direction: column;
+          align-items: stretch;
+      }
+      .search-box {
+          max-width: none;
+      }
   }
 </style>
