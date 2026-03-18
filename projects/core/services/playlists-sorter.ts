@@ -20,6 +20,10 @@ const collator = new Intl.Collator(undefined, {
   numeric: true,
 });
 
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+});
+
 function titleSorter(isAscending: boolean) {
   const multiplier = isAscending ? 1 : -1;
   return (a: Playlist, b: Playlist) => {
