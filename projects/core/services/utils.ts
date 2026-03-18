@@ -3,8 +3,6 @@ import { Notyf } from "notyf";
 let notify: Notyf;
 let inform: Notyf;
 
-function initNotyf() {
-  if (typeof window === "undefined" || notify) return;
 function getNotyf() {
   if (typeof window === "undefined") return null;
   if (notify) return notify;
@@ -36,19 +34,6 @@ function getInform() {
 
 export const notificationService = {
   error(message: string) {
-    initNotyf();
-    notify?.error(message);
-    return () => notify?.dismissAll();
-  },
-  success(message: string) {
-    initNotyf();
-    notify?.success(message);
-    return () => notify?.dismissAll();
-  },
-  info(message: string) {
-    initNotyf();
-    inform?.open({ type: "info", message });
-    return () => inform?.dismissAll();
     const n = getNotyf();
     n?.error(message);
     return () => n?.dismissAll();
@@ -84,20 +69,4 @@ if (typeof window !== 'undefined') {
   (window as any).error = notificationService.error;
   (window as any).success = notificationService.success;
   (window as any).info = notificationService.info;
-}
-
-/**
- * Generic debounce function to throttle expensive operations.
- */
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      func(...args);
-    }, wait);
-  };
 }

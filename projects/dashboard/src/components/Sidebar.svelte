@@ -24,12 +24,12 @@
   }
 
   const navItems: NavItem[] = [
-    { id: "/", label: "Saved playlists", icon: PlaylistPlayIcon as any, color: "#ff5252" },
-    { id: "/new", label: "New playlist", icon: PlaylistPlusIcon as any, color: "#ff8a80" },
-    { id: "/manage", label: "Manage Hub", icon: SaveIcon as any, color: "#ff1744" },
-    { id: "/sync", label: "Cloud Sync", icon: CloudSyncIcon as any, color: "#b0bec5" },
-    { id: "/merge", label: "Merge Tool", icon: MergeIcon as any, color: "#ff80ab" },
-    { id: "/support", label: "Support", icon: SupportIcon as any, color: "#cfd8dc" },
+    { id: "/", label: "Saved playlists", icon: PlaylistPlayIcon as any, color: "var(--primary)" },
+    { id: "/new", label: "New playlist", icon: PlaylistPlusIcon as any, color: "var(--primary)" },
+    { id: "/manage", label: "Manage Hub", icon: SaveIcon as any, color: "var(--primary)" },
+    { id: "/sync", label: "Cloud Sync", icon: CloudSyncIcon as any, color: "var(--primary)" },
+    { id: "/merge", label: "Merge Tool", icon: MergeIcon as any, color: "var(--primary)" },
+    { id: "/support", label: "Support", icon: SupportIcon as any, color: "var(--primary)" },
   ];
 
   function navigate(id: string) {
@@ -46,11 +46,11 @@
   }
 </script>
 
-<nav class="sidebar glass pro-blur" in:fly={{ x: -20, duration: 600 }}>
+<nav class="sidebar pro-glass" in:fly={{ x: -20, duration: 600 }}>
   <div class="sidebar-header">
     <div class="logo-area">
         <div class="logo-icon"><PlaylistPlayIcon size="24" /></div>
-        <h1 class="logo-text">YPH <span class="badge">PRO</span></h1>
+        <h1 class="logo-text">YPH <span class="badge primary">PRO</span></h1>
     </div>
   </div>
 
@@ -62,8 +62,9 @@
         class:active={activeRoute === item.id}
         on:click={() => navigate(item.id)}
         on:mousemove={handleMouseMove}
+        aria-current={activeRoute === item.id ? 'page' : undefined}
       >
-        <div class="icon-wrapper" style="--icon-color: {item.color}">
+        <div class="icon-wrapper" style="--icon-color: ${item.color}">
             <svelte:component this={item.icon} size="20" />
         </div>
         <span class="label">{item.label}</span>
@@ -79,7 +80,7 @@
   <div class="sidebar-footer">
     <div class="palette-hint">
         <TerminalIcon size="12" />
-        <span>Ctrl + K for Commands</span>
+        <span>/ for Search</span>
     </div>
 
     <div class="theme-controls">
@@ -92,8 +93,8 @@
     </div>
 
     <div class="quick-actions">
-        <button class="btn mini w-full" on:click={viewMode.toggle}>
-            Switch to {$viewMode === 'simple' ? 'Advanced' : 'Simple'} View
+        <button class="view-toggle-btn" on:click={viewMode.toggle}>
+            {$viewMode === 'simple' ? 'Advanced' : 'Simple'} View
         </button>
     </div>
   </div>
@@ -105,98 +106,76 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 1.5rem 1rem;
+    padding: var(--space-6) var(--space-4);
     border-right: 1px solid var(--border);
     position: relative;
     z-index: 20;
     color: var(--text);
-    background: var(--sidebar-bg, rgba(10, 15, 25, 0.7));
+    background: var(--card-bg-alpha);
+    border-radius: 0; /* Sidebar should span full height */
   }
 
-  .pro-blur { backdrop-filter: blur(24px); }
-
   .sidebar-header {
-    padding: 0.5rem 0.75rem 2rem;
+    padding: var(--space-2) var(--space-3) var(--space-8);
   }
 
   .logo-area {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--space-3);
   }
 
   .logo-icon {
       background: var(--primary);
       color: white;
-      padding: 6px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(255, 82, 82, 0.4);
+      padding: var(--space-2);
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
   }
 
   .logo-text {
-      font-size: 1.5rem;
+      font-size: var(--font-xl);
       font-weight: 900;
-      letter-spacing: -1px;
+      letter-spacing: -0.05em;
       margin: 0;
       display: flex;
       align-items: center;
-      gap: 6px;
-  }
-
-  .badge {
-      font-size: 0.6rem;
-      background: var(--primary);
-      color: white;
-      padding: 2px 5px;
-      border-radius: 4px;
-      letter-spacing: 0.5px;
-      font-weight: 800;
+      gap: var(--space-2);
   }
 
   .nav-section {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-1);
   }
 
   .section-label {
-      font-size: 0.65rem;
+      font-size: var(--font-xs);
       font-weight: 800;
       color: var(--text-muted);
-      letter-spacing: 1.5px;
-      padding-left: 0.75rem;
-      margin-bottom: 0.5rem;
+      letter-spacing: 0.1em;
+      padding-left: var(--space-3);
+      margin-bottom: var(--space-2);
       text-transform: uppercase;
   }
 
   .nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
     border: none;
     background: transparent;
     color: var(--text);
-    font-size: 0.95rem;
+    font-size: var(--font-sm);
     font-weight: 700;
     cursor: pointer;
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: var(--radius-lg);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     text-align: left;
     overflow: hidden;
   }
-
-  .luminous-hover::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 82, 82, 0.15) 0%, transparent 60%);
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.3s;
-  }
-  .luminous-hover:hover::after { opacity: 1; }
 
   .nav-item:hover {
     background: var(--hover);
@@ -213,22 +192,22 @@
       align-items: center;
       justify-content: center;
       color: var(--icon-color, var(--text-muted));
-      transition: all 0.3s;
+      transition: all 0.2s;
   }
 
   .nav-item.active .icon-wrapper {
-      filter: drop-shadow(0 0 8px var(--icon-color));
+      filter: drop-shadow(0 0 8px var(--primary));
       transform: scale(1.1);
   }
 
   .active-indicator {
       position: absolute;
       left: 0;
-      top: 20%;
-      bottom: 20%;
+      top: 25%;
+      bottom: 25%;
       width: 4px;
       background: var(--primary);
-      border-radius: 0 4px 4px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
       box-shadow: 0 0 10px var(--primary);
   }
 
@@ -237,19 +216,19 @@
   .sidebar-footer {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    padding: 1.5rem 0.75rem 0;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--space-3) 0;
     border-top: 1px solid var(--border);
   }
 
   .palette-hint {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--space-2);
       background: var(--hover);
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 0.7rem;
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      font-size: var(--font-xs);
       font-weight: 700;
       color: var(--text-muted);
       border: 1px solid var(--border);
@@ -257,47 +236,47 @@
 
   .theme-select {
     width: 100%;
-    padding: 10px;
-    border-radius: 10px;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
     background: var(--hover);
     border: 1px solid var(--border);
     color: var(--text);
-    font-size: 0.85rem;
+    font-size: var(--font-xs);
     font-weight: 700;
     cursor: pointer;
     outline: none;
   }
 
-  .btn.mini {
-      padding: 8px;
-      font-size: 0.75rem;
+  .view-toggle-btn {
+      width: 100%;
+      padding: var(--space-2);
+      font-size: var(--font-xs);
       font-weight: 800;
       background: var(--hover);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       cursor: pointer;
       color: var(--text-muted);
       transition: all 0.2s;
   }
 
-  .btn.mini:hover {
+  .view-toggle-btn:hover {
       background: var(--primary);
       color: white;
       border-color: var(--primary);
   }
-
-  .w-full { width: 100%; }
 
   @media (max-width: 768px) {
     .label, .section-label, .logo-text, .palette-hint, .theme-controls, .quick-actions {
       display: none;
     }
     .sidebar {
-      padding: 1.5rem 0.5rem;
+      padding: var(--space-4) var(--space-2);
+      width: var(--sidebar-collapsed-width);
     }
     .nav-item {
       justify-content: center;
-      padding: 14px;
+      padding: var(--space-3);
     }
     .logo-area {
         justify-content: center;

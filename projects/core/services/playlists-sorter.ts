@@ -1,27 +1,13 @@
 import type { Playlist, PlaylistsSorting } from "../types/model.js";
 import { aiService } from "./ai-service.js";
 
-const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-
-/**
- * Optimizes performance by using Intl.Collator for string comparisons
- * and pre-calculating keys for large datasets.
- */
-const collator = new Intl.Collator(undefined, {
-  numeric: true,
-  sensitivity: 'base'
-});
-
 // Use a pre-instantiated Intl.Collator for significantly faster string comparison
 // than String.prototype.localeCompare. Reusing the same instance avoids
 // re-initializing locale-sensitive logic for every comparison.
 // Performance win: ~3x faster for large arrays (e.g., 20k items).
 const collator = new Intl.Collator(undefined, {
   numeric: true,
-});
-
-const collator = new Intl.Collator(undefined, {
-  numeric: true,
+  sensitivity: 'base'
 });
 
 function titleSorter(isAscending: boolean) {
@@ -39,7 +25,6 @@ function timestampSorter(isNewFirst: boolean) {
 }
 
 const sorterByType: Record<
-  PlaylistsSorting,
   Exclude<PlaylistsSorting, "relevance">,
   (a: Playlist, b: Playlist) => number
 > = {
@@ -49,21 +34,6 @@ const sorterByType: Record<
   "title-za": titleSorter(false),
 };
 
-/**
- * Returns a typed sorting function based on the specified criteria.
- */
-export const getPlaylistsSorter = (sortBy: PlaylistsSorting): (a: Playlist, b: Playlist) => number =>
-  sorterByType[sortBy];
-
-/**
- * High-performance sort for large playlist collections using pre-calculated collator keys.
- */
-export function sortPlaylistsEfficiently(playlists: Playlist[], sortBy: PlaylistsSorting): Playlist[] {
-    if (playlists.length < 2) return [...playlists];
-
-    const sorter = getPlaylistsSorter(sortBy);
-    return [...playlists].sort(sorter);
-}
 export const playlistsSorter = {
   /**
    * Sorts an array of playlists based on the specified criteria.
@@ -95,3 +65,13 @@ export const getPlaylistsSorter = (sortBy: PlaylistsSorting) => {
     if (sortBy === "relevance") return () => 0;
     return sorterByType[sortBy as Exclude<PlaylistsSorting, "relevance">];
 };
+
+/**
+ * High-performance sort for large playlist collections using pre-calculated collator keys.
+ */
+export function sortPlaylistsEfficiently(playlists: Playlist[], sortBy: PlaylistsSorting): Playlist[] {
+    if (playlists.length < 2) return [...playlists];
+
+    const sorter = getPlaylistsSorter(sortBy);
+    return [...playlists].sort(sorter);
+}

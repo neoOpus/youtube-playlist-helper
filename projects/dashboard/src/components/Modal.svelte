@@ -51,7 +51,7 @@
     justify-content: center;
     align-items: center;
     z-index: 3000;
-    padding: 20px;
+    padding: var(--space-5);
   }
 
   .modal-container {
@@ -59,26 +59,20 @@
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    padding: 1.5rem;
+    padding: var(--space-6);
     outline: none;
-  }
-
-  .pro-glass {
-      background: var(--card-bg-alpha, rgba(15, 20, 30, 0.9));
-      backdrop-filter: blur(24px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      box-shadow: 0 32px 128px rgba(0, 0, 0, 0.5);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
   }
 
   .close-btn {
     position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
+    top: var(--space-6);
+    right: var(--space-6);
     background: var(--hover);
     border: none;
-    padding: 8px;
-    border-radius: 12px;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
     cursor: pointer;
     color: var(--text-muted);
     transition: all 0.2s;
@@ -95,6 +89,6 @@
   }
 
   .content {
-    margin-top: 10px;
+    margin-top: var(--space-3);
   }
 </style>
