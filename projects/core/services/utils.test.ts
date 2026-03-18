@@ -1,18 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { debounce } from './utils';
-
-describe('debounce', () => {
-  it('should delay function execution', () => {
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { debounce } from "./utils";
 
 describe("debounce", () => {
-  it("should delay function execution", () => {
-    vi.useFakeTimers();
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { debounce } from './utils';
-
-describe('debounce', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -21,7 +10,7 @@ describe('debounce', () => {
     vi.useRealTimers();
   });
 
-  it('should delay function execution', () => {
+  it("should delay function execution", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 100);
 
@@ -33,13 +22,9 @@ describe('debounce', () => {
 
     vi.advanceTimersByTime(50);
     expect(func).toHaveBeenCalledTimes(1);
-    vi.useRealTimers();
   });
 
-  it('should only call the function once after multiple rapid calls', () => {
-    vi.useFakeTimers();
   it("should only execute the last call within the wait period", () => {
-    vi.useFakeTimers();
     const func = vi.fn();
     const debouncedFunc = debounce(func, 100);
 
@@ -52,19 +37,19 @@ describe('debounce', () => {
     vi.advanceTimersByTime(100);
     expect(func).toHaveBeenCalledTimes(1);
     expect(func).toHaveBeenCalledWith("third");
-    vi.useRealTimers();
   });
 
-  it('should only call the function once after multiple rapid calls', () => {
+  it("should reset the timer on subsequent calls", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 100);
 
     debouncedFunc();
+    vi.advanceTimersByTime(50);
     debouncedFunc();
-    debouncedFunc();
+    vi.advanceTimersByTime(50);
+    expect(func).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(50);
     expect(func).toHaveBeenCalledTimes(1);
-    vi.useRealTimers();
   });
 });
