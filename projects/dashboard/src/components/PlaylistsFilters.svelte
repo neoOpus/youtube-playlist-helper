@@ -1,6 +1,6 @@
 <script lang="ts">
   import { get } from "svelte/store";
-  import { getPlaylistsSorter, aiService, debounce } from "@yph/core";
+  import { aiService, debounce, playlistsSorter, getPlaylistsSorter } from "@yph/core";
   import {
     playlistsSearch,
     playlistsSorting,
@@ -28,13 +28,6 @@
     filtersUpdated();
   }
 
-  const debouncedSearchChanged = debounce(() => {
-    playlistsSearch.set(search);
-    filtersUpdated();
-  }, 300);
-
-  function searchChanged() {
-    debouncedSearchChanged();
   const debouncedFiltersUpdated = debounce(() => {
     filtersUpdated();
   }, 300);
@@ -52,53 +45,12 @@
     let result = [...playlists];
 
     // 1. Group Filter
-    // 1. Filter by group
     if (selectedGroup !== "All") {
       result = result.filter((p) => p.groups?.includes(selectedGroup));
     }
 
     // 2. Search Filter
     if (search.trim()) {
-      if (useRegex) {
-        try {
-          const regex = new RegExp(search, "i");
-          result = result.filter(
-            (p) => regex.test(p.title) || p.groups?.some((g) => regex.test(g))
-          );
-        } catch (e) {
-          // Invalid regex
-        }
-      } else {
-        const keywords = search
-          .split(/\s+/)
-          .filter((k) => k.length)
-          .map((k) => k.toLowerCase());
-
-        result = result.filter((playlist) =>
-          keywords.every((k) => playlist.title?.toLowerCase().includes(k))
-        );
-      }
-    }
-
-    // 3. Sorting (Applied to the filtered subset)
-    // ⚡ PERFORMANCE: O(N log N) where N is the size of the filtered result (N <= M).
-    if (sortBy === ("relevance" as any)) {
-      const keywords = search.split(/\s+/).filter((k) => k.length > 2);
-      if (keywords.length > 0) {
-        // ⚡ PERFORMANCE: Schwartzian transform (pre-calculating sort scores)
-        // prevents redundant expensive AI relevance calculations during sort.
-        const scoredPlaylists = result.map((p) => ({
-          p,
-          score: aiService.calculatePlaylistRelevance(p, keywords),
-        }));
-        scoredPlaylists.sort((a, b) => b.score - a.score);
-        result = scoredPlaylists.map((item) => item.p);
-      }
-    } else {
-      result.sort(getPlaylistsSorter(sortBy));
-    // 2. Filter by search
-    if (search.trim()) {
-        const query = search.toLowerCase();
         if (useRegex) {
             try {
                 const regex = new RegExp(search, "i");
@@ -114,11 +66,6 @@
               .filter((k) => k.length)
               .map((k) => k.toLowerCase());
 
-            result = result.filter((playlist) => {
-                const lowerTitle = playlist.title?.toLowerCase() || "";
-                return keywords.every((k) => lowerTitle.includes(k));
-            const keywords = search.split(/\s+/).filter((k) => k.length).map((k) => k.toLowerCase());
-
             result = result.filter((p) => {
                 const matchesTitle = keywords.every((k) => p.title?.toLowerCase().includes(k));
                 const matchesVideos = searchInVideos && p.loadedVideos?.some(v =>
@@ -129,35 +76,13 @@
         }
     }
 
-    // 3. Sort the filtered result
+    // 3. Sorting (Applied to the filtered subset)
+    // ⚡ PERFORMANCE: O(N log N) where N is the size of the filtered result (N <= M).
     if (sortBy === "relevance") {
-        const keywords = search.split(/\s+/).filter(k => k.length > 2);
-        if (keywords.length > 0) {
-            const scoredResult = result.map((playlist) => ({
-                playlist,
-                score: aiService.calculatePlaylistRelevance(playlist, keywords)
-            }));
-            scoredResult.sort((a, b) => b.score - a.score);
-            result = scoredResult.map(item => item.playlist);
-        }
+      const keywords = search.split(/\s+/).filter((k) => k.length > 2);
+      result = playlistsSorter.sort(result, sortBy, keywords);
     } else {
-        result.sort(getPlaylistsSorter(sortBy));
-    }
-
-    // 3. Sort the filtered result
-    if (sortBy === "relevance" as any) {
-        const keywords = search.split(/\s+/).filter(k => k.length > 2).map(k => k.toLowerCase());
-        if (keywords.length > 0) {
-            // Schwartzian transform: pre-calculate relevance scores
-            const scoredResult = result.map((playlist) => ({
-                playlist,
-                score: aiService.calculatePlaylistRelevance(playlist, keywords)
-            }));
-            scoredResult.sort((a, b) => b.score - a.score);
-            result = scoredResult.map(item => item.playlist);
-        }
-    } else {
-        result.sort(getPlaylistsSorter(sortBy));
+      result.sort(getPlaylistsSorter(sortBy));
     }
 
     filteredPlaylists = result;
