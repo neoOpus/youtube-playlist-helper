@@ -1,51 +1,33 @@
 <script lang="ts">
   import SmartElement from "./SmartElement.svelte";
-  export let bgcolor = "var(--sidebar-bg-color)";
-  export let title = "";
+
+  export let bgcolor = "";
+  export let className = "";
 </script>
 
 <SmartElement
-  className="fab"
-  style="background-color: {bgcolor}"
-  {title}
+  className="floating-button {className}"
+  style={bgcolor ? "background-color: " + bgcolor : ""}
   on:click
 >
   <slot />
-  {#if title}
-    <span class="tooltip">{title}</span>
-  {/if}
 </SmartElement>
 
 <style>
-  :global(.fab) {
-    width: 50px;
-    height: 50px;
+  :global(.floating-button) {
+    position: fixed;
+    bottom: 2em;
+    right: 2em;
+    width: 3.5em;
+    height: 3.5em;
     border-radius: 50%;
+    background-color: var(--sidebar-bg-color);
     color: white;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     justify-content: center;
     align-items: center;
-    position: relative;
-  }
-
-  .tooltip {
-    visibility: hidden;
-    position: absolute;
-    bottom: 120%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  :global(.fab:hover) .tooltip {
-    visibility: visible;
-    opacity: 1;
+    font-size: 1.2em;
+    cursor: pointer;
+    z-index: 100;
   }
 </style>

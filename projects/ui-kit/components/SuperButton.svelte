@@ -2,28 +2,31 @@
   import { createEventDispatcher } from "svelte";
   import SmartElement from "./SmartElement.svelte";
 
-  export let title = "";
   export let primary = false;
   export let danger = false;
   export let circle = false;
   export let bgcolor = "";
   export let className = "";
   export let disabled = false;
+  export let title = "";
+  export let ariaLabel = "";
 
   const dispatch = createEventDispatcher();
 
-  function handleClick(e: MouseEvent) {
-    if (!disabled) dispatch("click", e);
+  function handleClick(e: any) {
+    if (!disabled) dispatch("click", e.detail);
   }
 </script>
 
 <SmartElement
   className="super-button {className} {primary ? 'is-primary' : ''} {danger ? 'is-danger' : ''} {circle ? 'is-circle' : ''}"
   {disabled}
-  style={bgcolor ? `background-color: ${bgcolor}` : ""}
+  {title}
+  {ariaLabel}
+  style={bgcolor ? "background-color: " + bgcolor : ""}
   on:click={handleClick}
 >
-  <div class="button-content" {title}>
+  <div class="button-content">
     <slot />
   </div>
 </SmartElement>
@@ -31,36 +34,16 @@
 <style>
   :global(.super-button) {
     padding: 0.5em 1em;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    background-color: var(--background-color);
-    color: var(--text-color);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background-color: var(--hover);
+    color: var(--text);
     justify-content: center;
     align-items: center;
-    font-weight: 500;
+    font-weight: 700;
   }
-
-  :global(.super-button.is-primary) {
-    background-color: var(--sidebar-bg-color);
-    color: white;
-    border-color: transparent;
-  }
-
-  :global(.super-button.is-danger) {
-    background-color: #dc3545;
-    color: white;
-    border-color: transparent;
-  }
-
-  :global(.super-button.is-circle) {
-    padding: 0.5em;
-    border-radius: 50%;
-    aspect-ratio: 1/1;
-  }
-
-  .button-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-  }
+  :global(.super-button.is-primary) { background-color: var(--primary); color: white; border-color: var(--primary); }
+  :global(.super-button.is-danger) { background-color: #dc3545; color: white; border-color: #dc3545; }
+  :global(.super-button.is-circle) { padding: 0.5em; border-radius: 50%; aspect-ratio: 1/1; width: 38px; height: 38px; }
+  .button-content { display: flex; align-items: center; justify-content: center; }
 </style>

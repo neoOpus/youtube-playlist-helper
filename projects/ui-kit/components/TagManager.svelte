@@ -1,34 +1,24 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import CloseIcon from "./icons/CloseIcon.svelte";
-  import PlusMultiple from "./icons/PlusMultiple.svelte";
-  import SimpleButton from "./SimpleButton.svelte";
+  import { CloseIcon, PencilIcon } from "./icons/index.js";
 
   export let tags: string[] = [];
   export let placeholder = "Add tag...";
-  let newTag = "";
 
   const dispatch = createEventDispatcher();
+  let newTag = "";
 
   function addTag() {
-    const trimmed = newTag.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      tags = [...tags, trimmed];
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      tags = [...tags, newTag.trim()];
       newTag = "";
       dispatch("change", tags);
     }
   }
 
   function removeTag(tag: string) {
-    tags = tags.filter(t => t !== tag);
+    tags = tags.filter((t) => t !== tag);
     dispatch("change", tags);
-  }
-
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      addTag();
-    }
   }
 </script>
 
@@ -37,77 +27,29 @@
     {#each tags as tag}
       <span class="tag">
         {tag}
-        <button class="remove-btn" on:click={() => removeTag(tag)}>
+        <button on:click={() => removeTag(tag)} aria-label="Remove {tag}">
           <CloseIcon size="12" />
         </button>
       </span>
     {/each}
   </div>
-  <div class="input-group">
+  <div class="input-area">
     <input
       type="text"
       bind:value={newTag}
       {placeholder}
-      on:keydown={handleKeydown}
+      on:keydown={(e) => e.key === "Enter" && addTag()}
     />
-    <SimpleButton on:click={addTag}>
-        <PlusMultiple size="16" />
-    </SimpleButton>
+    <button on:click={addTag}><PencilIcon size="16" /></button>
   </div>
 </div>
 
 <style>
-  .tag-manager {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .tags-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .tag {
-    background-color: var(--sidebar-bg-color);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .remove-btn {
-    background: none;
-    border: none;
-    color: white;
-    padding: 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    opacity: 0.7;
-  }
-
-  .remove-btn:hover {
-    opacity: 1;
-  }
-
-  .input-group {
-    display: flex;
-    gap: 4px;
-  }
-
-  input {
-    flex-grow: 1;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 4px 8px;
-    background: transparent;
-    color: inherit;
-    font-size: 0.9rem;
-  }
+  .tag-manager { display: flex; flex-direction: column; gap: 10px; }
+  .tags-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { background: var(--hover); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .tag button { background: transparent; border: none; cursor: pointer; color: var(--text-muted); display: flex; }
+  .input-area { display: flex; gap: 8px; }
+  input { flex-grow: 1; background: var(--hover); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; outline: none; }
+  button { background: var(--hover); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; cursor: pointer; color: var(--text); }
 </style>

@@ -1,56 +1,73 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
+
   export let width = 300;
   export let minWidth = 100;
-  export let maxWidth = 600;
+  export let maxWidth = 1000;
 
-  let resizing = false;
+  const dispatch = createEventDispatcher();
 
   function startResize(e: MouseEvent) {
-    resizing = true;
-    window.addEventListener("mousemove", resize);
-    window.addEventListener("mouseup", stopResize);
-  }
+    const startX = e.clientX;
+    const startWidth = width;
 
-  function resize(e: MouseEvent) {
-    if (resizing) {
-      const newWidth = e.clientX;
-      if (newWidth >= minWidth && newWidth <= maxWidth) {
-        width = newWidth;
-      }
+    function onMouseMove(e: MouseEvent) {
+      const deltaX = e.clientX - startX;
+      width = Math.min(Math.max(startWidth + deltaX, minWidth), maxWidth);
+      dispatch("resize", width);
     }
+
+    function onMouseUp() {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    }
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
   }
 
-  function stopResize() {
-    resizing = false;
-    window.removeEventListener("mousemove", resize);
-    window.removeEventListener("mouseup", stopResize);
+  function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "ArrowRight") width = Math.min(width + 10, maxWidth);
+      if (e.key === "ArrowLeft") width = Math.max(width - 10, minWidth);
+      dispatch("resize", width);
   }
 </script>
 
 <div class="panel" style="width: {width}px">
   <slot />
-  <div class="resizer" on:mousedown={startResize}></div>
+  <div
+    class="resizer"
+    on:mousedown={startResize}
+    on:keydown={handleKeydown}
+    role="slider"
+    aria-valuenow={width}
+    aria-valuemin={minWidth}
+    aria-valuemax={maxWidth}
+    aria-label="Resize panel"
+    tabindex="0"
+  ></div>
 </div>
 
 <style>
   .panel {
     position: relative;
     height: 100%;
-    border-right: 1px solid var(--border-color);
-    background: var(--background-color);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
   }
 
   .resizer {
     position: absolute;
     top: 0;
-    right: -5px;
-    width: 10px;
+    right: -3px;
+    width: 6px;
     height: 100%;
     cursor: col-resize;
     z-index: 5;
+    transition: background 0.2s;
   }
 
-  .resizer:hover {
-    background: rgba(0,0,0,0.1);
+  .resizer:hover, .resizer:focus {
+    background: var(--primary);
   }
 </style>

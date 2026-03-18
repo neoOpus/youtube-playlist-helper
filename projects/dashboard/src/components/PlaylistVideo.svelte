@@ -19,11 +19,23 @@
 
   const dispatch = createEventDispatcher();
 
+  import { predictionEngine, notificationService } from "@yph/core";
+  async function handlePredict() {
+      const prediction = await predictionEngine.predictMetadata(video.videoId);
+      if (prediction) {
+          video = { ...video, ...prediction };
+          await handleSave();
+          notificationService.success("Intelligence recovered metadata.");
+      } else {
+          notificationService.info("No historical matches found for this node.");
+      }
+  }
+
   function videoClicked() {
     window.open(video.url, "_blank");
   }
 
-  function deleteVideo(_: Event) {
+  function deleteVideo() {
     dispatch("delete", video);
   }
 
@@ -59,6 +71,7 @@
   className="playlist-video {video.watched ? 'is-watched' : ''}"
   {active}
   selected={video.selected}
+  ariaLabel="Video node: {video.title}"
 >
   <div
     class="video-selection"
@@ -76,11 +89,12 @@
         on:keydown={handleKeydown}
         role="button"
         tabindex="0"
-        aria-label="Play video"
+        aria-label="Play: {video.title}"
     >
         <img
-          alt={video.title}
+          alt="Thumbnail for {video.title}"
           src={video.thumbnailUrl}
+          loading="lazy"
         />
         {#if video.watched}
             <div class="watched-overlay">
@@ -90,7 +104,12 @@
     </div>
   {/if}
 
-  <div class="video-details" on:click={videoClicked} on:keydown={handleKeydown} role="button" tabindex="0">
+  <div class="video-details" on:click={videoClicked} on:keydown={handleKeydown} role="button" tabindex="0" aria-label="View details for {video.title}">
+        {#if video.title === "Unknown Video" || !video.title}
+            <button class="predict-btn" on:click|stopPropagation={handlePredict} title="Predict Metadata via AI" aria-label="Predict metadata">
+                <SearchIcon size="12" /> Predict
+            </button>
+        {/if}
     <div class="title-row">
         {#if video.watched}
             <span class="watched-badge">WATCHED</span>
@@ -101,15 +120,15 @@
   </div>
 
   <div class="video-btns" on:click|stopPropagation on:keydown|stopPropagation role="presentation">
-    <SuperButton on:click={trackDown} title="Track down alternatives" circle bgcolor="transparent" className="video-action-btn"
-      ><SearchIcon /></SuperButton
-    >
-    <SuperButton on:click={openIdCard} title="Video ID Card" circle bgcolor="transparent" className="video-action-btn"
-      ><InfoIcon /></SuperButton
-    >
-    <SuperButton on:click={deleteVideo} title="Delete video" circle bgcolor="transparent" className="video-action-btn"
-      ><DeleteIcon /></SuperButton
-    >
+    <SuperButton on:click={trackDown} title="Track down alternatives" circle bgcolor="transparent" className="video-action-btn" ariaLabel="Search alternatives">
+        <SearchIcon />
+    </SuperButton>
+    <SuperButton on:click={openIdCard} title="Video ID Card" circle bgcolor="transparent" className="video-action-btn" ariaLabel="Open ID Card">
+        <InfoIcon />
+    </SuperButton>
+    <SuperButton on:click={deleteVideo} title="Delete video" circle bgcolor="transparent" className="video-action-btn" ariaLabel="Delete node">
+        <DeleteIcon />
+    </SuperButton>
   </div>
 </SmartElement>
 
@@ -117,17 +136,19 @@
 
 <style>
   :global(.playlist-video) {
-    padding: 0.5em 1em;
+    padding: 0.75rem 1rem;
     align-items: center;
-    border-left: 4px solid transparent;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    background: var(--hover);
   }
 
-  :global(.playlist-video.is-selected) {
-    border-left: 4px solid var(--sidebar-bg-color);
+  :global(.playlist-video:hover) {
+    background: rgba(255, 255, 255, 0.06);
   }
 
   .video-selection {
-    margin-right: 15px;
+    margin-right: 1rem;
     display: flex;
     align-items: center;
   }
@@ -135,11 +156,12 @@
   .thumbnail-container {
     position: relative;
     width: 120px;
-    height: 65px;
-    margin-right: 10px;
-    border-radius: 4px;
+    height: 68px;
+    margin-right: 1rem;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
 
   img {
@@ -150,11 +172,8 @@
 
   .watched-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -166,7 +185,6 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 0.5em;
     min-width: 0;
     cursor: pointer;
   }
@@ -175,49 +193,68 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .video-title {
-    font-weight: bold;
-    font-size: 16px;
+    font-weight: 800;
+    font-size: 1rem;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    color: var(--text);
   }
 
   .watched-badge {
     background: #28a745;
     color: white;
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 0.6rem;
+    padding: 1px 5px;
     border-radius: 4px;
-    font-weight: bold;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+
+  .predict-btn {
+    background: linear-gradient(135deg, #6200ea, #d500f9);
+    color: white;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
   }
 
   :global(.playlist-video.is-watched) .video-title {
+    opacity: 0.6;
     text-decoration: line-through;
-    opacity: 0.7;
   }
 
   .video-channel {
-    font-size: 14px;
-    opacity: 0.8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
   }
 
   .video-btns {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-left: 10px;
-    gap: 5px;
+    margin-left: 1rem;
+    gap: 0.5rem;
   }
 
   :global(.video-action-btn) {
-    color: var(--text-color) !important;
+    color: var(--text-muted) !important;
   }
 
   :global(.video-action-btn:hover) {
-    background-color: rgba(0, 0, 0, 0.05) !important;
+    color: var(--primary) !important;
   }
 </style>
