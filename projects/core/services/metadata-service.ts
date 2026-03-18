@@ -1,35 +1,27 @@
-import type { Video } from "../types/model";
-import { storageService } from "./storage-service";
+import { storageService } from "./storage-service.js";
+import { historyService } from "./history-service.js";
+import type { Video } from "../types/model.js";
 
-/**
- * Prefix for video metadata keys in storage.
- */
-const METADATA_KEY_PREFIX = "metadata_";
-
-/**
- * Service for managing per-video metadata independent of playlists.
- */
 export const metadataService = {
-  /**
-   * Retrieves metadata for a specific video.
-   * @param videoId The YouTube video ID.
-   * @returns A partial Video object containing metadata.
-   */
-  async getVideoMetadata(videoId: string): Promise<Partial<Video>> {
-    const data = await storageService.fetchObject(METADATA_KEY_PREFIX + videoId, null);
-    if (!data) return {};
-    return typeof data === 'string' ? JSON.parse(data) : data;
-  },
+    async saveVideoMetadata(videoId: string, metadata: Partial<Video>) {
+        const existing = await storageService.fetchObject(`v_meta_${videoId}`, {});
+        const updated = { ...existing, ...metadata, videoId };
 
-  /**
-   * Saves metadata for a specific video.
-   * @param videoId The YouTube video ID.
-   * @param metadata The metadata to save.
-   */
-  async saveVideoMetadata(videoId: string, metadata: Partial<Video>) {
-    // Merge with existing metadata to avoid overwriting fields not provided in this call
-    const existing = await this.getVideoMetadata(videoId);
-    const merged = { ...existing, ...metadata };
-    await storageService.storeObject(METADATA_KEY_PREFIX + videoId, merged);
-  }
+        // Log to time machine if critical metadata changed
+        if (metadata.title || metadata.channel) {
+            await historyService.logHistory(videoId, updated.title, updated.channel);
+        }
+
+        await storageService.storeObject(`v_meta_${videoId}`, updated);
+    },
+
+    async getVideoMetadata(videoId: string): Promise<Partial<Video>> {
+        return storageService.fetchObject(`v_meta_${videoId}`, {});
+    },
+
+    async bulkUpdateMetadata(videoIds: string[], updates: Partial<Video>) {
+        for (const id of videoIds) {
+            await this.saveVideoMetadata(id, updates);
+        }
+    }
 };

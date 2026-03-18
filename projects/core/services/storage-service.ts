@@ -280,6 +280,16 @@ export const storageService = {
       })
     );
     return settings;
+  },
+
+  /**
+   * Updates application settings.
+   * @param updates The settings updates.
+   */
+  async updateSettings(updates: Partial<Settings>): Promise<void> {
+      for (const [key, value] of Object.entries(updates)) {
+          await this.storeObject(key, value);
+      }
   }
 };
 

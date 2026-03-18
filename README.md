@@ -28,3 +28,7 @@ A YouTube playlist creator for [Firefox](https://addons.mozilla.org/en-US/firefo
 1. Install Node.js and npm.
 2. Run `npm run build`.
 3. The extension source files are in `projects/extension` and the built editor in `projects/extension/editor`.
+
+## Related Projects
+
+- [Form Recovery Suite](https://github.com/neoOpus/form-recovery-suite) - Browser tool for form input recovery and restoration.

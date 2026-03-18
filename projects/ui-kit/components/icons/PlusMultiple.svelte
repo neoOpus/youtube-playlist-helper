@@ -1,3 +1,6 @@
-<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-    <path fill="currentColor" d="M19,11H15V15H13V11H9V9H13V5H15V9H19M20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M4,6H2V20A2,2 0 0,0 4,22H18V20H4V6Z" />
+<script lang="ts">
+  export let size = "24"; export let color = "currentColor";
+</script>
+<svg width={size} height={size} viewBox="0 0 24 24">
+    <path fill={color} d="M17,14H19V17H22V19H19V22H17V19H14V17H17V14M11,16L2,16V4L11,4M11,16L11,4L20,4L20,12H18V6H4V14H11V16Z" />
 </svg>
