@@ -28,6 +28,13 @@
     filtersUpdated();
   }
 
+  const debouncedSearchChanged = debounce(() => {
+    playlistsSearch.set(search);
+    filtersUpdated();
+  }, 300);
+
+  function searchChanged() {
+    debouncedSearchChanged();
   const debouncedFiltersUpdated = debounce(() => {
     filtersUpdated();
   }, 300);
@@ -40,15 +47,55 @@
   function filtersUpdated() {
     if (!playlists) return;
 
+    // ⚡ PERFORMANCE: Filter BEFORE sorting to minimize computational load on sort algorithms.
+    // O(M) where M is total playlists.
     let result = [...playlists];
 
+    // 1. Group Filter
     // 1. Filter by group
     if (selectedGroup !== "All") {
-      result = result.filter((p) =>
-        p.groups?.includes(selectedGroup)
-      );
+      result = result.filter((p) => p.groups?.includes(selectedGroup));
     }
 
+    // 2. Search Filter
+    if (search.trim()) {
+      if (useRegex) {
+        try {
+          const regex = new RegExp(search, "i");
+          result = result.filter(
+            (p) => regex.test(p.title) || p.groups?.some((g) => regex.test(g))
+          );
+        } catch (e) {
+          // Invalid regex
+        }
+      } else {
+        const keywords = search
+          .split(/\s+/)
+          .filter((k) => k.length)
+          .map((k) => k.toLowerCase());
+
+        result = result.filter((playlist) =>
+          keywords.every((k) => playlist.title?.toLowerCase().includes(k))
+        );
+      }
+    }
+
+    // 3. Sorting (Applied to the filtered subset)
+    // ⚡ PERFORMANCE: O(N log N) where N is the size of the filtered result (N <= M).
+    if (sortBy === ("relevance" as any)) {
+      const keywords = search.split(/\s+/).filter((k) => k.length > 2);
+      if (keywords.length > 0) {
+        // ⚡ PERFORMANCE: Schwartzian transform (pre-calculating sort scores)
+        // prevents redundant expensive AI relevance calculations during sort.
+        const scoredPlaylists = result.map((p) => ({
+          p,
+          score: aiService.calculatePlaylistRelevance(p, keywords),
+        }));
+        scoredPlaylists.sort((a, b) => b.score - a.score);
+        result = scoredPlaylists.map((item) => item.p);
+      }
+    } else {
+      result.sort(getPlaylistsSorter(sortBy));
     // 2. Filter by search
     if (search.trim()) {
         const query = search.toLowerCase();
