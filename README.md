@@ -1,30 +1,78 @@
-# YouTube Playlist Helper
+<div align="center">
+  <img src="https://img.shields.io/badge/Svelte_5-Expert-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript-Architecture-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Browser_Extensions-SOTA-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" />
+  <img src="https://img.shields.io/badge/AI_&_Automation-Systems-000000?style=for-the-badge&logo=openai&logoColor=white" />
+</div>
 
-| :warning: WARNING: This extension is currently discontinued. The source code is still available under the [MIT license](https://opensource.org/license/mit) |
-| ---------------------------------------------------------------------------------------------------- |
+<br />
 
-A YouTube playlist creator for [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-playlist-helper/) and [Google Chrome](https://chrome.google.com/webstore/detail/youtube-playlist-helper/ibdakohjhchaagmccfedeejmeillongg).
+# Hi, I'm Anoir Ben Tanfous (aka neoOpus)
 
-## Features
+**Software Engineer & Architect** specializing in high-performance browser extensions, robust form recovery systems, and intelligent digital ecosystems.
 
-- A complete playlist editor: add, delete, reorder, reverse, remove duplicates, import and export videos
+I focus on bridging the gap between experimental technology and production-grade reliability. My work emphasizes **State-of-the-Art (SOTA)** architectures that are invisible to the user yet uncompromising on privacy and performance.
 
-- Queue up videos from any page (with the right-click context menu) and play or save them using the playlist builder.
+### 🛠️ Core Technical Stack
 
-- Save playlists using your browser's sync storage
+**Frontend & UI Architecture**
+- **Svelte 5** (Runes, High-Performance UI)
+- **TypeScript** (Type-Safe Systems)
+- **Vite & CRXJS** (Modern Extension Tooling)
+- **Tailwind CSS** & **Shadow DOM** Encapsulation
 
-- Create a playlist from a bookmark folder
+**Systems & Storage**
+- **Browser Extension Manifest V3**
+- **Dexie.js** (IndexedDB with AES-GCM Encryption)
+- **Heuristic Identification Engines** (V-Hash Fingerprinting)
+- **WebDAV & E2EE Cloud Sync**
 
-- Create a playlist from a list of links
+**AI & Automation**
+- **WebGPU / Local LLMs** (Semantic Mapping)
+- **NLP** (PII Protection & Data Categorization)
+- **Autonomous Recovery Agents**
 
-- Combine YouTube tabs and create playlist
+---
 
-- Scan current tab for YouTube links and create a playlist (including thumbnails)
+### 🏛️ Engineering Philosophy
 
-- Convert current YouTube playlist tab to YouTube queue
+My approach to software is built on four central pillars:
 
-## Build instructions
+1. **Invisible Intelligence**: Tools should be smart enough to assist without being noticed.
+2. **Uncompromising Privacy**: Zero-knowledge architectures and local-first data.
+3. **Resilient Robustness**: Using multi-signal heuristics (V-Hash) to survive evolving web environments.
+4. **SOTA Performance**: Leveraging the latest standards (Manifest V3, Svelte 5) to ensure longevity and speed.
 
+> *"Machine learning models are valuable — but deployed systems that respect user privacy create impact."*
+
+---
+
+### 📊 GitHub Activity
+
+<p align="center">
+  <img src="https://github-readme-stats.vercel.app/api?username=neoOpus&show_icons=true&theme=tokyonight&count_private=true" alt="neoOpus's GitHub stats" />
+  <br />
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=neoOpus&layout=compact&theme=tokyonight&hide=css,html" alt="Top Languages" />
+</p>
+
+---
+
+### 🚀 Featured SOTA Projects
+*(Detailed project highlights coming soon)*
+
+- **Phoenix Form Recovery Suite**: The next generation of intelligent form recovery.
+- **YouTube Playlist Helper**: A "peace of mind" ecosystem for video management.
+
+---
+
+### 📫 Let’s Connect
+*(Remind me to set this up later)*
+
+⚡ Always building. Always improving. Always shipping.
 1. Install Node.js and npm.
 2. Run `npm run build`.
 3. The extension source files are in `projects/extension` and the built editor in `projects/extension/editor`.
+
+## Related Projects
+
+- [Form Recovery Suite](https://github.com/neoOpus/form-recovery-suite) - Browser tool for form input recovery and restoration.

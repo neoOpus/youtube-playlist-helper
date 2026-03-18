@@ -1,18 +1,3 @@
-export { default as CheckIcon } from "./components/icons/CheckIcon.svelte";
-export { default as ClipboardMultiple } from "./components/icons/ClipboardMultiple.svelte";
-export { default as CloseIcon } from "./components/icons/CloseIcon.svelte";
-export { default as DeleteIcon } from "./components/icons/DeleteIcon.svelte";
-export { default as Filter } from "./components/icons/Filter.svelte";
-export { default as InfoIcon } from "./components/icons/InfoIcon.svelte";
-export { default as PayPalIcon } from "./components/icons/PayPalIcon.svelte";
-export { default as PencilIcon } from "./components/icons/PencilIcon.svelte";
-export { default as PlaylistPlayIcon } from "./components/icons/PlaylistPlayIcon.svelte";
-export { default as PlaylistPlusIcon } from "./components/icons/PlaylistPlusIcon.svelte";
-export { default as PlusMultiple } from "./components/icons/PlusMultiple.svelte";
-export { default as RemoveDuplicates } from "./components/icons/RemoveDuplicates.svelte";
-export { default as ReverseIcon } from "./components/icons/ReverseIcon.svelte";
-export { default as SaveIcon } from "./components/icons/SaveIcon.svelte";
-export { default as SearchIcon } from "./components/icons/SearchIcon.svelte";
 export { default as SmartElement } from "./components/SmartElement.svelte";
 export { default as SuperButton } from "./components/SuperButton.svelte";
 export { default as SuperCheckbox } from "./components/SuperCheckbox.svelte";
@@ -21,3 +6,7 @@ export { default as SimpleButton } from "./components/SimpleButton.svelte";
 export { default as TagManager } from "./components/TagManager.svelte";
 export { default as CollapsibleSidebar } from "./components/CollapsibleSidebar.svelte";
 export { default as ResizablePanel } from "./components/ResizablePanel.svelte";
+export { default as ParametricBackground } from "./components/ParametricBackground.svelte";
+
+export * from "./components/icons/index.js";
+export * from "./types.js";
