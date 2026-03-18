@@ -8,19 +8,19 @@
   export let error = false;
   export let className = "";
   export let style = "";
+  export let title = "";
+  export let ariaLabel = "";
 
   const dispatch = createEventDispatcher();
 
-  function handleClick(event: MouseEvent) {
-    if (disabled || loading) return;
-    dispatch("click", event);
+  function handleClick(e: MouseEvent) {
+    if (!disabled && !loading) dispatch("click", e);
   }
 
-  function handleKeyDown(event: KeyboardEvent) {
-    if (disabled || loading) return;
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      dispatch("click", event);
+  function handleKeydown(e: KeyboardEvent) {
+    if ((e.key === 'Enter' || e.key === ' ') && !disabled && !loading) {
+      e.preventDefault();
+      dispatch("click", e);
     }
   }
 </script>
@@ -33,10 +33,13 @@
   class:is-loading={loading}
   class:is-error={error}
   {style}
-  role="button"
-  tabindex="0"
+  {title}
   on:click={handleClick}
-  on:keydown={handleKeyDown}
+  on:keydown={handleKeydown}
+  role="button"
+  tabindex={disabled ? -1 : 0}
+  aria-label={ariaLabel || title}
+  aria-disabled={disabled}
 >
   <slot />
 </div>
@@ -44,17 +47,10 @@
 <style>
   .smart-element {
     display: flex;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s;
+    user-select: none;
     cursor: pointer;
     outline: none;
-  }
-
-  .smart-element:hover {
-    background-color: var(--hover-color);
-  }
-
-  .smart-element:focus-visible {
-    box-shadow: 0 0 0 2px var(--sidebar-bg-color);
   }
 
   .smart-element.is-disabled {
@@ -67,16 +63,7 @@
     cursor: wait;
   }
 
-  .smart-element.is-error {
-    border: 1px solid #dc3545;
-  }
-
-  .smart-element.is-active {
-    background-color: var(--active-bg-color);
-    color: var(--active-text-color);
-  }
-
-  .smart-element.is-selected {
-    border-left: 4px solid var(--sidebar-bg-color);
+  .smart-element:focus-visible {
+    box-shadow: 0 0 0 2px var(--primary);
   }
 </style>

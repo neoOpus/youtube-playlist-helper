@@ -5,5 +5,5 @@
     "strict": true,
     "noImplicitAny": false
   },
-  "exclude": ["form-recovery-suite", "node_modules", "**/node_modules/*", "playlist-editor"]
+  "exclude": ["node_modules", "**/node_modules/*", "projects/extension/editor"]
 }
