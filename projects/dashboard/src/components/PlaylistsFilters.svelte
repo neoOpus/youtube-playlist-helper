@@ -1,30 +1,22 @@
 <script lang="ts">
-  import { get } from "svelte/store";
-  import { aiService, debounce, playlistsSorter, getPlaylistsSorter } from "@yph/core";
-  import {
-    playlistsSearch,
-    playlistsSorting,
-  } from "../stores/playlists-filters";
+  import { debounce, getPlaylistsSorter, aiService, playlistsSorter } from "@yph/core";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
-  import { Filter, SearchIcon } from "@yph/ui-kit";
+  import { SearchIcon, Filter } from "@yph/ui-kit";
+  import { playlistsSearch } from "../stores/playlists-filters";
 
   export let playlists: Playlist[] = [];
   export let filteredPlaylists: Playlist[] = [];
 
-  let sortBy: PlaylistsSorting = get(playlistsSorting);
-  let search = get(playlistsSearch);
+  let search = "";
   let selectedGroup = "All";
+  let sortBy: PlaylistsSorting = "date-created-desc";
   let useRegex = false;
   let searchInVideos = false;
   let showPowerFeatures = false;
 
-  $: groups = [
-    "All",
-    ...new Set((playlists || []).flatMap((p) => p.groups || []).filter(Boolean)),
-  ];
+  $: groups = ["All", ...new Set(playlists.flatMap((p) => p.groups || []))];
 
   function sortingChanged() {
-    playlistsSorting.set(sortBy);
     filtersUpdated();
   }
 
@@ -41,7 +33,6 @@
     if (!playlists) return;
 
     // ⚡ PERFORMANCE: Filter BEFORE sorting to minimize computational load on sort algorithms.
-    // O(M) where M is total playlists.
     let result = [...playlists];
 
     // 1. Group Filter
@@ -51,33 +42,35 @@
 
     // 2. Search Filter
     if (search.trim()) {
-        if (useRegex) {
-            try {
-                const regex = new RegExp(search, "i");
-                result = result.filter((p) =>
-                    regex.test(p.title) ||
-                    p.groups?.some(g => regex.test(g)) ||
-                    (searchInVideos && p.loadedVideos?.some(v => regex.test(v.title)))
-                );
-            } catch (e) { /* Invalid regex */ }
-        } else {
-            const keywords = search
-              .split(/\s+/)
-              .filter((k) => k.length)
-              .map((k) => k.toLowerCase());
-
-            result = result.filter((p) => {
-                const matchesTitle = keywords.every((k) => p.title?.toLowerCase().includes(k));
-                const matchesVideos = searchInVideos && p.loadedVideos?.some(v =>
-                    keywords.every(k => v.title.toLowerCase().includes(k))
-                );
-                return matchesTitle || matchesVideos;
-            });
+      if (useRegex) {
+        try {
+          const regex = new RegExp(search, "i");
+          result = result.filter(
+            (p) => regex.test(p.title || "") ||
+                   p.groups?.some((g) => regex.test(g)) ||
+                   (searchInVideos && p.loadedVideos?.some(v => regex.test(v.title)))
+          );
+        } catch (e) {
+          // Invalid regex
         }
+      } else {
+        const keywords = search
+          .split(/\s+/)
+          .filter((k) => k.length)
+          .map((k) => k.toLowerCase());
+
+        result = result.filter((p) => {
+          const lowerTitle = (p.title || "").toLowerCase();
+          const matchesTitle = keywords.every((k) => lowerTitle.includes(k));
+          const matchesVideos = searchInVideos && p.loadedVideos?.some(v =>
+            keywords.every(k => v.title.toLowerCase().includes(k))
+          );
+          return matchesTitle || matchesVideos;
+        });
+      }
     }
 
     // 3. Sorting (Applied to the filtered subset)
-    // ⚡ PERFORMANCE: O(N log N) where N is the size of the filtered result (N <= M).
     if (sortBy === "relevance") {
       const keywords = search.split(/\s+/).filter((k) => k.length > 2);
       result = playlistsSorter.sort(result, sortBy, keywords);

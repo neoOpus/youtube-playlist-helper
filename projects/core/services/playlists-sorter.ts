@@ -78,7 +78,6 @@ export const getPlaylistsSorter = (sortBy: PlaylistsSorting) => {
 
 /**
  * High-performance sort for large playlist collections using pre-calculated collator keys.
- * @deprecated Use playlistsSorter.sort instead.
  */
 export function sortPlaylistsEfficiently(
   playlists: Playlist[],

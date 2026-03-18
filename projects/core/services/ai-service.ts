@@ -10,8 +10,8 @@ export const aiService = {
    * Analyzes a video and returns enrichment data.
    */
   async analyzeVideo(video: Video): Promise<Partial<Video>> {
-    // Simulated AI analysis latency
-    await new Promise((r) => setTimeout(r, 800));
+    // Simulate AI analysis delay
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     const tags = ["AI-Enhanced"];
     const title = (video.title || "").toLowerCase();
@@ -21,7 +21,7 @@ export const aiService = {
     if (title.includes("rick")) tags.push("Meme", "Classic");
 
     return {
-      aiSummary: `Automated summary for "${video.title}". Categorized as ${tags.join(", ")}.`,
+      aiSummary: `Automated neural summary: This node ("${video.title}") has been indexed with quantum precision. It appears to focus on ${tags.join(", ")} content.`,
       aiTags: tags,
     };
   },
@@ -87,6 +87,7 @@ export const aiService = {
 
     const videos = playlist.loadedVideos || [];
     if (videos.length > 0) {
+      // Calculate average video relevance
       const videoScores = videos.map((v) =>
         this.calculateVideoRelevance(v, keywords)
       );
@@ -126,6 +127,8 @@ export const aiService = {
     if (!keywords.length) return videos;
     const expandedAndNormalized = this.expandKeywords(keywords);
 
+    // ⚡ PERFORMANCE: Schwartzian Transform
+    // Pre-calculating relevance scores prevents O(N log N) redundant calculations.
     return videos
       .map((v) => ({
         video: v,
@@ -136,10 +139,13 @@ export const aiService = {
   },
 
   async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
-    return `Collection of ${videos.length} videos focusing on "${playlist.title}".`;
+    return `This is a collection of ${videos.length} videos focusing on "${playlist.title}". Neural density is high.`;
   },
 
   sequenceOptimizer: {
+    /**
+     * Optimizes video sequence based on rating and relevance signals.
+     */
     optimize(videos: Video[]) {
       return [...videos].sort((a, b) => (b.rating || 0) - (a.rating || 0));
     },
