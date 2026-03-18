@@ -54,7 +54,7 @@ describe("aiService", () => {
   describe("summarizePlaylist", () => {
     it("should generate a valid summary string", async () => {
         const playlist = { title: "Test Playlist" } as Playlist;
-        const videos = [{}, {}] as Video[];
+        const videos = [{} as Video, {} as Video];
         const summary = await aiService.summarizePlaylist(playlist, videos);
         expect(summary).toContain("2 videos");
         expect(summary).toContain("Test Playlist");
@@ -70,7 +70,7 @@ describe("aiService", () => {
         url: "",
         channel: "C1",
         thumbnailUrl: "",
-      } as any,
+      },
       {
         id: "2",
         videoId: "v2",
@@ -78,7 +78,7 @@ describe("aiService", () => {
         url: "",
         channel: "C2",
         thumbnailUrl: "",
-      } as any,
+      },
     ];
 
     it("should correctly calculate video relevance with semantic expansion", () => {

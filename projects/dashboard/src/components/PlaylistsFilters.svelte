@@ -14,17 +14,9 @@
 
   $: groups = ["All", ...new Set(playlists.flatMap((p) => p.groups || []))];
 
-  function sortingChanged() {
-    filtersUpdated();
-  }
-
   const debouncedFiltersUpdated = debounce(() => {
     filtersUpdated();
   }, 300);
-
-  function searchChanged() {
-    debouncedFiltersUpdated();
-  }
 
   function filtersUpdated() {
     if (!playlists) return;
@@ -80,12 +72,14 @@
   }
 
   // Reactive dependencies for automatic filtering when state changes
+  // We use immediate updates for UI toggles and sorting
   $: if (playlists || $playlistsSorting || selectedGroup || useRegex || searchInVideos) {
       filtersUpdated();
   }
 
-  // Search is debounced to avoid O(N) filtering on every keystroke
-  $: if ($playlistsSearch) {
+  // Search is debounced to avoid expensive filtering on every keystroke
+  $: {
+      $playlistsSearch;
       debouncedFiltersUpdated();
   }
 </script>
@@ -104,7 +98,6 @@
               <input
                 type="text"
                 bind:value={$playlistsSearch}
-                on:input={searchChanged}
                 placeholder={useRegex ? "Regex Search..." : "Search playlists... (Press / to focus)"}
               />
           </div>
