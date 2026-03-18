@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { size = "24", color = "currentColor" } = $props();
+  export let size = "24"; export let color = "currentColor";
 </script>
 <svg width={size} height={size} viewBox="0 0 24 24">
     <path fill={color} d="M13,3V5H15V11H13V13H15V17H13V19H15V21H17V19H19V13H17V11H19V5H17V3H15M15,5H17V11H15V5M15,13H17V19H15V13M11,3H9V5H7V11H9V13H7V17H9V19H7V21H9V19H11V13H9V11H11V5H9V3H11V5M9,5H7V11H9V5M9,13H7V19H9V13Z" />
