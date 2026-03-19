@@ -50,6 +50,10 @@
       if (pl) {
           playlist = pl;
           videos = pl.loadedVideos || [];
+      } else {
+          // If no ID is provided, we are creating a new one
+          playlist = { id: `pl-${Date.now()}`, title: "New Infrastructure Node", videos: [], timestamp: Date.now() };
+          videos = [];
       }
       loading = false;
   }
@@ -112,7 +116,6 @@
     event.preventDefault();
     const sourceIndex = parseInt(event.dataTransfer.getData("index"));
 
-    // Adjust for pagination
     const actualSourceIndex = (currentPage - 1) * pageSize + sourceIndex;
     const actualTargetIndex = (currentPage - 1) * pageSize + targetIndex;
 
@@ -138,26 +141,26 @@
   $: paginatedVideos = paginate({ items: filteredVideos, pageSize, currentPage });
 </script>
 
-<div class="editor-view" in:fade>
+<div class="editor-view view-container" in:fade>
     {#if loading}
-        <div class="loader">Quantum Alignment in Progress...</div>
+        <div class="loader aura-glow">Quantum Alignment in Progress...</div>
     {:else if playlist}
-        <header class="editor-header">
+        <header class="editor-header aura-glow">
             <div class="title-section">
-                <input class="pl-title-input" bind:value={playlist.title} />
-                <span class="pl-meta">{videos.length} nodes indexed</span>
+                <input class="pl-title-input" bind:value={playlist.title} placeholder="Untitled Infrastructure..." />
+                <span class="pl-meta">{videos.length} nodes currently indexed</span>
             </div>
             <div class="header-actions">
-                <button class="btn secondary" on:click={() => showBulkAdd = !showBulkAdd}>
+                <button class="action-btn secondary-btn" on:click={() => showBulkAdd = !showBulkAdd}>
                     <PlusMultiple size="18" /> Bulk Link
                 </button>
-                <button class="btn secondary" on:click={handleRemoveDuplicates} title="Deduplicate Nodes">
+                <button class="action-btn secondary-btn" on:click={handleRemoveDuplicates} title="Deduplicate Nodes">
                     <RemoveDuplicates size="18" /> Deduplicate
                 </button>
-                <button class="btn secondary" on:click={optimizeSequence} title="AI Smart Reorder">
+                <button class="action-btn secondary-btn" on:click={optimizeSequence} title="AI Smart Reorder">
                     <TerminalIcon size="18" /> Optimize
                 </button>
-                <button class="btn primary-sota sota-glow" on:click={save}>
+                <button class="action-btn primary-btn sota-glow" on:click={save}>
                     <SaveIcon size="18" /> Sync Changes
                 </button>
             </div>
@@ -165,14 +168,15 @@
 
         {#if showBulkAdd}
             <div class="bulk-add-pane pro-glass" transition:slide>
-                <textarea bind:value={bulkInput} placeholder="Paste YouTube URLs or IDs..."></textarea>
+                <h3 class="card-title mb-4"><PlusMultiple size="18" /> Bulk Node Intake</h3>
+                <textarea bind:value={bulkInput} placeholder="Paste YouTube URLs or IDs (one per line)..."></textarea>
                 <div class="row justify-end mt-4">
-                    <button class="btn primary" on:click={addVideos}>Link Nodes</button>
+                    <button class="action-btn primary-btn" on:click={addVideos}>Link Nodes</button>
                 </div>
             </div>
         {/if}
 
-        <div class="search-bar mt-6">
+        <div class="search-bar mt-8 pro-glass">
             <SearchIcon size="18" color="var(--text-muted)" />
             <input type="text" bind:value={searchQuery} placeholder="Filter indexed nodes..." />
         </div>
@@ -188,6 +192,7 @@
                     on:dragleave={() => hovering = null}
                     class:is-hovering={hovering === index}
                     role="listitem"
+                    class="video-card-wrapper"
                 >
                     <PlaylistVideo bind:video on:delete={removeVideo} active={false} />
                 </div>
@@ -195,7 +200,7 @@
         </div>
 
         {#if filteredVideos.length > pageSize}
-            <div class="pagination-footer mt-8">
+            <div class="pagination-footer mt-12">
                 <PaginationNav
                     totalItems={filteredVideos.length}
                     {pageSize}
@@ -207,7 +212,7 @@
             </div>
         {/if}
     {:else}
-        <div class="error-state">
+        <div class="error-state pro-glass">
             <h2>Critical Failure: Node Collection Not Found</h2>
             <p>The requested playlist infrastructure is offline or inaccessible.</p>
         </div>
@@ -215,30 +220,127 @@
 </div>
 
 <style>
-    .editor-view { padding: 2rem; max-width: 1000px; margin: 0 auto; min-height: 100vh; }
-    .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
-    .pl-title-input { background: transparent; border: none; font-size: 2rem; font-weight: 900; color: var(--text); outline: none; letter-spacing: -1px; width: 60%; }
-    .pl-title-input:focus { border-bottom: 2px solid var(--primary); }
-    .pl-meta { display: block; font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
-    .header-actions { display: flex; gap: 0.8rem; }
-    .bulk-add-pane { padding: 1.5rem; border-radius: 16px; border: 1px dashed var(--primary); margin-bottom: 2rem; background: var(--card-bg); }
-    textarea { width: 100%; height: 120px; background: var(--hover); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; color: var(--text); font-family: 'JetBrains Mono'; resize: none; outline: none; }
-    .search-bar { background: var(--hover); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
-    .search-bar input { background: transparent; border: none; color: var(--text); width: 100%; outline: none; font-weight: 700; }
-    .btn { padding: 10px 16px; border-radius: 10px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text); font-size: 0.85rem; }
-    .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
-    .btn.primary-sota { background: var(--primary); color: white; border-color: var(--primary); }
-    .btn.secondary { background: var(--hover); }
-    .sota-glow { box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3); }
-    .loader { padding: 5rem; text-align: center; font-size: 1.2rem; font-weight: 900; color: var(--primary); animation: pulse 2s infinite; }
-    .error-state { text-align: center; padding: 5rem; color: var(--text-muted); }
-    .error-state h2 { color: var(--danger); font-weight: 900; }
-    @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-    .mt-4 { margin-top: 1rem; }
-    .mt-6 { margin-top: 1.5rem; }
-    .mt-8 { margin-top: 2rem; }
-    .justify-end { justify-content: flex-end; }
-    .row { display: flex; }
-    .pagination-footer { display: flex; justify-content: center; border-top: 1px solid var(--border); padding-top: 2rem; }
-    .is-hovering { border-top: 4px solid var(--primary); }
+    .view-container {
+      padding: var(--space-12) var(--space-8);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .editor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-12);
+        padding-bottom: var(--space-8);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .pl-title-input {
+        background: transparent;
+        border: none;
+        font-size: var(--font-4xl);
+        font-weight: 900;
+        color: var(--text);
+        outline: none;
+        letter-spacing: -0.06em;
+        width: 100%;
+        padding: 0;
+        transition: all 0.3s;
+    }
+    .pl-title-input:focus { color: var(--primary); }
+
+    .pl-meta {
+        display: block;
+        font-size: var(--font-xs);
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-top: var(--space-2);
+        letter-spacing: 0.1em;
+        opacity: 0.7;
+    }
+
+    .header-actions { display: flex; gap: var(--space-3); }
+
+    .action-btn {
+        padding: var(--space-3) var(--space-4);
+        border-radius: var(--radius-lg);
+        font-weight: 800;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        transition: all 0.3s var(--easing-standard);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        color: var(--text);
+        background: var(--bg-secondary);
+        font-size: var(--font-sm);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px -5px var(--shadow);
+        background: var(--hover);
+    }
+
+    .primary-btn { background: var(--primary); color: white; border-color: var(--primary); }
+    .primary-btn:hover { background: var(--primary-hover); }
+
+    .bulk-add-pane { padding: var(--space-8); margin-bottom: var(--space-8); border: 1px dashed var(--primary); }
+    textarea {
+        width: 100%;
+        height: 160px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        color: var(--text);
+        font-family: 'JetBrains Mono', monospace;
+        resize: none;
+        outline: none;
+        font-size: var(--font-sm);
+        transition: border-color 0.3s;
+    }
+    textarea:focus { border-color: var(--primary); }
+
+    .search-bar {
+        padding: var(--space-4) var(--space-6);
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        border-radius: var(--radius-xl);
+    }
+    .search-bar input {
+        background: transparent;
+        border: none;
+        color: var(--text);
+        width: 100%;
+        outline: none;
+        font-weight: 700;
+        font-size: var(--font-base);
+    }
+
+    .video-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .video-card-wrapper {
+        transition: transform 0.3s var(--easing-standard);
+    }
+    .video-card-wrapper.is-hovering { transform: scale(1.02) translateX(10px); }
+
+    .loader { padding: var(--space-16); text-align: center; font-size: var(--font-xl); font-weight: 900; color: var(--primary); }
+    .error-state { text-align: center; padding: var(--space-16); }
+
+    .mt-8 { margin-top: var(--space-8); }
+    .mt-12 { margin-top: var(--space-12); }
+    .mb-4 { margin-bottom: var(--space-4); }
+
+    @media (max-width: 900px) {
+        .editor-header { flex-direction: column; align-items: flex-start; gap: var(--space-6); }
+        .header-actions { width: 100%; overflow-x: auto; padding-bottom: var(--space-2); }
+    }
 </style>

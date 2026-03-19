@@ -68,7 +68,7 @@
 </script>
 
 <SmartElement
-  className="playlist-video {video.watched ? 'is-watched' : ''}"
+  className="playlist-video-revamp {video.watched ? 'is-watched' : ''}"
   {active}
   selected={video.selected}
   ariaLabel="Video node: {video.title}"
@@ -84,7 +84,7 @@
 
   {#if !disableThumbnails}
     <div
-        class="thumbnail-container"
+        class="thumbnail-container pro-glass"
         on:click|preventDefault={videoClicked}
         on:keydown={handleKeydown}
         role="button"
@@ -112,7 +112,7 @@
         {/if}
     <div class="title-row">
         {#if video.watched}
-            <span class="watched-badge">WATCHED</span>
+            <span class="badge primary">WATCHED</span>
         {/if}
         <span class="video-title">{video.title}</span>
     </div>
@@ -120,48 +120,53 @@
   </div>
 
   <div class="video-btns" on:click|stopPropagation on:keydown|stopPropagation role="presentation">
-    <SuperButton on:click={trackDown} title="Track down alternatives" circle bgcolor="transparent" className="video-action-btn" ariaLabel="Search alternatives">
-        <SearchIcon />
-    </SuperButton>
-    <SuperButton on:click={openIdCard} title="Video ID Card" circle bgcolor="transparent" className="video-action-btn" ariaLabel="Open ID Card">
-        <InfoIcon />
-    </SuperButton>
-    <SuperButton on:click={deleteVideo} title="Delete video" circle bgcolor="transparent" className="video-action-btn" ariaLabel="Delete node">
-        <DeleteIcon />
-    </SuperButton>
+    <button on:click={trackDown} title="Track down alternatives" class="video-action-btn" aria-label="Search alternatives">
+        <SearchIcon size="16" />
+    </button>
+    <button on:click={openIdCard} title="Video ID Card" class="video-action-btn" aria-label="Open ID Card">
+        <InfoIcon size="16" />
+    </button>
+    <button on:click={deleteVideo} title="Delete video" class="video-action-btn danger-btn" aria-label="Delete node">
+        <DeleteIcon size="16" />
+    </button>
   </div>
 </SmartElement>
 
 <VideoIdCard bind:display={showIdCard} bind:video on:save={handleSave} />
 
 <style>
-  :global(.playlist-video) {
-    padding: 0.75rem 1rem;
+  :global(.playlist-video-revamp) {
+    padding: var(--space-4) var(--space-6);
     align-items: center;
-    border-radius: 12px;
-    margin-bottom: 0.5rem;
-    background: var(--hover);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    transition: all 0.3s var(--easing-standard);
   }
 
-  :global(.playlist-video:hover) {
-    background: rgba(255, 255, 255, 0.06);
+  :global(.playlist-video-revamp:hover) {
+    background: var(--hover);
+    border-color: rgba(var(--primary-rgb), 0.3);
+    transform: translateX(8px);
+    box-shadow: 0 4px 12px var(--shadow);
   }
 
   .video-selection {
-    margin-right: 1rem;
+    margin-right: var(--space-4);
     display: flex;
     align-items: center;
   }
 
   .thumbnail-container {
     position: relative;
-    width: 120px;
-    height: 68px;
-    margin-right: 1rem;
-    border-radius: 8px;
+    width: 140px;
+    height: 78px;
+    margin-right: var(--space-6);
+    border-radius: var(--radius-md);
     overflow: hidden;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
   }
 
   img {
@@ -173,7 +178,7 @@
   .watched-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(var(--bg), 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -187,74 +192,85 @@
     justify-content: center;
     min-width: 0;
     cursor: pointer;
+    gap: var(--space-1);
   }
 
   .title-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 2px;
+    gap: var(--space-3);
   }
 
   .video-title {
     font-weight: 800;
-    font-size: 1rem;
+    font-size: var(--font-base);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     color: var(--text);
-  }
-
-  .watched-badge {
-    background: #28a745;
-    color: white;
-    font-size: 0.6rem;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-weight: 900;
-    flex-shrink: 0;
+    letter-spacing: -0.01em;
   }
 
   .predict-btn {
-    background: linear-gradient(135deg, #6200ea, #d500f9);
+    background: linear-gradient(135deg, var(--primary), #d500f9);
     color: white;
     border: none;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 2px 10px;
+    border-radius: var(--radius-sm);
     font-size: 10px;
     font-weight: 800;
     cursor: pointer;
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
     display: flex;
     align-items: center;
     gap: 4px;
     width: fit-content;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
-  :global(.playlist-video.is-watched) .video-title {
-    opacity: 0.6;
+  :global(.playlist-video-revamp.is-watched) .video-title {
+    opacity: 0.5;
     text-decoration: line-through;
   }
 
   .video-channel {
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: var(--font-xs);
+    font-weight: 700;
     color: var(--text-muted);
+    opacity: 0.7;
   }
 
   .video-btns {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-left: 1rem;
-    gap: 0.5rem;
+    margin-left: var(--space-6);
+    gap: var(--space-3);
   }
 
-  :global(.video-action-btn) {
-    color: var(--text-muted) !important;
+  .video-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    background: var(--hover);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    transition: all 0.2s;
   }
 
-  :global(.video-action-btn:hover) {
-    color: var(--primary) !important;
+  .video-action-btn:hover {
+    color: white;
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.1);
+  }
+
+  .danger-btn:hover {
+    background: var(--danger);
+    border-color: var(--danger);
   }
 </style>
