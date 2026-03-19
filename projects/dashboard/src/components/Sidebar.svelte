@@ -24,12 +24,12 @@
   }
 
   const navItems: NavItem[] = [
-    { id: "/", label: "Saved playlists", icon: PlaylistPlayIcon as any, color: "var(--primary)" },
-    { id: "/new", label: "New playlist", icon: PlaylistPlusIcon as any, color: "var(--primary)" },
-    { id: "/manage", label: "Manage Hub", icon: SaveIcon as any, color: "var(--primary)" },
-    { id: "/sync", label: "Cloud Sync", icon: CloudSyncIcon as any, color: "var(--primary)" },
-    { id: "/merge", label: "Merge Tool", icon: MergeIcon as any, color: "var(--primary)" },
-    { id: "/support", label: "Support", icon: SupportIcon as any, color: "var(--primary)" },
+    { id: "/", label: "Saved infrastructure", icon: PlaylistPlayIcon as any, color: "var(--primary)" },
+    { id: "/new", label: "New deployment", icon: PlaylistPlusIcon as any, color: "var(--primary)" },
+    { id: "/manage", label: "Control Center", icon: SaveIcon as any, color: "var(--primary)" },
+    { id: "/sync", label: "Global Sync", icon: CloudSyncIcon as any, color: "var(--primary)" },
+    { id: "/merge", label: "Collision Tool", icon: MergeIcon as any, color: "var(--primary)" },
+    { id: "/support", label: "Operational Support", icon: SupportIcon as any, color: "var(--primary)" },
   ];
 
   function navigate(id: string) {
@@ -156,7 +156,7 @@
   .nav-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-2);
   }
 
   .section-label {
@@ -181,7 +181,7 @@
     font-size: var(--font-sm);
     font-weight: 700;
     cursor: pointer;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     transition: all 0.3s var(--easing-standard);
     position: relative;
     text-align: left;
@@ -197,6 +197,7 @@
   .nav-item.active {
     background: var(--hover);
     color: var(--primary);
+    box-shadow: inset 4px 0 0 var(--primary);
   }
 
   .icon-wrapper {
@@ -209,18 +210,19 @@
 
   .nav-item.active .icon-wrapper {
       filter: drop-shadow(0 0 12px var(--primary));
-      transform: scale(1.15);
+      transform: scale(1.1);
   }
 
   .active-indicator {
       position: absolute;
-      left: 0;
-      top: 25%;
-      bottom: 25%;
-      width: 4px;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
       background: var(--primary);
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      box-shadow: 0 0 15px var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--primary);
   }
 
   .spacer { flex-grow: 1; }
@@ -228,7 +230,7 @@
   .sidebar-footer {
     display: flex;
     flex-direction: column;
-    gap: var(--space-8);
+    gap: var(--space-6);
     padding: var(--space-8) var(--space-3) 0;
     border-top: 1px solid var(--border);
   }
@@ -305,7 +307,7 @@
     }
     .sidebar {
       padding: var(--space-8) var(--space-2);
-      width: var(--sidebar-collapsed-width);
+      width: 60px;
     }
     .nav-item {
       justify-content: center;

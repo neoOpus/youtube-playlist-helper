@@ -2,16 +2,18 @@
   import { onMount } from "svelte";
   import { fade, fly, scale } from "svelte/transition";
   import { flip } from "svelte/animate";
-  import { storageService } from "@yph/core";
+  import { storageService, actionLogger } from "@yph/core";
   import type { Playlist } from "@yph/core";
   import PlaylistsFilters from "../components/PlaylistsFilters.svelte";
   import PlaylistPreview from "../components/PlaylistPreview.svelte";
-  import { InfoIcon, SearchIcon, PlaylistPlayIcon } from "@yph/ui-kit";
+  import { InfoIcon, SearchIcon, PlaylistPlayIcon, DeleteIcon, MergeIcon, SuperButton } from "@yph/ui-kit";
 
   let playlists: Playlist[] = [];
   let filteredPlaylists: Playlist[] = [];
   let virtualFolders: { title: string, count: number, type: 'tag' | 'rating' }[] = [];
   let selectedFolder = "all";
+
+  let selectedIds = new Set<string>();
 
   onMount(async () => {
     playlists = await storageService.getPlaylists();
@@ -54,10 +56,46 @@
   function handleDeleted(e: any) {
       const pl = (e as CustomEvent<Playlist>).detail;
       playlists = playlists.filter(p => p.id !== pl.id);
+      selectedIds.delete(pl.id);
+      selectedIds = new Set(selectedIds);
+  }
+
+  function handleSelection(id: string, selected: boolean) {
+      if (selected) selectedIds.add(id);
+      else selectedIds.delete(id);
+      selectedIds = new Set(selectedIds);
+  }
+
+  function clearSelection() {
+      selectedIds.clear();
+      selectedIds = new Set(selectedIds);
+  }
+
+  async function deleteSelected() {
+      const count = selectedIds.size;
+      if (confirm(`Decommission ${count} infrastructure nodes?`)) {
+          const toDelete = playlists.filter(p => selectedIds.has(p.id));
+
+          actionLogger.log(`Delete ${count} playlists`, async () => {
+              for (const pl of toDelete) {
+                  await storageService.savePlaylist(pl);
+              }
+              playlists = [...playlists, ...toDelete];
+              generateVirtualFolders();
+          });
+
+          for (const pl of toDelete) {
+              await storageService.removePlaylist(pl);
+          }
+
+          playlists = playlists.filter(p => !selectedIds.has(p.id));
+          clearSelection();
+          generateVirtualFolders();
+      }
   }
 </script>
 
-<main in:fade class="view-container">
+<main class="view-container">
   <header class="view-header">
       <div class="header-content aura-glow">
           <h1>Saved Infrastructure</h1>
@@ -95,7 +133,12 @@
               {#if displayedPlaylists.length > 0}
                   {#each displayedPlaylists as pl (pl.id)}
                       <div animate:flip={{ duration: 500 }} in:scale={{ start: 0.98, duration: 400 }}>
-                          <PlaylistPreview playlist={pl} on:deleted={handleDeleted} />
+                          <PlaylistPreview
+                            playlist={pl}
+                            selected={selectedIds.has(pl.id)}
+                            on:deleted={handleDeleted}
+                            on:select={(e) => handleSelection(pl.id, e.detail)}
+                          />
                       </div>
                   {/each}
               {:else}
@@ -108,23 +151,31 @@
           </div>
       </section>
   </div>
+
+  <div class="selection-bar pro-glass-high" class:visible={selectedIds.size > 0}>
+      <div class="selection-info">
+          <span class="badge primary">{selectedIds.size}</span>
+          <span class="bold">Nodes Selected</span>
+      </div>
+      <div class="selection-actions">
+          <SuperButton on:click={clearSelection}>Cancel</SuperButton>
+          <button class="mass-action-btn" title="Merge Selection">
+              <MergeIcon size="18" />
+          </button>
+          <button class="mass-action-btn danger" on:click={deleteSelected} title="Decommission All">
+              <DeleteIcon size="18" />
+          </button>
+      </div>
+  </div>
 </main>
 
 <style>
-  .view-container {
-    padding: var(--space-12) var(--space-8);
-    max-width: 1600px;
-    margin: 0 auto;
-    color: var(--text);
-  }
-
   .view-header {
-    margin-bottom: var(--space-16);
-    padding-bottom: var(--space-8);
+    margin-bottom: var(--space-12);
+    padding-bottom: var(--space-6);
   }
 
   .header-content { display: flex; flex-direction: column; gap: var(--space-2); }
-  .header-content h1 { font-size: 3rem; }
 
   .view-layout {
     display: grid;
@@ -201,11 +252,51 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-6);
+    border: 1px dashed var(--border-strong);
   }
 
   .empty-state h3 { font-size: var(--font-xl); font-weight: 800; }
 
   .mt-8 { margin-top: var(--space-8); }
+
+  .selection-info {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+  }
+
+  .selection-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+  }
+
+  .mass-action-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      transition: all 0.3s;
+  }
+
+  .mass-action-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-4px) scale(1.1);
+      box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.3);
+  }
+
+  .mass-action-btn.danger:hover {
+      background: var(--danger);
+      border-color: var(--danger);
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+  }
 
   @media (max-width: 1200px) {
     .view-layout { grid-template-columns: 200px 1fr; gap: var(--space-8); }
@@ -216,5 +307,6 @@
     .view-layout { grid-template-columns: 1fr; }
     .folders-sidebar { display: none; }
     .view-header h1 { font-size: var(--font-4xl); }
+    .selection-bar { min-width: 90%; padding: var(--space-4); }
   }
 </style>

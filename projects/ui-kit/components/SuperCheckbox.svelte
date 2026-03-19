@@ -2,7 +2,7 @@
   import { createEventDispatcher } from "svelte";
   import SmartElement from "./SmartElement.svelte";
 
-  export let checked = false;
+  export let checked: boolean | "indeterminate" = false;
   export let disabled = false;
   export let label = "";
 
@@ -10,7 +10,7 @@
 
   function toggle() {
     if (disabled) return;
-    checked = !checked;
+    checked = checked === true ? false : true;
     dispatch("change", checked);
   }
 
@@ -30,15 +30,20 @@
 >
   <div
     class="checkbox"
-    class:is-checked={checked}
+    class:is-checked={checked === true}
+    class:is-indeterminate={checked === 'indeterminate'}
     tabindex={disabled ? -1 : 0}
     role="checkbox"
     aria-checked={checked}
     on:keydown={handleKeydown}
   >
-    {#if checked}
-      <svg viewBox="0 0 24 24" width="14" height="14">
+    {#if checked === true}
+      <svg viewBox="0 0 24 24" width="14" height="14" transition:scale>
         <path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
+      </svg>
+    {:else if checked === 'indeterminate'}
+      <svg viewBox="0 0 24 24" width="14" height="14" transition:scale>
+        <rect fill="currentColor" x="4" y="10" width="16" height="4" rx="1" />
       </svg>
     {/if}
   </div>
@@ -75,7 +80,7 @@
     color: white;
   }
 
-  .checkbox.is-checked {
+  .checkbox.is-checked, .checkbox.is-indeterminate {
     background-color: var(--primary);
     border-color: var(--primary);
   }

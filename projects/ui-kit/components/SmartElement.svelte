@@ -23,8 +23,18 @@
       dispatch("click", e);
     }
   }
+
+  function handleMouseMove(e: MouseEvent) {
+    if (disabled || loading) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    (e.currentTarget as HTMLElement).style.setProperty('--x', `${x}px`);
+    (e.currentTarget as HTMLElement).style.setProperty('--y', `${y}px`);
+  }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="smart-element {className}"
   class:is-active={active}
@@ -36,6 +46,7 @@
   {title}
   on:click={handleClick}
   on:keydown={handleKeydown}
+  on:mousemove={handleMouseMove}
   role="button"
   tabindex={disabled ? -1 : 0}
   aria-label={ariaLabel || title}
@@ -47,10 +58,11 @@
 <style>
   .smart-element {
     display: flex;
-    transition: all 0.2s;
+    transition: all var(--duration-standard) var(--easing-gentle);
     user-select: none;
     cursor: pointer;
     outline: none;
+    position: relative;
   }
 
   .smart-element.is-disabled {
@@ -65,5 +77,13 @@
 
   .smart-element:focus-visible {
     box-shadow: 0 0 0 2px var(--primary);
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .smart-element.is-selected {
+      border-color: var(--primary);
+      background: rgba(var(--primary-rgb), 0.1);
+      box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.15);
   }
 </style>

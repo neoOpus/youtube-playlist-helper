@@ -13,7 +13,8 @@ describe('aiService', () => {
       const keywords = ['music', 'test'];
 
       const score = aiService.calculateVideoRelevance(video, keywords);
-      expect(score).toBeGreaterThan(0);
+      // 'music' matches text and title (20) + 'test' matches text (10) = 30
+      expect(score).toBe(30);
     });
 
     it('should be case-insensitive', () => {
@@ -25,7 +26,8 @@ describe('aiService', () => {
         const keywords = ['rock'];
 
         const score = aiService.calculateVideoRelevance(video, keywords);
-        expect(score).toBeGreaterThan(0);
+        // 'rock' matches text and title = 20
+        expect(score).toBe(20);
     });
   });
 
@@ -38,7 +40,8 @@ describe('aiService', () => {
         const keywords = ['music', 'songs'];
 
         const score = aiService.calculatePlaylistRelevance(playlist, keywords);
-        expect(score).toBeGreaterThan(0);
+        // 'music' matches text (20) + 'songs' matches text and title (40) = 60
+        expect(score).toBe(60);
     });
   });
 });
