@@ -1,13 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, fly, slide, scale } from "svelte/transition";
+  import { fade, fly, scale } from "svelte/transition";
   import { flip } from "svelte/animate";
-  import { storageService, aiService } from "@yph/core";
-  import type { Playlist, Video } from "@yph/core";
-  import { viewMode } from "../stores/view-mode";
+  import { storageService } from "@yph/core";
+  import type { Playlist } from "@yph/core";
   import PlaylistsFilters from "../components/PlaylistsFilters.svelte";
   import PlaylistPreview from "../components/PlaylistPreview.svelte";
-  import { InfoIcon, SearchIcon, PlaylistPlayIcon, SaveIcon } from "@yph/ui-kit";
+  import { InfoIcon, SearchIcon, PlaylistPlayIcon } from "@yph/ui-kit";
 
   let playlists: Playlist[] = [];
   let filteredPlaylists: Playlist[] = [];
@@ -58,13 +57,13 @@
   }
 </script>
 
-<main in:fade>
-  <div class="saved-header">
+<main in:fade class="view-container">
+  <header class="saved-header">
       <div class="header-left">
           <h1>Saved Collection</h1>
           <p class="muted">Access your curated YouTube infrastructure.</p>
       </div>
-  </div>
+  </header>
 
   <div class="saved-layout">
       <aside class="folders-sidebar">
@@ -75,7 +74,7 @@
               <span class="count">{playlists.length}</span>
           </button>
 
-          {#each virtualFolders as folder}
+          {#each virtualFolders as folder (folder.title)}
               <button
                 class="folder-item"
                 class:active={selectedFolder === folder.title}
@@ -112,28 +111,105 @@
 </main>
 
 <style>
-  main { padding: 2rem; max-width: 1400px; margin: 0 auto; color: var(--text); }
-  .saved-header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
-  h1 { font-size: 2.5rem; font-weight: 900; letter-spacing: -1.5px; }
+  .view-container {
+    padding: var(--space-8);
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    color: var(--text);
+  }
 
-  .saved-layout { display: grid; grid-template-columns: 260px 1fr; gap: 2.5rem; align-items: start; }
+  .saved-header {
+    margin-bottom: var(--space-12);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--space-6);
+  }
 
-  .folders-sidebar { display: flex; flex-direction: column; gap: 6px; }
-  .section-label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1.5px; padding-left: 12px; margin-bottom: 10px; }
+  .saved-layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    gap: var(--space-12);
+    align-items: start;
+  }
 
-  .folder-item { border: none; background: transparent; padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text); transition: all 0.2s; text-align: left; }
-  .folder-item:hover { background: var(--hover); transform: translateX(4px); }
-  .folder-item.active { background: var(--hover); color: var(--primary); font-weight: 800; box-shadow: inset 4px 0 0 var(--primary); }
+  .folders-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    position: sticky;
+    top: var(--space-8);
+  }
+
+  .section-label {
+    font-size: var(--font-xs);
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    padding-left: var(--space-3);
+    margin-bottom: var(--space-3);
+    text-transform: uppercase;
+  }
+
+  .folder-item {
+    border: none;
+    background: transparent;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+  }
+
+  .folder-item:hover {
+    background: var(--hover);
+    transform: translateX(4px);
+  }
+
+  .folder-item.active {
+    background: var(--hover);
+    color: var(--primary);
+    font-weight: 700;
+    box-shadow: inset 4px 0 0 var(--primary);
+  }
 
   .folder-item span { flex-grow: 1; }
-  .count { font-size: 0.7rem; font-weight: 900; font-family: 'JetBrains Mono'; opacity: 0.5; }
+  .count {
+    font-size: var(--font-xs);
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0.6;
+  }
 
-  .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-6);
+  }
 
-  .empty-state { grid-column: 1 / -1; padding: 5rem; text-align: center; border: 1px dashed var(--border); border-radius: 24px; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-  .empty-state h3 { margin: 0; font-weight: 900; }
+  .empty-state {
+    grid-column: 1 / -1;
+    padding: var(--space-16);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+  }
 
-  .mt-6 { margin-top: 1.5rem; }
+  .empty-state h3 { margin: 0; font-weight: 800; }
 
-  @media (max-width: 900px) { .saved-layout { grid-template-columns: 1fr; } .folders-sidebar { display: none; } }
+  .mt-6 { margin-top: var(--space-6); }
+
+  @media (max-width: 1024px) {
+    .saved-layout { grid-template-columns: 200px 1fr; gap: var(--space-6); }
+  }
+
+  @media (max-width: 768px) {
+    .saved-layout { grid-template-columns: 1fr; }
+    .folders-sidebar { display: none; }
+    .view-container { padding: var(--space-4); }
+  }
 </style>

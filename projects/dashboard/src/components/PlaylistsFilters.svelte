@@ -156,24 +156,24 @@
 
 <style>
   aside {
-    padding: 1rem 0;
+    padding: var(--space-4) 0;
     position: sticky;
     top: 0;
     background-color: transparent;
     width: 100%;
     z-index: 5;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1.5rem;
+      gap: var(--space-6);
       width: 100%;
   }
 
@@ -181,7 +181,7 @@
       flex-grow: 1;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--space-2);
       max-width: 500px;
   }
 
@@ -192,9 +192,8 @@
       align-items: center;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0 12px;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+      border-radius: var(--radius-md);
+      padding: 0 var(--space-3);
   }
 
   .input-wrapper:focus-within {
@@ -205,18 +204,18 @@
   .input-wrapper input {
       border: none;
       background: transparent;
-      padding: 8px 12px;
+      padding: var(--space-2) var(--space-3);
       width: 100%;
       outline: none;
-      font-size: 0.95rem;
+      font-size: var(--font-sm);
       color: var(--text);
   }
 
   .power-toggle {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: var(--radius-md);
+      padding: var(--space-2);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -236,9 +235,9 @@
   }
 
   .power-row {
-      padding: 0.5rem 1rem;
+      padding: var(--space-2) var(--space-4);
       background: var(--hover);
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       border: 1px dashed var(--border);
   }
 
@@ -246,44 +245,44 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
+      gap: var(--space-4);
   }
 
   .checks {
       display: flex;
-      gap: 1.5rem;
+      gap: var(--space-6);
   }
 
   .check-opt {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
+      gap: var(--space-2);
+      font-size: var(--font-xs);
       font-weight: 600;
   }
 
   .power-hint {
-      font-size: 0.75rem;
+      font-size: var(--font-xs);
       color: var(--text-muted);
       font-style: italic;
   }
 
   .filters {
       display: flex;
-      gap: 1rem;
+      gap: var(--space-4);
   }
 
   label {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
+      gap: var(--space-2);
+      font-size: var(--font-sm);
       color: var(--text-muted);
   }
 
   select {
-      padding: 6px 12px;
-      border-radius: 6px;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background-color: var(--card-bg);
       color: var(--text);
@@ -292,6 +291,16 @@
 
   h2 {
       font-weight: 800;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.02em;
+  }
+
+  @media (max-width: 900px) {
+      .header-row {
+          flex-direction: column;
+          align-items: stretch;
+      }
+      .search-box {
+          max-width: none;
+      }
   }
 </style>
