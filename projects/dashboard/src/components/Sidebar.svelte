@@ -46,16 +46,16 @@
   }
 </script>
 
-<nav class="sidebar pro-glass" in:fly={{ x: -20, duration: 600 }}>
+<nav class="sidebar pro-glass" in:fly={{ x: -40, duration: 800, easing: (t) => t * (2 - t) }}>
   <div class="sidebar-header">
-    <div class="logo-area">
+    <div class="logo-area aura-glow">
         <div class="logo-icon"><PlaylistPlayIcon size="24" /></div>
-        <h1 class="logo-text">YPH <span class="badge primary">PRO</span></h1>
+        <h1 class="logo-text">YPH <span class="badge primary">SOTA</span></h1>
     </div>
   </div>
 
   <div class="nav-section">
-    <p class="section-label">NAVIGATE</p>
+    <p class="section-label">INFRASTRUCTURE</p>
     {#each navItems as item}
       <button
         class="nav-item luminous-hover"
@@ -64,12 +64,12 @@
         on:mousemove={handleMouseMove}
         aria-current={activeRoute === item.id ? 'page' : undefined}
       >
-        <div class="icon-wrapper" style="--icon-color: ${item.color}">
+        <div class="icon-wrapper">
             <svelte:component this={item.icon} size="20" />
         </div>
         <span class="label">{item.label}</span>
         {#if activeRoute === item.id}
-            <div class="active-indicator" in:fade></div>
+            <div class="active-indicator" in:fade={{ duration: 300 }}></div>
         {/if}
       </button>
     {/each}
@@ -78,24 +78,30 @@
   <div class="spacer"></div>
 
   <div class="sidebar-footer">
-    <div class="palette-hint">
+    <div class="palette-hint luminous-hover" on:mousemove={handleMouseMove}>
         <TerminalIcon size="12" />
-        <span>/ for Search</span>
+        <span>Press / to Index</span>
     </div>
 
     <div class="theme-controls">
-        <p class="section-label">THEME</p>
-        <select bind:value={$activeTheme} class="theme-select">
-          {#each themes as theme}
-            <option value={theme.id}>{theme.name}</option>
-          {/each}
-        </select>
+        <p class="section-label">SYSTEM THEME</p>
+        <div class="select-wrapper">
+            <select bind:value={$activeTheme} class="theme-select">
+              {#each themes as theme}
+                <option value={theme.id}>{theme.name}</option>
+              {/each}
+            </select>
+        </div>
     </div>
 
     <div class="quick-actions">
         <button class="view-toggle-btn" on:click={viewMode.toggle}>
-            {$viewMode === 'simple' ? 'Advanced' : 'Simple'} View
+            {$viewMode === 'simple' ? 'ADVANCED CORE' : 'SIMPLE CORE'}
         </button>
+    </div>
+
+    <div class="footer-meta">
+        <span class="small muted">v1.2.4-QUANTUM</span>
     </div>
   </div>
 </nav>
@@ -106,23 +112,23 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: var(--space-6) var(--space-4);
+    padding: var(--space-8) var(--space-4);
     border-right: 1px solid var(--border);
     position: relative;
     z-index: 20;
     color: var(--text);
     background: var(--card-bg-alpha);
-    border-radius: 0; /* Sidebar should span full height */
+    border-radius: 0;
   }
 
   .sidebar-header {
-    padding: var(--space-2) var(--space-3) var(--space-8);
+    padding: var(--space-2) var(--space-4) var(--space-12);
   }
 
   .logo-area {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--space-4);
   }
 
   .logo-icon {
@@ -130,17 +136,21 @@
       color: white;
       padding: var(--space-2);
       border-radius: var(--radius-md);
-      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
+      box-shadow: 0 8px 24px rgba(var(--primary-rgb), 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
   }
 
   .logo-text {
       font-size: var(--font-xl);
       font-weight: 900;
-      letter-spacing: -0.05em;
+      letter-spacing: -0.06em;
       margin: 0;
       display: flex;
       align-items: center;
       gap: var(--space-2);
+      color: var(--text);
   }
 
   .nav-section {
@@ -150,28 +160,29 @@
   }
 
   .section-label {
-      font-size: var(--font-xs);
-      font-weight: 800;
+      font-size: 0.65rem;
+      font-weight: 900;
       color: var(--text-muted);
-      letter-spacing: 0.1em;
-      padding-left: var(--space-3);
-      margin-bottom: var(--space-2);
+      letter-spacing: 0.15em;
+      padding-left: var(--space-4);
+      margin-bottom: var(--space-3);
       text-transform: uppercase;
+      opacity: 0.6;
   }
 
   .nav-item {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
     border: none;
     background: transparent;
-    color: var(--text);
+    color: var(--text-muted);
     font-size: var(--font-sm);
     font-weight: 700;
     cursor: pointer;
     border-radius: var(--radius-lg);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s var(--easing-standard);
     position: relative;
     text-align: left;
     overflow: hidden;
@@ -179,7 +190,8 @@
 
   .nav-item:hover {
     background: var(--hover);
-    transform: translateX(4px);
+    color: var(--text);
+    transform: translateX(6px);
   }
 
   .nav-item.active {
@@ -191,13 +203,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--icon-color, var(--text-muted));
-      transition: all 0.2s;
+      color: inherit;
+      transition: transform 0.3s;
   }
 
   .nav-item.active .icon-wrapper {
-      filter: drop-shadow(0 0 8px var(--primary));
-      transform: scale(1.1);
+      filter: drop-shadow(0 0 12px var(--primary));
+      transform: scale(1.15);
   }
 
   .active-indicator {
@@ -208,7 +220,7 @@
       width: 4px;
       background: var(--primary);
       border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      box-shadow: 0 0 10px var(--primary);
+      box-shadow: 0 0 15px var(--primary);
   }
 
   .spacer { flex-grow: 1; }
@@ -216,67 +228,88 @@
   .sidebar-footer {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
-    padding: var(--space-6) var(--space-3) 0;
+    gap: var(--space-8);
+    padding: var(--space-8) var(--space-3) 0;
     border-top: 1px solid var(--border);
   }
 
   .palette-hint {
       display: flex;
       align-items: center;
-      gap: var(--space-2);
-      background: var(--hover);
-      padding: var(--space-2) var(--space-3);
+      gap: var(--space-3);
+      background: var(--bg-secondary);
+      padding: var(--space-3) var(--space-4);
       border-radius: var(--radius-md);
       font-size: var(--font-xs);
-      font-weight: 700;
+      font-weight: 800;
       color: var(--text-muted);
       border: 1px solid var(--border);
+      cursor: help;
   }
 
   .theme-select {
     width: 100%;
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-md);
-    background: var(--hover);
+    background: var(--bg-secondary);
     border: 1px solid var(--border);
     color: var(--text);
     font-size: var(--font-xs);
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
     outline: none;
+    appearance: none;
+  }
+
+  .select-wrapper { position: relative; }
+  .select-wrapper::after {
+      content: '▼';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 8px;
+      pointer-events: none;
+      opacity: 0.5;
   }
 
   .view-toggle-btn {
       width: 100%;
-      padding: var(--space-2);
-      font-size: var(--font-xs);
-      font-weight: 800;
-      background: var(--hover);
+      padding: var(--space-3);
+      font-size: 0.65rem;
+      font-weight: 900;
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
       cursor: pointer;
       color: var(--text-muted);
       transition: all 0.2s;
+      letter-spacing: 0.05em;
   }
 
   .view-toggle-btn:hover {
       background: var(--primary);
       color: white;
       border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+  }
+
+  .footer-meta {
+      text-align: center;
+      opacity: 0.5;
   }
 
   @media (max-width: 768px) {
-    .label, .section-label, .logo-text, .palette-hint, .theme-controls, .quick-actions {
+    .label, .section-label, .logo-text, .palette-hint, .theme-controls, .quick-actions, .footer-meta {
       display: none;
     }
     .sidebar {
-      padding: var(--space-4) var(--space-2);
+      padding: var(--space-8) var(--space-2);
       width: var(--sidebar-collapsed-width);
     }
     .nav-item {
       justify-content: center;
-      padding: var(--space-3);
+      padding: var(--space-4);
     }
     .logo-area {
         justify-content: center;

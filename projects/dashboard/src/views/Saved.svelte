@@ -58,19 +58,19 @@
 </script>
 
 <main in:fade class="view-container">
-  <header class="saved-header">
-      <div class="header-left">
-          <h1>Saved Collection</h1>
-          <p class="muted">Access your curated YouTube infrastructure.</p>
+  <header class="view-header">
+      <div class="header-content aura-glow">
+          <h1>Saved Infrastructure</h1>
+          <p class="muted">Access your curated YouTube nodes and collections.</p>
       </div>
   </header>
 
-  <div class="saved-layout">
+  <div class="view-layout">
       <aside class="folders-sidebar">
-          <p class="section-label">VIRTUAL FOLDERS</p>
+          <p class="section-label">VIRTUAL NODES</p>
           <button class="folder-item" class:active={selectedFolder === 'all'} on:click={() => selectedFolder = 'all'}>
               <PlaylistPlayIcon size="16" />
-              <span>All Playlists</span>
+              <span>All Infrastructure</span>
               <span class="count">{playlists.length}</span>
           </button>
 
@@ -91,18 +91,18 @@
       <section class="content-area">
           <PlaylistsFilters {playlists} bind:filteredPlaylists />
 
-          <div class="results-grid mt-6">
+          <div class="results-grid mt-8">
               {#if displayedPlaylists.length > 0}
                   {#each displayedPlaylists as pl (pl.id)}
-                      <div animate:flip={{ duration: 400 }} in:scale={{ start: 0.9, duration: 300 }}>
+                      <div animate:flip={{ duration: 500 }} in:scale={{ start: 0.98, duration: 400 }}>
                           <PlaylistPreview playlist={pl} on:deleted={handleDeleted} />
                       </div>
                   {/each}
               {:else}
                   <div class="empty-state pro-glass" in:fade>
                       <InfoIcon size="48" color="var(--text-muted)" />
-                      <h3>No Matches Found</h3>
-                      <p>Adjust your filters or select a different folder.</p>
+                      <h3>No Matching Nodes</h3>
+                      <p>Adjust your search filters or select a different folder.</p>
                   </div>
               {/if}
           </div>
@@ -112,19 +112,21 @@
 
 <style>
   .view-container {
-    padding: var(--space-8);
-    max-width: var(--container-max-width);
+    padding: var(--space-12) var(--space-8);
+    max-width: 1600px;
     margin: 0 auto;
     color: var(--text);
   }
 
-  .saved-header {
-    margin-bottom: var(--space-12);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: var(--space-6);
+  .view-header {
+    margin-bottom: var(--space-16);
+    padding-bottom: var(--space-8);
   }
 
-  .saved-layout {
+  .header-content { display: flex; flex-direction: column; gap: var(--space-2); }
+  .header-content h1 { font-size: 3rem; }
+
+  .view-layout {
     display: grid;
     grid-template-columns: var(--sidebar-width) 1fr;
     gap: var(--space-12);
@@ -134,59 +136,61 @@
   .folders-sidebar {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-2);
     position: sticky;
-    top: var(--space-8);
+    top: var(--space-12);
   }
 
   .section-label {
-    font-size: var(--font-xs);
-    font-weight: 800;
+    font-size: 0.65rem;
+    font-weight: 900;
     color: var(--text-muted);
-    letter-spacing: 0.1em;
-    padding-left: var(--space-3);
-    margin-bottom: var(--space-3);
+    letter-spacing: 0.15em;
+    padding-left: var(--space-4);
+    margin-bottom: var(--space-4);
     text-transform: uppercase;
+    opacity: 0.6;
   }
 
   .folder-item {
     border: none;
     background: transparent;
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-4) var(--space-5);
     border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-4);
     cursor: pointer;
-    color: var(--text);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-muted);
+    transition: all 0.3s var(--easing-standard);
     text-align: left;
+    font-weight: 700;
   }
 
   .folder-item:hover {
     background: var(--hover);
-    transform: translateX(4px);
+    color: var(--text);
+    transform: translateX(6px);
   }
 
   .folder-item.active {
     background: var(--hover);
     color: var(--primary);
-    font-weight: 700;
     box-shadow: inset 4px 0 0 var(--primary);
   }
 
   .folder-item span { flex-grow: 1; }
   .count {
-    font-size: var(--font-xs);
-    font-weight: 700;
+    font-size: 0.65rem;
+    font-weight: 800;
     font-family: 'JetBrains Mono', monospace;
-    opacity: 0.6;
+    opacity: 0.5;
   }
 
   .results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: var(--space-8);
   }
 
   .empty-state {
@@ -196,20 +200,21 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-4);
+    gap: var(--space-6);
   }
 
-  .empty-state h3 { margin: 0; font-weight: 800; }
+  .empty-state h3 { font-size: var(--font-xl); font-weight: 800; }
 
-  .mt-6 { margin-top: var(--space-6); }
+  .mt-8 { margin-top: var(--space-8); }
 
-  @media (max-width: 1024px) {
-    .saved-layout { grid-template-columns: 200px 1fr; gap: var(--space-6); }
+  @media (max-width: 1200px) {
+    .view-layout { grid-template-columns: 200px 1fr; gap: var(--space-8); }
+    .view-container { padding: var(--space-8) var(--space-4); }
   }
 
-  @media (max-width: 768px) {
-    .saved-layout { grid-template-columns: 1fr; }
+  @media (max-width: 900px) {
+    .view-layout { grid-template-columns: 1fr; }
     .folders-sidebar { display: none; }
-    .view-container { padding: var(--space-4); }
+    .view-header h1 { font-size: var(--font-4xl); }
   }
 </style>
