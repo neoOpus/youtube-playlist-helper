@@ -55,7 +55,7 @@
   --card-bg: #282a36;
 }
 
-[data-theme="sota-red"] {
+[data-theme="pro-red"] {
   --primary: #ff5252;
   --primary-rgb: 255, 82, 82;
   --bg: #0f172a;

@@ -8,14 +8,17 @@
     TerminalIcon,
     PlusMultiple,
     CheckIcon,
-    InfoIcon
+    InfoIcon,
+    SuperButton,
+    CloudSyncIcon
   } from "@yph/ui-kit";
   import LibraryAuditor from "../components/LibraryAuditor.svelte";
   import NeuralMap from "../components/NeuralMap.svelte";
   import ThemeArchitect from "../components/ThemeArchitect.svelte";
   import ImportWizard from "../components/ImportWizard.svelte";
 
-  let showImport = false;
+  let showImport = $state(false);
+  let advancedMode = $state(false);
 
   async function exportData() {
       const playlists = await storageService.getPlaylists();
@@ -63,15 +66,15 @@
             <div class="action-card pro-glass">
                 <h3 class="card-title"><SaveIcon size="18" /> Data Governance</h3>
                 <div class="btns-stack mt-6">
-                    <button class="action-btn" on:click={() => showImport = true}>
+                    <SuperButton primary onclick={() => showImport = true}>
                         <PlusMultiple size="18" /> Import Logic Snapshot
-                    </button>
-                    <button class="action-btn" on:click={exportData}>
+                    </SuperButton>
+                    <SuperButton outline onclick={exportData}>
                         <SaveIcon size="18" /> Export Global Map (JSON)
-                    </button>
-                    <button class="action-btn danger-btn" on:click={clearAll}>
+                    </SuperButton>
+                    <SuperButton danger onclick={clearAll} class="mt-4">
                         <DeleteIcon size="18" /> Decommission System
-                    </button>
+                    </SuperButton>
                 </div>
             </div>
 
@@ -80,9 +83,20 @@
             <div class="system-info pro-glass mt-8">
                 <h3 class="card-title"><InfoIcon size="18" /> Infrastructure Core</h3>
                 <div class="v-list mt-6">
-                    <div class="v-row"><span>SOTA Version</span> <span class="v-val">2.2 Quantum</span></div>
+                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2 Pro</span></div>
                     <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
                     <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
+
+                    {#if advancedMode}
+                      <div in:fly={{ y: -10, duration: 300 }}>
+                        <div class="v-row"><span>Neural Density</span> <span class="v-val">High (Optimized)</span></div>
+                        <div class="v-row"><span>E2EE Status</span> <span class="val success">Active (Pro-Resistant)</span></div>
+                      </div>
+                    {/if}
+
+                    <button class="toggle-advanced" onclick={() => advancedMode = !advancedMode}>
+                        {advancedMode ? 'Hide Detailed Params' : 'Show Advanced Params'}
+                    </button>
                 </div>
             </div>
         </aside>
@@ -92,12 +106,6 @@
 <ImportWizard bind:display={showImport} on:complete={() => window.location.reload()} />
 
 <style>
-    .view-container {
-      padding: var(--space-12) var(--space-8);
-      max-width: 1600px;
-      margin: 0 auto;
-    }
-
     .view-header { margin-bottom: var(--space-12); }
     .header-content { display: flex; flex-direction: column; gap: var(--space-3); }
     .header-content h1 { font-size: 3rem; margin: 0; }
@@ -145,43 +153,6 @@
 
     .btns-stack { display: flex; flex-direction: column; gap: var(--space-3); }
 
-    .action-btn {
-        padding: var(--space-4);
-        border-radius: var(--radius-lg);
-        font-weight: 800;
-        cursor: pointer;
-        border: 1px solid var(--border);
-        transition: all 0.3s var(--easing-standard);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--space-3);
-        color: var(--text);
-        background: var(--bg-secondary);
-        font-size: var(--font-sm);
-    }
-
-    .action-btn:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-        transform: translateY(-4px) scale(1.02);
-        box-shadow: 0 12px 32px rgba(var(--primary-rgb), 0.3);
-    }
-
-    .danger-btn {
-        color: var(--danger);
-        border-color: rgba(239, 68, 68, 0.2);
-        margin-top: var(--space-4);
-    }
-
-    .danger-btn:hover {
-        background: var(--danger);
-        color: white;
-        border-color: var(--danger);
-        box-shadow: 0 12px 32px rgba(239, 68, 68, 0.3);
-    }
-
     .v-list { display: flex; flex-direction: column; gap: var(--space-3); }
     .v-row {
         display: flex;
@@ -195,12 +166,35 @@
     .v-row:last-child { border-bottom: none; }
     .v-val { color: var(--text); font-family: 'JetBrains Mono', monospace; font-weight: 800; }
 
+    .toggle-advanced {
+        margin-top: var(--space-2);
+        font-size: var(--font-xs);
+        font-weight: 800;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+        text-align: center;
+        background: none;
+        border: none;
+        padding: var(--space-2);
+    }
+
+    .toggle-advanced:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    .val.success { color: var(--success); }
+
+    :global(.mt-4) { margin-top: var(--space-4) !important; }
     .mt-6 { margin-top: var(--space-6); }
     .mt-8 { margin-top: var(--space-8); }
 
     @media (max-width: 1200px) {
         .manage-grid { grid-template-columns: 1fr; }
         .actions-sidebar { order: -1; }
-        .view-container { padding: var(--space-8) var(--space-4); }
     }
 </style>

@@ -35,7 +35,7 @@
     </div>
 
     <div class="arch-actions mt-8">
-        <button class="btn primary sota-glow w-full" on:click={() => notificationService.success("Parameters committed.")}>
+        <button class="btn primary pro-glow w-full" on:click={() => notificationService.success("Parameters committed.")}>
             <SaveIcon size="18" /> Commit Visual Parameters
         </button>
     </div>
@@ -60,7 +60,7 @@
 
     .btn { padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
-    .sota-glow { box-shadow: 0 0 15px rgba(255, 82, 82, 0.4); }
+    .pro-glow { box-shadow: 0 0 15px rgba(255, 82, 82, 0.4); }
 
     .p-6 { padding: 1.5rem; }
     .mt-8 { margin-top: 2rem; }

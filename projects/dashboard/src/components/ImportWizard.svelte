@@ -252,7 +252,7 @@
             {#if step < 3}
                 <button class="btn primary" on:click={nextStep} disabled={!rawInput && importType === 'urls'}>Continue</button>
             {:else}
-                <button class="btn primary sota-glow" on:click={runImport} disabled={processing}>
+                <button class="btn primary pro-glow" on:click={runImport} disabled={processing}>
                     {processing ? 'Processing...' : 'Synchronize'}
                 </button>
             {/if}
@@ -299,6 +299,6 @@
     .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
     .btn.secondary { background: var(--hover); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .sota-glow { box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3); }
+    .pro-glow { box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3); }
     @media (max-width: 500px) { .import-options { grid-template-columns: 1fr; } }
 </style>

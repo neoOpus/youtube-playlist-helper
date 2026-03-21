@@ -6,7 +6,7 @@
   import type { Playlist } from "@yph/core";
   import PlaylistsFilters from "../components/PlaylistsFilters.svelte";
   import PlaylistPreview from "../components/PlaylistPreview.svelte";
-  import { InfoIcon, SearchIcon, PlaylistPlayIcon, DeleteIcon, MergeIcon, SuperButton } from "@yph/ui-kit";
+  import { InfoIcon, SearchIcon, PlaylistPlayIcon, DeleteIcon, MergeIcon, SuperButton, Breadcrumbs } from "@yph/ui-kit";
 
   let playlists: Playlist[] = [];
   let filteredPlaylists: Playlist[] = [];
@@ -15,6 +15,15 @@
 
   let selectedIds = new Set<string>();
 
+  async function seedData() {
+    const mock = [
+      { id: "1", title: "Pro Computing for Beginners", loadedVideos: [{ id: "v1", title: "Introduction", aiTags: ["Pro", "Science"] }], groups: ["Tech"] },
+      { id: "2", title: "Pro Frontend Architecture", loadedVideos: [{ id: "v2", title: "Design Systems", aiTags: ["UI", "UX"] }], groups: ["Design"] }
+    ];
+    for (const pl of mock) await storageService.savePlaylist(pl as any);
+    playlists = await storageService.getPlaylists();
+    generateVirtualFolders();
+  }
   onMount(async () => {
     playlists = await storageService.getPlaylists();
     generateVirtualFolders();
@@ -98,6 +107,7 @@
 <main class="view-container">
   <header class="view-header">
       <div class="header-content aura-glow">
+          <Breadcrumbs items={[{label: 'INFRASTRUCTURE'}, {label: 'SAVED NODES', active: true}]} />
           <h1>Saved Infrastructure</h1>
           <p class="muted">Access your curated YouTube nodes and collections.</p>
       </div>
@@ -158,13 +168,13 @@
           <span class="bold">Nodes Selected</span>
       </div>
       <div class="selection-actions">
-          <SuperButton on:click={clearSelection}>Cancel</SuperButton>
-          <button class="mass-action-btn" title="Merge Selection">
+          <SuperButton outline on:click={clearSelection}>Cancel</SuperButton>
+          <SuperButton primary title="Merge Selection">
               <MergeIcon size="18" />
-          </button>
-          <button class="mass-action-btn danger" on:click={deleteSelected} title="Decommission All">
+          </SuperButton>
+          <SuperButton danger on:click={deleteSelected} title="Decommission All">
               <DeleteIcon size="18" />
-          </button>
+          </SuperButton>
       </div>
   </div>
 </main>
@@ -175,7 +185,7 @@
     padding-bottom: var(--space-6);
   }
 
-  .header-content { display: flex; flex-direction: column; gap: var(--space-2); }
+  .header-content { display: flex; flex-direction: column; gap: var(--space-4); }
 
   .view-layout {
     display: grid;
@@ -269,33 +279,6 @@
       display: flex;
       align-items: center;
       gap: var(--space-4);
-  }
-
-  .mass-action-btn {
-      width: 46px;
-      height: 46px;
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-strong);
-      color: var(--text);
-      transition: all 0.3s;
-  }
-
-  .mass-action-btn:hover {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-      transform: translateY(-4px) scale(1.1);
-      box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.3);
-  }
-
-  .mass-action-btn.danger:hover {
-      background: var(--danger);
-      border-color: var(--danger);
-      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
   }
 
   @media (max-width: 1200px) {

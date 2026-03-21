@@ -96,7 +96,7 @@
                     <InfoIcon size="48" color="var(--primary)" />
                     <h3>Library is Healthy</h3>
                     <p>Click below to start a deep scan for unavailable videos.</p>
-                    <button class="btn primary sota-glow mt-4" on:click={scanLibrary}>Run Deep Scan</button>
+                    <button class="btn primary pro-glow mt-4" on:click={scanLibrary}>Run Deep Scan</button>
                 </div>
             {:else}
                 <div class="repair-pane" in:fade>
@@ -125,7 +125,7 @@
 
                     <div class="actions mt-8">
                         <button class="btn secondary" on:click={next}>Skip</button>
-                        <button class="btn primary-sota" on:click={replaceVideo}>Replace Video</button>
+                        <button class="btn primary-pro" on:click={replaceVideo}>Replace Video</button>
                     </div>
                 </div>
             {/if}
@@ -234,11 +234,11 @@
 
     .actions { display: flex; gap: 15px; }
     .btn { padding: 14px 24px; border-radius: 14px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; flex-grow: 1; }
-    .btn.primary-sota { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 15px rgba(255, 82, 82, 0.3); }
+    .btn.primary-pro { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 15px rgba(255, 82, 82, 0.3); }
     .btn.secondary { background: var(--hover); color: var(--text); }
 
     .mt-4 { margin-top: 1rem; }
     .mt-6 { margin-top: 1.5rem; }
     .mt-8 { margin-top: 2rem; }
-    .sota-glow { box-shadow: 0 0 20px rgba(255, 82, 82, 0.4); }
+    .pro-glow { box-shadow: 0 0 20px rgba(255, 82, 82, 0.4); }
 </style>

@@ -24,7 +24,7 @@
         </button>
 
         <div class="meta-info mt-12">
-            <p class="small muted">Node Version: 1.2.4-QUANTUM</p>
+            <p class="small muted">Node Version: 1.2.4-Professional</p>
             <p class="small muted">Developed by neoOpus Core Architecture</p>
         </div>
     </div>

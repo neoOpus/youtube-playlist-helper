@@ -1,35 +1,35 @@
 <script lang="ts">
   import type { Playlist } from "@yph/core";
-  import { storageService } from "@yph/core";
-  import PlaylistPreview from "./PlaylistPreview.svelte";
   import PlaylistsFilters from "./PlaylistsFilters.svelte";
+  import PlaylistPreview from "./PlaylistPreview.svelte";
 
-  export let playlists: Playlist[];
-  let filteredPlaylists = playlists;
+  let {
+    playlists = $bindable([]),
+    filteredPlaylists = $bindable([])
+  }: {
+    playlists?: Playlist[];
+    filteredPlaylists: Playlist[];
+  } = $props();
 
-  let disableThumbnails = true;
-  storageService.getSettings().then((settings) => {
-    disableThumbnails = settings.disableThumbnails;
-  });
+  function handleDeleted(pl: Playlist) {
+    playlists = playlists.filter(p => p.id !== pl.id);
+  }
 </script>
 
 {#if playlists.length > 0}
   <PlaylistsFilters bind:playlists bind:filteredPlaylists />
 {/if}
 
-<div class="selector">
-  {#each filteredPlaylists as playlist (playlist.id)}
-    <PlaylistPreview {playlist} />
-  {:else}
-    <p style="text-align: center; padding: 1rem 0;">No playlist found</p>
+<div class="playlists-list mt-6">
+  {#each filteredPlaylists as pl (pl.id)}
+    <PlaylistPreview playlist={pl} ondeleted={handleDeleted} />
   {/each}
 </div>
 
 <style>
-  .selector {
-    display: flex;
-    justify-content: flex-start;
-    flex-wrap: wrap;
+  .playlists-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
   }
 </style>

@@ -8,7 +8,7 @@ export type ThemeName =
   | "github-light"
   | "github-dark"
   | "dracula"
-  | "sota-red";
+  | "pro-red";
 
 export interface ThemeDef {
     id: ThemeName;
@@ -22,7 +22,7 @@ export const themes: ThemeDef[] = [
     { id: "github-light", name: "GitHub Light", primary: "#ffffff", accent: "#0969da" },
     { id: "github-dark", name: "GitHub Dark", primary: "#0d1117", accent: "#2f81f7" },
     { id: "dracula", name: "Dracula Night", primary: "#282a36", accent: "#bd93f9" },
-    { id: "sota-red", name: "SOTA Red Edition", primary: "#121212", accent: "#ff5252" }
+    { id: "pro-red", name: "Pro Red Edition", primary: "#121212", accent: "#ff5252" }
 ];
 
 function createThemeChoice() {

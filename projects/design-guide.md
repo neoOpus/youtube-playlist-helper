@@ -1,87 +1,105 @@
-# YouTube Playlist Helper: Quantum SOTA Design Guide
+# YouTube Playlist Helper: Professional Design Guide
 
-This guide defines the "State of the Art" (SOTA) front-end architecture and implementation for the YouTube Playlist Helper: Quantum Edition. It ensures the extension feels like a polished, modern, and high-performance web application.
+This guide defines the "State of the Art" (Pro) front-end architecture and implementation for the YouTube Playlist Helper: Pro Edition. It serves as a comprehensive blueprint for developers to achieve a polished, modern, and delightful user experience.
 
 ## 1. Core Design Principles
-- **Clarity & Consistency:** Unified color palette and component standards to minimize cognitive load.
-- **Deep Glassmorphism:** Layered translucency with 32px-64px backdrop blurs and subtle white-alpha borders.
-- **Luminous Interaction:** Dynamic radial gradients ("Luminous Hover") that track user focus and cursor movement.
-- **Accessibility (WCAG 2.2 AA):** Minimum 4.5:1 contrast, visible focus outlines, ARIA labels for all icon actions, and full keyboard operability.
-- **Motion Performance:** 60fps animations limited to GPU-accelerated properties (`transform`, `opacity`).
+*   **Clarity:** Use whitespace and typography to separate concerns. Minimalist aesthetics to reduce cognitive load.
+*   **Consistency:** All components follow the "Pro" design system (4px grid, shared color tokens).
+*   **Feedback:** Immediate visual or haptic responses to user actions (Ripples, Toasts, Hover Glows).
+*   **Visual Hierarchy:** High-contrast headings and "Aura Glow" backgrounds for primary content.
+*   **Accessibility (WCAG 2.2 AA):** High contrast (4.5:1+), keyboard focus visibility, and semantic HTML.
+*   **Simplicity:** Progressive disclosure of complex features (Advanced Mode).
+*   **Responsiveness:** Fluid layouts that adapt from mobile popups to 4K dashboards.
+*   **Delight:** Smooth 60fps transitions and cursor-tracking radial gradients.
+*   **Information Architecture:** Flattened navigation with clear breadcrumbs.
 
-## 2. UI Component Library
+## 2. UI Component Library (Specifications)
+
+### Layout & Grid
+*   **Baseline Grid:** 4px.
+*   **Max-Width:** 1200px (Desktop), 768px (Tablet), 480px (Mobile/Popup).
+*   **Layout:** 12-column grid for dashboard; single-column for extension popup.
 
 ### Design Tokens (CSS Variables)
-| Token | Dark (Quantum) | GitHub Light | Dracula |
-| :--- | :--- | :--- | :--- |
-| `--primary` | `#ff5252` | `#0969da` | `#bd93f9` |
-| `--bg` | `#030712` | `#ffffff` | `#282a36` |
-| `--card-bg-alpha` | `rgba(3, 7, 18, 0.75)` | `rgba(255, 255, 255, 0.9)` | `rgba(40, 42, 54, 0.85)` |
-| `--border` | `rgba(255, 255, 255, 0.05)` | `rgba(31, 35, 40, 0.1)` | `rgba(68, 71, 90, 0.8)` |
-| `--text` | `#f9fafb` | `#1f2328` | `#f8f8f2` |
-
-### Typography Scale (4px Baseline)
-| Size | Token | Value | Weight | Use Case |
+| Token | Dark (Pro) | GitHub Light | Dracula | Pro Red |
 | :--- | :--- | :--- | :--- | :--- |
-| XS | `--font-xs` | 0.7rem | 800 | Metadata, Badges, Labels |
-| SM | `--font-sm` | 0.85rem | 700 | Body text, Inputs, Nav items |
-| BASE | `--font-base` | 0.95rem | 500 | Main paragraphs |
-| LG | `--font-lg` | 1.1rem | 800 | Card titles |
-| XL | `--font-xl` | 1.3rem | 900 | Section headers, Logo |
-| 4XL | `--font-4xl` | 2.5rem | 900 | Page titles |
+| `--primary` | `#ff5252` | `#0969da` | `#bd93f9` | `#ff0000` |
+| `--bg` | `#030712` | `#ffffff` | `#282a36` | `#0a0000` |
+| `--card-bg` | `rgba(3, 7, 18, 0.75)` | `rgba(255, 255, 255, 0.9)` | `rgba(40, 42, 54, 0.85)` | `rgba(15, 0, 0, 0.9)` |
+| `--border` | `rgba(255, 255, 255, 0.05)` | `rgba(31, 35, 40, 0.1)` | `rgba(68, 71, 90, 0.8)` | `rgba(255, 0, 0, 0.1)` |
+| `--text` | `#f9fafb` | `#1f2328` | `#f8f8f2` | `#ffffff` |
+
+### Components
+*   **Buttons:**
+    *   *Primary:* Solid `--primary`, white text, 8px radius, 0 4px 15px shadow.
+    *   *Secondary:* Glass background, 1px border, 0.8 opacity text.
+    *   *Danger:* `#ff4444` solid.
+*   **Input Fields:** 12px padding, 8px radius, 1px border. Focus: 2px border `--primary`.
+*   **Modals:** Backdrop blur (32px), centered, 16px radius, Y-offset +20px entry animation.
+*   **Tooltips:** Dark background, 12px font, 4px radius, 200ms fade-in.
+*   **Toasts:** Bottom-right, progress bar (10s), "Undo" action link.
 
 ## 3. Interaction Patterns
-- **Luminous Hover:** A radial gradient follows the cursor within `selectable` and `super-button` elements.
-- **Aura Glow:** Critical headers and active items feature a pulsing 8% opacity radial backdrop.
-- **Selection Bar:** Appears from the bottom (Y+120px) with a spring animation (`cubic-bezier(0.34, 1.56, 0.64, 1)`).
-- **Keyboard Navigation:**
-  - `/`: Focus Search
-  - `Enter/Space`: Activate Nodes/Checkboxes
-  - `Tab`: Logical flow (Sidebar -> Filters -> Grid)
+*   **Luminous Hover:** A radial gradient `radial-gradient(600px circle at var(--x) var(--y), rgba(255,255,255,0.06), transparent 40%)` follows the mouse.
+*   **Click/Tap:** 100ms scale down (0.96) for buttons.
+*   **Loading:** 2Hz pulsing "Aura Glow" on skeleton states.
+*   **Undo/Redo:** `Ctrl+Z` / `Ctrl+Y` support; Toasts provide a 10s window to reverse deletions.
+*   **Keyboard:** `Tab` for focus; `Space/Enter` for activation; `/` to focus global search.
 
-## 4. Animation Specifications (JSON)
-```json
-{
-  "transitions": {
-    "standard": { "duration": 300, "easing": "cubic-bezier(0.4, 0, 0.2, 1)" },
-    "gentle": { "duration": 300, "easing": "cubic-bezier(0.3, 0, 0.2, 1)" },
-    "spring": { "duration": 500, "easing": "cubic-bezier(0.34, 1.56, 0.64, 1)" }
-  },
-  "micro_interactions": {
-    "button_press": { "scale": 0.96, "duration": 100 },
-    "card_lift": { "translateY": -8, "duration": 300 },
-    "aura_pulse": { "scale_range": [1.0, 1.1], "opacity_range": [0.5, 1.0], "period": "4s" }
-  }
-}
-```
+## 4. Responsive & Adaptive Layout
+*   **Breakpoint ≤ 480px (Extension Popup):**
+    *   Hide sidebar; show bottom navigation bar.
+    *   Compact list items (no channel thumbnails).
+*   **Breakpoint 481px - 768px (Tablet):**
+    *   Collapsible sidebar (icons only).
+    *   2-column grid for playlists.
+*   **Breakpoint ≥ 769px (Desktop):**
+    *   Full sidebar with labels.
+    *   3+ column grid.
 
-## 5. Responsive Breakpoints
-- **Mobile (≤ 480px):** Sidebar collapses to 60px icons. 1-column grid.
-- **Tablet (481px - 1024px):** 2-column grid. Sticky sidebar.
-- **Desktop (≥ 1025px):** 12-column layout. Max-width 1400px.
+## 5. Motion & Performance
+*   **Frame Budget:** < 16.6ms (60fps).
+*   **Hardware Acceleration:** Use `will-change: transform, opacity`.
+*   **Transitions:** `cubic-bezier(0.4, 0, 0.2, 1)` for standard; `cubic-bezier(0.34, 1.56, 0.64, 1)` for spring effects.
 
-## 6. Implementation Snippets
+## 6. Information Architecture (IA)
+1.  **Extension Icon:** Quick status & "Open Dashboard" button.
+2.  **Popup (Primary Actions):** Current tab video → Add to Playlist; Search.
+3.  **Dashboard (Main Hub):**
+    *   **Sidebar:** Root navigation (New, Saved, Manage, Sync).
+    *   **Main View:** Data display (Grid/Table).
+    *   **Bottom Bar:** Selection & Mass Actions.
+4.  **Options Page:** Theme selection, storage stats, E2EE toggle.
 
-### Svelte (Primary)
+## 7. User-Testing Protocol
+*   **Format:** 5-user remote "Think Aloud" test.
+*   **Metrics:** Task Success Rate (%), Time-on-Task (s), SUS Score (0-100).
+*   **Iteration:** Any task with < 80% success rate requires immediate UI redesign.
+
+## 8. Implementation Snippets (Svelte/TypeScript)
+
+### Breadcrumbs Component
 ```svelte
-<SuperButton primary on:click={save}>Save Deployment</SuperButton>
+<nav class="breadcrumbs">
+  {#each items as item, i}
+    <span>{item}</span>
+    {#if i < items.length - 1} <ChevronRight /> {/if}
+  {/each}
+</nav>
 ```
 
-### React / Vanilla JS (Styles)
-```css
-.super-button.is-primary {
-  background: var(--primary);
-  box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
-  transition: transform 0.2s;
+### SuperButton Styles (SCSS)
+```scss
+.super-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  &.primary { background: var(--primary); color: white; }
+  &:hover { filter: brightness(1.2); transform: translateY(-2px); }
+  &:active { transform: scale(0.96); }
 }
-.super-button.is-primary:active { transform: scale(0.96); }
 ```
-
-## 7. Accessibility Audit (Simulated)
-- **Score:** 98/100 (Lighthouse Standard)
-- **Contrast:** Pass (Primary Red on Dark: 4.8:1)
-- **Aria:** 100% coverage on interactive icons.
-- **Keyboard:** All views navigable via Tab + Enter.
 
 ---
-*Created by Jules, Software Engineer.*
+*Authored by Jules, Software Engineer.*

@@ -127,7 +127,7 @@
     {/if}
 
     <div class="actions mt-8">
-      <button class="btn primary-sota sota-glow w-full" on:click={save}>
+      <button class="btn primary-pro pro-glow w-full" on:click={save}>
         <SaveIcon size="18" /> Commit Changes to Infrastructure
       </button>
     </div>
@@ -155,7 +155,7 @@
 
   .btn { padding: 12px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text); }
   .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
-  .btn.primary-sota { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn.primary-pro { background: var(--primary); color: white; border-color: var(--primary); }
   .btn.secondary { background: var(--hover); }
   .btn.mini { padding: 6px 12px; font-size: 0.7rem; }
 

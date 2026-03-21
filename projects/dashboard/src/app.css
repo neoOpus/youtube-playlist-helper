@@ -1,5 +1,5 @@
 :root {
-  /* --- Quantum Design System (SOTA Revamp) --- */
+  /* --- Pro Design System (Pro Revamp) --- */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -25,7 +25,7 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Default (Quantum Dark / SOTA Red) */
+  /* Default (Pro Dark / Pro Red) */
   --primary: #ff5252;
   --primary-hover: #ff7575;
   --primary-active: #e64a4a;

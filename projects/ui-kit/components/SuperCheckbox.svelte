@@ -1,21 +1,29 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  import SmartElement from "./SmartElement.svelte";
+  import { scale } from "svelte/transition";
 
-  export let checked: boolean | "indeterminate" = false;
-  export let disabled = false;
-  export let label = "";
-
-  const dispatch = createEventDispatcher();
+  let {
+    checked = $bindable(false),
+    disabled = false,
+    label = "",
+    onchange = (val: boolean | "mixed") => {}
+  }: {
+    checked: boolean | "mixed";
+    disabled?: boolean;
+    label?: string;
+    onchange?: (val: boolean | "mixed") => void;
+  } = $props();
 
   function toggle() {
     if (disabled) return;
-    checked = checked === true ? false : true;
-    dispatch("change", checked);
+    if (checked === "mixed") {
+        checked = true;
+    } else {
+        checked = !checked;
+    }
+    if (onchange) onchange(checked);
   }
 
   function handleKeydown(e: KeyboardEvent) {
-    if (disabled) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       toggle();
@@ -23,76 +31,77 @@
   }
 </script>
 
-<SmartElement
-  className="super-checkbox-container"
-  {disabled}
-  on:click={toggle}
->
-  <div
-    class="checkbox"
-    class:is-checked={checked === true}
-    class:is-indeterminate={checked === 'indeterminate'}
-    tabindex={disabled ? -1 : 0}
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+    class="super-checkbox-container"
+    class:disabled
+    onclick={(e) => { e.stopPropagation(); toggle(); }}
     role="checkbox"
     aria-checked={checked}
-    on:keydown={handleKeydown}
-  >
+    onkeydown={handleKeydown}
+    tabindex={disabled ? -1 : 0}
+>
+  <div class="checkbox-box" class:checked={checked === true || checked === 'mixed'}>
     {#if checked === true}
-      <svg viewBox="0 0 24 24" width="14" height="14" transition:scale>
-        <path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
-      </svg>
-    {:else if checked === 'indeterminate'}
-      <svg viewBox="0 0 24 24" width="14" height="14" transition:scale>
-        <rect fill="currentColor" x="4" y="10" width="16" height="4" rx="1" />
-      </svg>
+      <div transition:scale={{ duration: 200 }}>
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
+          </svg>
+      </div>
+    {:else if checked === 'mixed'}
+      <div transition:scale={{ duration: 200 }}>
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <rect fill="currentColor" x="4" y="10" width="16" height="4" rx="1" />
+          </svg>
+      </div>
     {/if}
   </div>
   {#if label}
-    <span class="label">{label}</span>
+    <span class="checkbox-label">{label}</span>
   {/if}
-</SmartElement>
+</div>
 
 <style>
-  :global(.super-checkbox-container) {
-    display: flex;
+  .super-checkbox-container {
+    display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    background: transparent !important;
-    padding: var(--space-1);
-    border-radius: var(--radius-sm);
+    gap: 8px;
     cursor: pointer;
+    user-select: none;
+    outline: none;
   }
 
-  :global(.super-checkbox-container:hover .checkbox:not(:disabled)) {
-    border-color: var(--primary);
-  }
-
-  .checkbox {
+  .checkbox-box {
     width: 20px;
     height: 20px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-strong);
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--bg-secondary);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    flex-shrink: 0;
     color: white;
   }
 
-  .checkbox.is-checked, .checkbox.is-indeterminate {
-    background-color: var(--primary);
+  .checkbox-box.checked {
+    background: var(--primary);
     border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
   }
 
-  .checkbox:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
+  .super-checkbox-container:hover .checkbox-box {
+      border-color: var(--primary);
   }
 
-  .label {
+  .checkbox-label {
     font-size: var(--font-sm);
-    user-select: none;
+    font-weight: 700;
     color: var(--text);
+  }
+
+  .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>

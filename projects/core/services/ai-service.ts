@@ -2,7 +2,7 @@ import type { Video, Playlist } from "../types/model.js";
 
 /**
  * AI Service for intelligent playlist analysis and optimization.
- * Part of the "Quantum Edition" upgrade.
+ * Part of the "Pro Edition" upgrade.
  */
 export const aiService = {
   /**
@@ -19,7 +19,7 @@ export const aiService = {
     if (video.title.toLowerCase().includes("rick")) tags.push("Meme", "Classic");
 
     return {
-      aiSummary: `Automated neural summary: This node ("${video.title}") has been indexed with quantum precision. It appears to focus on ${tags.join(", ")} content.`,
+      aiSummary: `Automated neural summary: This node ("${video.title}") has been indexed with pro precision. It appears to focus on ${tags.join(", ")} content.`,
       aiTags: tags,
     };
   },

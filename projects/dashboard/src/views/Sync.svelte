@@ -65,7 +65,7 @@
             <div class="form-group mt-8">
                 <label class="toggle-row">
                     <span class="label-text">Enable Global Synchronization</span>
-                    <input type="checkbox" bind:checked={syncEnabled} class="quantum-check" />
+                    <input type="checkbox" bind:checked={syncEnabled} class="pro-check" />
                 </label>
             </div>
 
@@ -80,7 +80,7 @@
             </div>
 
             <div class="btns mt-10">
-                <button class="action-btn primary-btn sota-glow flex-1" on:click={save}><CheckIcon size="18" /> Lock Config</button>
+                <button class="action-btn primary-btn pro-glow flex-1" on:click={save}><CheckIcon size="18" /> Lock Config</button>
                 <button class="action-btn secondary-btn" on:click={test} disabled={testing}>{testing ? 'Testing...' : 'Probe Connection'}</button>
             </div>
         </section>
@@ -171,7 +171,7 @@
     .toggle-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .label-text { font-weight: 700; color: var(--text); }
 
-    .quantum-check {
+    .pro-check {
         width: 44px;
         height: 22px;
         accent-color: var(--primary);

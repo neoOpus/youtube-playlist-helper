@@ -1,6 +1,6 @@
 <script lang="ts">
   import { push } from "svelte-spa-router";
-  import { fade, fly } from "svelte/transition";
+  import { fade, fly, slide } from "svelte/transition";
   import {
     PlaylistPlusIcon,
     PlaylistPlayIcon,
@@ -32,6 +32,8 @@
     { id: "/support", label: "Operational Support", icon: SupportIcon as any, color: "var(--primary)" },
   ];
 
+  let systemSettingsExpanded = true;
+
   function navigate(id: string) {
     push(id);
   }
@@ -50,7 +52,7 @@
   <div class="sidebar-header">
     <div class="logo-area aura-glow">
         <div class="logo-icon"><PlaylistPlayIcon size="24" /></div>
-        <h1 class="logo-text">YPH <span class="badge primary">SOTA</span></h1>
+        <h1 class="logo-text">YPH <span class="badge primary">Pro</span></h1>
     </div>
   </div>
 
@@ -78,30 +80,40 @@
   <div class="spacer"></div>
 
   <div class="sidebar-footer">
-    <div class="palette-hint luminous-hover" on:mousemove={handleMouseMove}>
+    <div class="palette-hint luminous-hover" role="status" on:mousemove={handleMouseMove}>
         <TerminalIcon size="12" />
         <span>Press / to Index</span>
     </div>
 
-    <div class="theme-controls">
-        <p class="section-label">SYSTEM THEME</p>
-        <div class="select-wrapper">
-            <select bind:value={$activeTheme} class="theme-select">
-              {#each themes as theme}
-                <option value={theme.id}>{theme.name}</option>
-              {/each}
-            </select>
-        </div>
-    </div>
-
-    <div class="quick-actions">
-        <button class="view-toggle-btn" on:click={viewMode.toggle}>
-            {$viewMode === 'simple' ? 'ADVANCED CORE' : 'SIMPLE CORE'}
+    <div class="collapsible-section">
+        <button class="section-toggle" on:click={() => systemSettingsExpanded = !systemSettingsExpanded}>
+            <span class="section-label">SYSTEM ARCHITECT</span>
+            <span class="chevron" class:expanded={systemSettingsExpanded}>▼</span>
         </button>
+
+        {#if systemSettingsExpanded}
+          <div transition:slide>
+            <div class="theme-controls">
+                <div class="select-wrapper">
+                    <select bind:value={$activeTheme} class="theme-select">
+                      {#each themes as theme}
+                        <option value={theme.id}>{theme.name}</option>
+                      {/each}
+                    </select>
+                </div>
+            </div>
+
+            <div class="quick-actions mt-4">
+                <button class="view-toggle-btn" on:click={viewMode.toggle}>
+                    {$viewMode === 'simple' ? 'ADVANCED CORE' : 'SIMPLE CORE'}
+                </button>
+            </div>
+          </div>
+        {/if}
     </div>
 
     <div class="footer-meta">
-        <span class="small muted">v1.2.4-QUANTUM</span>
+        <span class="small muted">v1.2.4-Professional</span>
     </div>
   </div>
 </nav>
@@ -168,7 +180,27 @@
       margin-bottom: var(--space-3);
       text-transform: uppercase;
       opacity: 0.6;
+      flex-grow: 1;
+      text-align: left;
   }
+
+  .section-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: var(--space-2) 0;
+  }
+
+  .chevron {
+      font-size: 8px;
+      color: var(--text-muted);
+      transition: transform 0.3s;
+  }
+
+  .chevron.expanded { transform: rotate(180deg); }
 
   .nav-item {
     display: flex;
@@ -301,8 +333,10 @@
       opacity: 0.5;
   }
 
+  .mt-4 { margin-top: var(--space-4); }
+
   @media (max-width: 768px) {
-    .label, .section-label, .logo-text, .palette-hint, .theme-controls, .quick-actions, .footer-meta {
+    .label, .logo-text, .palette-hint, .collapsible-section, .footer-meta {
       display: none;
     }
     .sidebar {
@@ -316,5 +350,6 @@
     .logo-area {
         justify-content: center;
     }
+    .section-label { display: none; }
   }
 </style>

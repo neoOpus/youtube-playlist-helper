@@ -1,24 +1,26 @@
 <script lang="ts">
-  import { debounce, playlistsSorter, aiService } from "@yph/core";
+  import { fade, fly } from "svelte/transition";
+  import { debounce, playlistsSorter } from "@yph/core";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
   import { SearchIcon, Filter } from "@yph/ui-kit";
   import { playlistsSearch } from "../stores/playlists-filters";
 
-  export let playlists: Playlist[] = [];
-  export let filteredPlaylists: Playlist[] = [];
+  let {
+    playlists = [],
+    filteredPlaylists = $bindable([])
+  }: {
+    playlists?: Playlist[];
+    filteredPlaylists: Playlist[];
+  } = $props();
 
-  let search = "";
-  let selectedGroup = "All";
-  let sortBy: PlaylistsSorting = "date-created-desc";
-  let useRegex = false;
-  let searchInVideos = true;
-  let showPowerFeatures = false;
+  let search = $state("");
+  let selectedGroup = $state("All");
+  let sortBy = $state<PlaylistsSorting>("date-created-desc");
+  let useRegex = $state(false);
+  let searchInVideos = $state(true);
+  let showPowerFeatures = $state(false);
 
-  $: groups = ["All", ...new Set(playlists.flatMap((p) => p.groups || []))];
-
-  function sortingChanged() {
-    filtersUpdated();
-  }
+  let groups = $derived(["All", ...new Set(playlists.flatMap((p) => p.groups || []))]);
 
   const debouncedFiltersUpdated = debounce(() => {
     filtersUpdated();
@@ -34,12 +36,10 @@
 
     let result = [...playlists];
 
-    // 1. Group Filter
     if (selectedGroup !== "All") {
       result = result.filter((p) => p.groups?.includes(selectedGroup));
     }
 
-    // 2. Search Filter
     if (search.trim()) {
       if (useRegex) {
         try {
@@ -49,15 +49,9 @@
                    p.groups?.some((g) => regex.test(g)) ||
                    (searchInVideos && p.loadedVideos?.some(v => regex.test(v.title) || (v.aiTags || []).some(t => regex.test(t))))
           );
-        } catch (e) {
-          // Invalid regex
-        }
+        } catch (e) {}
       } else {
-        const keywords = search
-          .split(/\s+/)
-          .filter((k) => k.length)
-          .map((k) => k.toLowerCase());
-
+        const keywords = search.toLowerCase().split(/\s+/).filter(k => k);
         result = result.filter((p) => {
           const lowerTitle = (p.title || "").toLowerCase();
           const matchesTitle = keywords.every((k) => lowerTitle.includes(k));
@@ -72,17 +66,26 @@
       }
     }
 
-    // 3. Sorting
     const keywords = search.split(/\s+/).filter((k) => k.length > 2);
     result = playlistsSorter.sort(result, sortBy, keywords);
-
     filteredPlaylists = result;
   }
 
-  $: if (playlists) filtersUpdated();
+  $effect(() => {
+      filtersUpdated();
+  });
+
+  function handleMouseMove(e: MouseEvent) {
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      target.style.setProperty("--x", `${x}px`);
+      target.style.setProperty("--y", `${y}px`);
+  }
 </script>
 
-<aside class="pro-glass filters-bar">
+<aside class="pro-glass filters-bar luminous-hover" onmousemove={handleMouseMove}>
   <div class="header-row">
       <div class="stats aura-glow">
         <h2>
@@ -97,18 +100,18 @@
               <input
                 type="text"
                 bind:value={search}
-                on:input={searchChanged}
+                oninput={searchChanged}
                 placeholder={useRegex ? "Regex Search..." : "Deep Search nodes... (Press /)"}
               />
           </div>
-          <button class="power-toggle" class:active={showPowerFeatures} on:click={() => showPowerFeatures = !showPowerFeatures} title="Advanced Filters">
+          <button class="power-toggle" class:active={showPowerFeatures} onclick={() => showPowerFeatures = !showPowerFeatures} title="Advanced Filters">
               <Filter size="16" />
           </button>
       </div>
 
       <div class="filters">
           <label>
-            <select bind:value={selectedGroup} on:change={filtersUpdated}>
+            <select bind:value={selectedGroup}>
               <option value="All">All Groups</option>
               {#each groups.filter(g => g !== 'All') as group}
                 <option value={group}>{group}</option>
@@ -117,7 +120,7 @@
           </label>
 
           <label>
-            <select bind:value={sortBy} on:change={sortingChanged}>
+            <select bind:value={sortBy}>
               <optgroup label="Timeline">
                   <option value="date-created-desc">Recently Created</option>
                   <option value="last-modified-desc">Recently Modified</option>
@@ -144,15 +147,15 @@
       <div class="power-options">
           <div class="checks">
               <label class="check-opt">
-                  <input type="checkbox" bind:checked={useRegex} on:change={filtersUpdated} />
+                  <input type="checkbox" bind:checked={useRegex} />
                   <span>Regex Mode</span>
               </label>
               <label class="check-opt">
-                  <input type="checkbox" bind:checked={searchInVideos} on:change={filtersUpdated} />
-                  <span>Deep Search (Videos & Tags)</span>
+                  <input type="checkbox" bind:checked={searchInVideos} />
+                  <span>Deep Search</span>
               </label>
           </div>
-          <span class="power-hint">Powered by Quantum Heuristics and Multi-Signal AI Sort.</span>
+          <span class="power-hint">Powered by Pro Heuristics.</span>
       </div>
   </div>
   {/if}
@@ -170,23 +173,11 @@
     flex-direction: column;
     gap: var(--space-4);
     border: 1px solid var(--border-strong);
+    background: var(--card-bg-alpha);
   }
 
-  .header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-8);
-      width: 100%;
-  }
-
-  .search-box {
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      max-width: 600px;
-  }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); width: 100%; }
+  .search-box { flex-grow: 1; display: flex; align-items: center; gap: var(--space-2); max-width: 600px; }
 
   .input-wrapper {
       position: relative;
@@ -200,11 +191,7 @@
       transition: all 0.3s;
   }
 
-  .input-wrapper:focus-within {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.12);
-      background: var(--bg);
-  }
+  .input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.12); }
 
   .input-wrapper input {
       border: none;
@@ -229,63 +216,15 @@
       color: var(--text-muted);
   }
 
-  .power-toggle:hover {
-      background: var(--hover);
-      color: var(--text);
-  }
+  .power-toggle.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-  .power-toggle.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-      box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.4);
-  }
-
-  .power-row {
-      padding: var(--space-3) var(--space-5);
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: var(--radius-md);
-      border: 1px dashed var(--border-strong);
-  }
-
-  .power-options {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-4);
-  }
-
-  .checks {
-      display: flex;
-      gap: var(--space-8);
-  }
-
-  .check-opt {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      font-size: var(--font-xs);
-      font-weight: 700;
-      cursor: pointer;
-  }
-
-  .check-opt input {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--primary);
-  }
-
-  .power-hint {
-      font-size: var(--font-xs);
-      color: var(--text-muted);
-      font-weight: 600;
-      opacity: 0.7;
-  }
-
-  .filters {
-      display: flex;
-      gap: var(--space-4);
-  }
+  .power-row { padding: var(--space-3) var(--space-5); background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); border: 1px dashed var(--border-strong); }
+  .power-options { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+  .checks { display: flex; gap: var(--space-8); }
+  .check-opt { display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-xs); font-weight: 700; cursor: pointer; }
+  .check-opt input { width: 16px; height: 16px; accent-color: var(--primary); }
+  .power-hint { font-size: var(--font-xs); color: var(--text-muted); font-weight: 600; opacity: 0.7; }
+  .filters { display: flex; gap: var(--space-4); }
 
   select {
       padding: var(--space-2) var(--space-4);
@@ -297,35 +236,13 @@
       font-weight: 700;
       font-size: var(--font-sm);
       cursor: pointer;
-      transition: all 0.2s;
   }
 
-  select:hover {
-      border-color: var(--primary);
-      background: var(--hover);
-  }
-
-  h2 {
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      font-size: var(--font-lg);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0;
-  }
+  h2 { font-weight: 900; letter-spacing: -0.04em; font-size: var(--font-lg); display: flex; align-items: center; gap: 10px; margin: 0; }
 
   @media (max-width: 1100px) {
-      .header-row {
-          flex-direction: column;
-          align-items: stretch;
-          gap: var(--space-4);
-      }
-      .search-box {
-          max-width: none;
-      }
-      .filters {
-          justify-content: flex-end;
-      }
+      .header-row { flex-direction: column; align-items: stretch; gap: var(--space-4); }
+      .search-box { max-width: none; }
+      .filters { justify-content: flex-end; }
   }
 </style>

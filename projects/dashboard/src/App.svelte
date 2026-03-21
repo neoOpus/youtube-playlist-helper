@@ -6,7 +6,7 @@
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
   import PlaylistComparison from "./components/PlaylistComparison.svelte";
-  import UndoNotification from "./components/UndoNotification.svelte";
+  import ActionToast from "./components/ActionToast.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import Sync from "./views/Sync.svelte";
   import CommandPalette from "./components/CommandPalette.svelte";
@@ -67,7 +67,7 @@
   <main class="main-content">
       <Router {routes} />
   </main>
-  <UndoNotification />
+  <ActionToast />
   <CommandPalette bind:display={showPalette} />
 </div>
 

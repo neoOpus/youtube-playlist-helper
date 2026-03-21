@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://img.shields.io/badge/Svelte_5-Expert-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" />
   <img src="https://img.shields.io/badge/TypeScript-Architecture-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
-  <img src="https://img.shields.io/badge/Browser_Extensions-SOTA-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" />
+  <img src="https://img.shields.io/badge/Browser_Extensions-Pro-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" />
   <img src="https://img.shields.io/badge/AI_&_Automation-Systems-000000?style=for-the-badge&logo=openai&logoColor=white" />
 </div>
 
@@ -11,7 +11,7 @@
 
 **Software Engineer & Architect** specializing in high-performance browser extensions, robust form recovery systems, and intelligent digital ecosystems.
 
-I focus on bridging the gap between experimental technology and production-grade reliability. My work emphasizes **State-of-the-Art (SOTA)** architectures that are invisible to the user yet uncompromising on privacy and performance.
+I focus on bridging the gap between experimental technology and production-grade reliability. My work emphasizes **State-of-the-Art (Pro)** architectures that are invisible to the user yet uncompromising on privacy and performance.
 
 ### 🛠️ Core Technical Stack
 
@@ -41,7 +41,7 @@ My approach to software is built on four central pillars:
 1. **Invisible Intelligence**: Tools should be smart enough to assist without being noticed.
 2. **Uncompromising Privacy**: Zero-knowledge architectures and local-first data.
 3. **Resilient Robustness**: Using multi-signal heuristics (V-Hash) to survive evolving web environments.
-4. **SOTA Performance**: Leveraging the latest standards (Manifest V3, Svelte 5) to ensure longevity and speed.
+4. **Pro Performance**: Leveraging the latest standards (Manifest V3, Svelte 5) to ensure longevity and speed.
 
 > *"Machine learning models are valuable — but deployed systems that respect user privacy create impact."*
 
@@ -57,7 +57,7 @@ My approach to software is built on four central pillars:
 
 ---
 
-### 🚀 Featured SOTA Projects
+### 🚀 Featured Pro Projects
 *(Detailed project highlights coming soon)*
 
 - **Phoenix Form Recovery Suite**: The next generation of intelligent form recovery.

@@ -24,11 +24,11 @@ describe('metadataService', () => {
     it('should merge metadata and log history on title change', async () => {
         vi.mocked(storageService.fetchObject).mockResolvedValue({ rating: 5 });
 
-        await metadataService.saveVideoMetadata('v1', { title: 'Quantum Flux' });
+        await metadataService.saveVideoMetadata('v1', { title: 'Pro Flux' });
 
         expect(storageService.storeObject).toHaveBeenCalledWith(
             'v_meta_v1',
-            expect.objectContaining({ title: 'Quantum Flux', rating: 5 })
+            expect.objectContaining({ title: 'Pro Flux', rating: 5 })
         );
         expect(historyService.logHistory).toHaveBeenCalled();
     });

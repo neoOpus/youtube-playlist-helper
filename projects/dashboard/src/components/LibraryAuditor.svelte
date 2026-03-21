@@ -64,7 +64,7 @@
     <div class="audit-header mb-6">
         <div class="title-row">
             <h3><SearchIcon size="20" color="var(--primary)" /> Infrastructure Audit</h3>
-            <span class="badge secondary">SOTA v2.1</span>
+            <span class="badge secondary">Pro v2.1</span>
         </div>
         <p class="muted">Automated quality assessment of your local collection.</p>
     </div>
@@ -115,7 +115,7 @@
         </div>
 
         <div class="audit-actions mt-6">
-            <button class="btn primary sota-glow w-full" on:click={runAudit}>
+            <button class="btn primary pro-glow w-full" on:click={runAudit}>
                 <CheckIcon size="18" /> Re-Validate Collection
             </button>
         </div>
