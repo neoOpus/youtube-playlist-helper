@@ -1,105 +1,108 @@
 # YouTube Playlist Helper: Professional Design Guide
+**Architecture & Implementation Blueprint for the Pro Edition**
 
-This guide defines the "State of the Art" (Pro) front-end architecture and implementation for the YouTube Playlist Helper: Pro Edition. It serves as a comprehensive blueprint for developers to achieve a polished, modern, and delightful user experience.
+This document defines the exact visual specifications, interaction patterns, and implementation strategy for the YouTube Playlist Helper Professional UI.
+
+---
 
 ## 1. Core Design Principles
-*   **Clarity:** Use whitespace and typography to separate concerns. Minimalist aesthetics to reduce cognitive load.
-*   **Consistency:** All components follow the "Pro" design system (4px grid, shared color tokens).
-*   **Feedback:** Immediate visual or haptic responses to user actions (Ripples, Toasts, Hover Glows).
-*   **Visual Hierarchy:** High-contrast headings and "Aura Glow" backgrounds for primary content.
-*   **Accessibility (WCAG 2.2 AA):** High contrast (4.5:1+), keyboard focus visibility, and semantic HTML.
-*   **Simplicity:** Progressive disclosure of complex features (Advanced Mode).
-*   **Responsiveness:** Fluid layouts that adapt from mobile popups to 4K dashboards.
-*   **Delight:** Smooth 60fps transitions and cursor-tracking radial gradients.
-*   **Information Architecture:** Flattened navigation with clear breadcrumbs.
 
-## 2. UI Component Library (Specifications)
+*   **Clarity:** 1.5 line-height for body text; 32px - 64px section breathing room.
+*   **Consistency:** Strict adherence to the 4px baseline grid.
+*   **Liveness:** 60fps animations; < 100ms response time for interactions.
+*   **Accessibility:** WCAG 2.2 AA (Color contrast 4.5:1; Focus outlines 2px).
+*   **Progressive Disclosure:** Advanced technical parameters are sequestered behind the "System Architect" toggle in the sidebar.
 
-### Layout & Grid
-*   **Baseline Grid:** 4px.
-*   **Max-Width:** 1200px (Desktop), 768px (Tablet), 480px (Mobile/Popup).
-*   **Layout:** 12-column grid for dashboard; single-column for extension popup.
+---
 
-### Design Tokens (CSS Variables)
-| Token | Dark (Pro) | GitHub Light | Dracula | Pro Red |
-| :--- | :--- | :--- | :--- | :--- |
-| `--primary` | `#ff5252` | `#0969da` | `#bd93f9` | `#ff0000` |
-| `--bg` | `#030712` | `#ffffff` | `#282a36` | `#0a0000` |
-| `--card-bg` | `rgba(3, 7, 18, 0.75)` | `rgba(255, 255, 255, 0.9)` | `rgba(40, 42, 54, 0.85)` | `rgba(15, 0, 0, 0.9)` |
-| `--border` | `rgba(255, 255, 255, 0.05)` | `rgba(31, 35, 40, 0.1)` | `rgba(68, 71, 90, 0.8)` | `rgba(255, 0, 0, 0.1)` |
-| `--text` | `#f9fafb` | `#1f2328` | `#f8f8f2` | `#ffffff` |
+## 2. Layout & Grid Specifications
 
-### Components
-*   **Buttons:**
-    *   *Primary:* Solid `--primary`, white text, 8px radius, 0 4px 15px shadow.
-    *   *Secondary:* Glass background, 1px border, 0.8 opacity text.
-    *   *Danger:* `#ff4444` solid.
-*   **Input Fields:** 12px padding, 8px radius, 1px border. Focus: 2px border `--primary`.
-*   **Modals:** Backdrop blur (32px), centered, 16px radius, Y-offset +20px entry animation.
-*   **Tooltips:** Dark background, 12px font, 4px radius, 200ms fade-in.
-*   **Toasts:** Bottom-right, progress bar (10s), "Undo" action link.
+| Property | Value | Notes |
+| :--- | :--- | :--- |
+| **Baseline Grid** | 4px | All measurements (padding, margin, width) must be multiples. |
+| **Max Container Width** | 1400px | Centered in viewport. |
+| **Grid System** | 12-Column | Fluid percentage-based widths. |
+| **Gutter Width** | 32px | Standardized via `var(--space-8)`. |
+| **Content Padding** | 48px | Standardized via `var(--space-12)`. |
 
-## 3. Interaction Patterns
-*   **Luminous Hover:** A radial gradient `radial-gradient(600px circle at var(--x) var(--y), rgba(255,255,255,0.06), transparent 40%)` follows the mouse.
-*   **Click/Tap:** 100ms scale down (0.96) for buttons.
-*   **Loading:** 2Hz pulsing "Aura Glow" on skeleton states.
-*   **Undo/Redo:** `Ctrl+Z` / `Ctrl+Y` support; Toasts provide a 10s window to reverse deletions.
-*   **Keyboard:** `Tab` for focus; `Space/Enter` for activation; `/` to focus global search.
+---
 
-## 4. Responsive & Adaptive Layout
-*   **Breakpoint ≤ 480px (Extension Popup):**
-    *   Hide sidebar; show bottom navigation bar.
-    *   Compact list items (no channel thumbnails).
-*   **Breakpoint 481px - 768px (Tablet):**
-    *   Collapsible sidebar (icons only).
-    *   2-column grid for playlists.
-*   **Breakpoint ≥ 769px (Desktop):**
-    *   Full sidebar with labels.
-    *   3+ column grid.
+## 3. UI Component Specifications
 
-## 5. Motion & Performance
-*   **Frame Budget:** < 16.6ms (60fps).
-*   **Hardware Acceleration:** Use `will-change: transform, opacity`.
-*   **Transitions:** `cubic-bezier(0.4, 0, 0.2, 1)` for standard; `cubic-bezier(0.34, 1.56, 0.64, 1)` for spring effects.
+### 3.1 Buttons (SuperButton)
+*   **Height:** 44px (Standard) / 32px (Mini).
+*   **Typography:** Inter Bold (700), 14px, All-Caps.
+*   **Corner Radius:** 10px (`$radius-md`).
+*   **Types:**
+    *   *Primary:* Gradient (#ff5252 -> #ff7575), white text.
+    *   *Secondary:* `var(--bg-secondary)` with 1px border.
+    *   *Danger:* Gradient (#ef4444 -> #ff6b6b).
+*   **States:**
+    *   *Hover:* Scale 1.02; brightness 110%.
+    *   *Active:* Scale 0.96; brightness 90%.
 
-## 6. Information Architecture (IA)
-1.  **Extension Icon:** Quick status & "Open Dashboard" button.
-2.  **Popup (Primary Actions):** Current tab video → Add to Playlist; Search.
-3.  **Dashboard (Main Hub):**
-    *   **Sidebar:** Root navigation (New, Saved, Manage, Sync).
-    *   **Main View:** Data display (Grid/Table).
-    *   **Bottom Bar:** Selection & Mass Actions.
-4.  **Options Page:** Theme selection, storage stats, E2EE toggle.
+### 3.2 Form Elements
+*   **Input Fields / Selects:**
+    *   *Typography:* Inter Medium (500), 14px.
+    *   *Background:* Obsidian Glass (`var(--bg-secondary)`).
+    *   *Focus:* 2px solid `var(--primary)` + 4px soft outer glow.
+*   **Checkboxes:** 20px x 20px; 6px radius. Spring scale (0.8 -> 1.0) on state change.
 
-## 7. User-Testing Protocol
-*   **Format:** 5-user remote "Think Aloud" test.
-*   **Metrics:** Task Success Rate (%), Time-on-Task (s), SUS Score (0-100).
-*   **Iteration:** Any task with < 80% success rate requires immediate UI redesign.
+### 3.3 Overlays
+*   **Modals:** 28px radius; 64px glass blur; `translateY(30px -> 0)` entry.
+*   **Tooltips:** 11px font; Black background; 150ms fade.
+*   **Action Toasts:** 64px height; Bottom-right fixed; 10s progress bar for undo visibility.
 
-## 8. Implementation Snippets (Svelte/TypeScript)
+---
 
-### Breadcrumbs Component
+## 4. Interaction Patterns
+
+### 4.1 Micro-Interaction Timings
+*   **Click Ripple:** 100ms.
+*   **Luminous Hover Expansion:** 300ms.
+*   **Sidebar Collapse:** 300ms `cubic-bezier(0.4, 0, 0.2, 1)`.
+
+### 4.2 Keyboard Navigation
+*   **Hierarchy:** [1] Global Search -> [2] Navigation Sidebar -> [3] Filter Bar -> [4] Main Grid.
+*   **Shortcuts:** `/` for Search; `N` for New; `M` for Manage; `ESC` to clear.
+
+---
+
+## 5. Implementation Snippets
+
+### 5.1 Svelte 5 Component (Reference)
 ```svelte
-<nav class="breadcrumbs">
-  {#each items as item, i}
-    <span>{item}</span>
-    {#if i < items.length - 1} <ChevronRight /> {/if}
-  {/each}
-</nav>
+<script lang="ts">
+  let { primary = false, onclick, children } = $props();
+</script>
+
+<button
+  class="super-button {primary ? 'primary' : ''}"
+  onclick={onclick}
+>
+  {@render children?.()}
+</button>
 ```
 
-### SuperButton Styles (SCSS)
-```scss
-.super-button {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  &.primary { background: var(--primary); color: white; }
-  &:hover { filter: brightness(1.2); transform: translateY(-2px); }
-  &:active { transform: scale(0.96); }
-}
+### 5.2 React Component (Reference)
+```tsx
+export const SuperButton = ({ primary, onClick, children }) => (
+  <button
+    className={`super-button ${primary ? 'primary' : ''}`}
+    onClick={onClick}
+  >
+    {children}
+  </button>
+);
 ```
 
 ---
-*Authored by Jules, Software Engineer.*
+
+## 6. Deliverables Index
+*   **SCSS Tokens:** `projects/pro-variables.scss`
+*   **Motion Spec:** `projects/pro-animations.json`
+*   **Accessibility:** `projects/accessibility-report.md`
+*   **Test Template:** `projects/user-test-template.md`
+
+---
+*Authored by Jules, UI Architect.*
