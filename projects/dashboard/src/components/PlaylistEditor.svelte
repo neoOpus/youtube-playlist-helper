@@ -1,8 +1,9 @@
+<svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade, slide } from "svelte/transition";
   import { flip } from "svelte/animate";
-  import { params } from "svelte-spa-router";
+  import { router } from "../stores/router";
   import {
     storageService,
     videoService,
@@ -13,6 +14,7 @@
   } from "@yph/core";
   import type { Playlist, Video } from "@yph/core";
   import PlaylistVideo from "./PlaylistVideo.svelte";
+  import SimplePagination from "./SimplePagination.svelte";
   import {
     SaveIcon,
     PlusMultiple,
@@ -22,7 +24,6 @@
     SuperButton,
     Breadcrumbs
   } from "@yph/ui-kit";
-  import { paginate, PaginationNav } from "svelte-paginate";
 
   let playlist = $state<Playlist | null>(null);
   let videos = $state<Video[]>([]);
@@ -36,7 +37,7 @@
   let pageSize = 20;
 
   onMount(async () => {
-      const id = $params.id;
+      const id = router.params?.id;
       if (id) {
           playlist = await storageService.getPlaylist(id);
           if (playlist) {
@@ -100,7 +101,7 @@
           videos = previous;
       });
       videos = aiService.sequenceOptimizer.optimize(videos);
-      notificationService.success("Neural sequence optimized.");
+      notificationService.success("Infrastructure sequence optimized.");
   }
 
   let filteredVideos = $derived(
@@ -113,7 +114,7 @@
   );
 
   let paginatedVideos = $derived(
-    paginate({ items: filteredVideos, pageSize, currentPage })
+    filteredVideos.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   );
 
   function handleMouseMove(e: MouseEvent) {
@@ -188,18 +189,11 @@
             {/if}
         </div>
 
-        {#if filteredVideos.length > pageSize}
-            <div class="pagination-footer mt-12">
-                <PaginationNav
-                    totalItems={filteredVideos.length}
-                    {pageSize}
-                    {currentPage}
-                    limit={1}
-                    showStepOptions={true}
-                    on:setPage={(e) => currentPage = e.detail.page}
-                />
-            </div>
-        {/if}
+        <SimplePagination
+            totalItems={filteredVideos.length}
+            {pageSize}
+            bind:currentPage={currentPage}
+        />
     {:else}
         <div class="error-state pro-glass">
             <h2>Critical Failure: Node Collection Not Found</h2>
@@ -229,7 +223,6 @@
     .loader { padding: var(--space-16); text-align: center; font-size: var(--font-xl); font-weight: 900; color: var(--primary); }
     .error-state { text-align: center; padding: var(--space-16); }
     .mt-8 { margin-top: var(--space-8); }
-    .mt-12 { margin-top: var(--space-12); }
     .mb-4 { margin-bottom: var(--space-4); }
     .row { display: flex; }
     .justify-end { justify-content: flex-end; }

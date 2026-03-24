@@ -1,3 +1,4 @@
+<svelte:options runes={true} />
 <script lang="ts">
   import type { Playlist } from "@yph/core";
   import PlaylistsFilters from "./PlaylistsFilters.svelte";

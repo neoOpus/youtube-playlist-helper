@@ -1,5 +1,6 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  import { push } from "svelte-spa-router";
+  import { router } from "../stores/router";
   import type { Playlist } from "@yph/core";
   import {
     PlaylistPlayIcon,
@@ -43,7 +44,7 @@
   }
 
   function navigateToEdit() {
-      push(`/edit/${playlist.id}`);
+      router.push(`/edit/${playlist.id}`);
   }
 
   function handleMouseMove(e: MouseEvent) {

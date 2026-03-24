@@ -1,3 +1,4 @@
+<svelte:options runes={true} />
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
   import { debounce, playlistsSorter } from "@yph/core";

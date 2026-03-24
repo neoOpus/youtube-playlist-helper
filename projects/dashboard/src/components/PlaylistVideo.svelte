@@ -1,5 +1,5 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import {
     DeleteIcon,
     InfoIcon,
@@ -11,15 +11,22 @@
   } from "@yph/ui-kit";
   import type { Video } from "@yph/core";
   import VideoIdCard from "./VideoIdCard.svelte";
-  import { metadataService, alternativesService } from "@yph/core";
+  import { metadataService, alternativesService, predictionEngine, notificationService } from "@yph/core";
 
-  export let video: Video;
-  export let active: boolean;
-  export let disableThumbnails = false;
+  let {
+    video = $bindable(),
+    active,
+    disableThumbnails = false,
+    ondelete = (v: Video) => {},
+    onsave = (v: Video) => {}
+  }: {
+    video: Video;
+    active: boolean;
+    disableThumbnails?: boolean;
+    ondelete?: (v: Video) => void;
+    onsave?: (v: Video) => void;
+  } = $props();
 
-  const dispatch = createEventDispatcher();
-
-  import { predictionEngine, notificationService } from "@yph/core";
   async function handlePredict() {
       const prediction = await predictionEngine.predictMetadata(video.videoId);
       if (prediction) {
@@ -36,10 +43,10 @@
   }
 
   function deleteVideo() {
-    dispatch("delete", video);
+    ondelete(video);
   }
 
-  let showIdCard = false;
+  let showIdCard = $state(false);
   function openIdCard() {
     showIdCard = true;
   }
@@ -57,7 +64,7 @@
       aiTags: video.aiTags,
       aiSummary: video.aiSummary
     });
-    dispatch("save", video);
+    onsave(video);
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -75,8 +82,8 @@
 >
   <div
     class="video-selection"
-    on:click|stopPropagation
-    on:keydown|stopPropagation
+    onclick={(e) => e.stopPropagation()}
+    onkeydown={(e) => e.stopPropagation()}
     role="presentation"
   >
     <SuperCheckbox bind:checked={video.selected} />
@@ -85,8 +92,8 @@
   {#if !disableThumbnails}
     <div
         class="thumbnail-container pro-glass"
-        on:click|preventDefault={videoClicked}
-        on:keydown={handleKeydown}
+        onclick={(e) => { e.preventDefault(); videoClicked(); }}
+        onkeydown={handleKeydown}
         role="button"
         tabindex="0"
         aria-label="Play: {video.title}"
@@ -104,9 +111,9 @@
     </div>
   {/if}
 
-  <div class="video-details" on:click={videoClicked} on:keydown={handleKeydown} role="button" tabindex="0" aria-label="View details for {video.title}">
+  <div class="video-details" onclick={videoClicked} onkeydown={handleKeydown} role="button" tabindex="0" aria-label="View details for {video.title}">
         {#if video.title === "Unknown Video" || !video.title}
-            <button class="predict-btn" on:click|stopPropagation={handlePredict} title="Predict Metadata via AI" aria-label="Predict metadata">
+            <button class="predict-btn" onclick={(e) => { e.stopPropagation(); handlePredict(); }} title="Predict Metadata via AI" aria-label="Predict metadata">
                 <SearchIcon size="12" /> Predict
             </button>
         {/if}
@@ -119,14 +126,14 @@
     <span class="video-channel">{video.channel}</span>
   </div>
 
-  <div class="video-btns" on:click|stopPropagation on:keydown|stopPropagation role="presentation">
-    <button on:click={trackDown} title="Track down alternatives" class="video-action-btn" aria-label="Search alternatives">
+  <div class="video-btns" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
+    <button onclick={trackDown} title="Track down alternatives" class="video-action-btn" aria-label="Search alternatives">
         <SearchIcon size="16" />
     </button>
-    <button on:click={openIdCard} title="Video ID Card" class="video-action-btn" aria-label="Open ID Card">
+    <button onclick={openIdCard} title="Video ID Card" class="video-action-btn" aria-label="Open ID Card">
         <InfoIcon size="16" />
     </button>
-    <button on:click={deleteVideo} title="Delete video" class="video-action-btn danger-btn" aria-label="Delete node">
+    <button onclick={deleteVideo} title="Delete video" class="video-action-btn danger-btn" aria-label="Delete node">
         <DeleteIcon size="16" />
     </button>
   </div>
@@ -135,142 +142,20 @@
 <VideoIdCard bind:display={showIdCard} bind:video on:save={handleSave} />
 
 <style>
-  :global(.playlist-video-revamp) {
-    padding: var(--space-4) var(--space-6);
-    align-items: center;
-    border-radius: var(--radius-lg);
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    transition: all 0.3s var(--easing-standard);
-  }
-
-  :global(.playlist-video-revamp:hover) {
-    background: var(--hover);
-    border-color: rgba(var(--primary-rgb), 0.3);
-    transform: translateX(8px);
-    box-shadow: 0 4px 12px var(--shadow);
-  }
-
-  .video-selection {
-    margin-right: var(--space-4);
-    display: flex;
-    align-items: center;
-  }
-
-  .thumbnail-container {
-    position: relative;
-    width: 140px;
-    height: 78px;
-    margin-right: var(--space-6);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-    flex-shrink: 0;
-  }
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .watched-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(var(--bg), 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
-  }
-
-  .video-details {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0;
-    cursor: pointer;
-    gap: var(--space-1);
-  }
-
-  .title-row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-  }
-
-  .video-title {
-    font-weight: 800;
-    font-size: var(--font-base);
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
-
-  .predict-btn {
-    background: linear-gradient(135deg, var(--primary), #d500f9);
-    color: white;
-    border: none;
-    padding: 2px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 10px;
-    font-weight: 800;
-    cursor: pointer;
-    margin-bottom: var(--space-1);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    width: fit-content;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  :global(.playlist-video-revamp.is-watched) .video-title {
-    opacity: 0.5;
-    text-decoration: line-through;
-  }
-
-  .video-channel {
-    font-size: var(--font-xs);
-    font-weight: 700;
-    color: var(--text-muted);
-    opacity: 0.7;
-  }
-
-  .video-btns {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: var(--space-6);
-    gap: var(--space-3);
-  }
-
-  .video-action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-md);
-    background: var(--hover);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    transition: all 0.2s;
-  }
-
-  .video-action-btn:hover {
-    color: white;
-    background: var(--primary);
-    border-color: var(--primary);
-    transform: scale(1.1);
-  }
-
-  .danger-btn:hover {
-    background: var(--danger);
-    border-color: var(--danger);
-  }
+  :global(.playlist-video-revamp) { padding: var(--space-4) var(--space-6); align-items: center; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--border); transition: all 0.3s var(--easing-standard); }
+  :global(.playlist-video-revamp:hover) { background: var(--hover); border-color: rgba(var(--primary-rgb), 0.3); transform: translateX(8px); box-shadow: 0 4px 12px var(--shadow); }
+  .video-selection { margin-right: var(--space-4); display: flex; align-items: center; }
+  .thumbnail-container { position: relative; width: 140px; height: 78px; margin-right: var(--space-6); border-radius: var(--radius-md); overflow: hidden; cursor: pointer; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+  img { width: 100%; height: 100%; object-fit: cover; }
+  .watched-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(var(--bg), 0.6); display: flex; justify-content: center; align-items: center; pointer-events: none; }
+  .video-details { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; cursor: pointer; gap: var(--space-1); }
+  .title-row { display: flex; align-items: center; gap: var(--space-3); }
+  .video-title { font-weight: 800; font-size: var(--font-base); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--text); letter-spacing: -0.01em; }
+  .predict-btn { background: linear-gradient(135deg, var(--primary), #d500f9); color: white; border: none; padding: 2px 10px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 800; cursor: pointer; margin-bottom: var(--space-1); display: flex; align-items: center; gap: 4px; width: fit-content; text-transform: uppercase; letter-spacing: 0.05em; }
+  :global(.playlist-video-revamp.is-watched) .video-title { opacity: 0.5; text-decoration: line-through; }
+  .video-channel { font-size: var(--font-xs); font-weight: 700; color: var(--text-muted); opacity: 0.7; }
+  .video-btns { display: flex; justify-content: center; align-items: center; margin-left: var(--space-6); gap: var(--space-3); }
+  .video-action-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--hover); border: 1px solid var(--border); color: var(--text-muted); transition: all 0.2s; }
+  .video-action-btn:hover { color: white; background: var(--primary); border-color: var(--primary); transform: scale(1.1); }
+  .danger-btn:hover { background: var(--danger); border-color: var(--danger); }
 </style>

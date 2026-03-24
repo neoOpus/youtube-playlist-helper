@@ -1,7 +1,8 @@
 {
   "name": "@yph/dashboard",
   "version": "1.0.0",
-  "private": true, "type": "module",
+  "private": true,
+  "type": "module",
   "scripts": {
     "build": "vite build",
     "dev": "vite",
@@ -37,6 +38,7 @@
   "dependencies": {
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
+    "lucide-svelte": "^1.0.0-rc.1",
     "sirv-cli": "^1.0.0",
     "svelte-fa": "^3.0.4",
     "svelte-paginate": "^0.0.1",

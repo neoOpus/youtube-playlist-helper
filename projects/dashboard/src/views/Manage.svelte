@@ -1,3 +1,4 @@
+<svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade, fly } from "svelte/transition";
@@ -13,7 +14,7 @@
     CloudSyncIcon
   } from "@yph/ui-kit";
   import LibraryAuditor from "../components/LibraryAuditor.svelte";
-  import NeuralMap from "../components/NeuralMap.svelte";
+  import InfrastructureMap from "../components/InfrastructureMap.svelte";
   import ThemeArchitect from "../components/ThemeArchitect.svelte";
   import ImportWizard from "../components/ImportWizard.svelte";
 
@@ -48,14 +49,14 @@
                 <div class="icon-blob"><TerminalIcon size="32" /></div>
                 <h1>System Management</h1>
             </div>
-            <p class="muted">Oversee neural connections, library quality, and global aesthetics.</p>
+            <p class="muted">Oversee infrastructure connections, library quality, and global aesthetics.</p>
         </div>
     </header>
 
     <div class="manage-grid">
         <div class="main-stats">
             <div class="stat-card">
-                <NeuralMap />
+                <InfrastructureMap />
             </div>
             <div class="stat-card">
                 <LibraryAuditor />
@@ -89,7 +90,7 @@
 
                     {#if advancedMode}
                       <div in:fly={{ y: -10, duration: 300 }}>
-                        <div class="v-row"><span>Neural Density</span> <span class="v-val">High (Optimized)</span></div>
+                        <div class="v-row"><span>Data Density</span> <span class="v-val">High (Optimized)</span></div>
                         <div class="v-row"><span>E2EE Status</span> <span class="val success">Active (Pro-Resistant)</span></div>
                       </div>
                     {/if}

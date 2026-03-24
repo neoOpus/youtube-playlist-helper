@@ -1,5 +1,6 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  import Router, { push, location } from "svelte-spa-router";
+  import { onMount } from "svelte";
   import PlaylistEditor from "./components/PlaylistEditor.svelte";
   import New from "./views/New.svelte";
   import Saved from "./views/Saved.svelte";
@@ -10,12 +11,13 @@
   import Sidebar from "./components/Sidebar.svelte";
   import Sync from "./views/Sync.svelte";
   import CommandPalette from "./components/CommandPalette.svelte";
-  import { onMount } from "svelte";
   import { playlistsSearch } from "./stores/playlists-filters";
-  import { activeTheme } from "./stores/theme.store";
+  import { themeState, initTheme } from "./stores/theme.svelte";
   import { ParametricBackground } from "@yph/ui-kit";
+  import { enrichmentAgent } from "@yph/core";
+  import { router } from "./stores/router";
 
-  const routes = {
+  const routes: Record<string, any> = {
     "/": Saved,
     "/new": New,
     "/manage": Manage,
@@ -23,14 +25,22 @@
     "/merge": PlaylistComparison,
     "/support": Support,
     "/edit/:id": PlaylistEditor,
-    "*": Saved,
   };
 
-  let showPalette = false;
+  let showPalette = $state(false);
+  let CurrentView = $derived(routes[$router.path] || Saved);
 
-  import { enrichmentAgent } from "@yph/core";
-  onMount(() => { enrichmentAgent.start(); });
-  onMount(() => {
+  // Use $effect for theme attribute sync - this replaces the .subscribe in the old store
+  $effect(() => {
+    if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute("data-theme", themeState.active);
+    }
+  });
+
+  onMount(async () => {
+      await initTheme();
+      enrichmentAgent.start();
+
       const handleKeyDown = (e: KeyboardEvent) => {
           if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
               if (e.key === "Escape") {
@@ -44,11 +54,11 @@
               const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
               if (searchInput) searchInput.focus();
           } else if (e.key.toLowerCase() === "n") {
-              push("/new");
+              router.push("/new");
           } else if (e.key.toLowerCase() === "s") {
-              push("/");
+              router.push("/");
           } else if (e.key.toLowerCase() === "m") {
-              push("/manage");
+              router.push("/manage");
           } else if (e.key === "Escape") {
               playlistsSearch.set("");
           }
@@ -60,12 +70,12 @@
 </script>
 
 <div class="app-container">
-  <ParametricBackground theme={$activeTheme} />
+  <ParametricBackground theme={themeState.active} />
   <div class="sidebar-wrapper">
-    <Sidebar activeRoute={$location} />
+    <Sidebar activeRoute={$router.fullPath} />
   </div>
   <main class="main-content">
-      <Router {routes} />
+      <CurrentView params={$router.params} />
   </main>
   <ActionToast />
   <CommandPalette bind:display={showPalette} />

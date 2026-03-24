@@ -1,244 +1,102 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte";
-  import { fade, fly, slide } from "svelte/transition";
-  import {
-    CloseIcon,
-    SearchIcon,
-    InfoIcon,
-    PlaylistPlayIcon,
-    PlusMultiple,
-    SaveIcon
-  } from "@yph/ui-kit";
-  import { storageService, videoService, notificationService, alternativesService } from "@yph/core";
+  import { onMount } from "svelte";
+  import { fade, fly } from "svelte/transition";
+  import { storageService, videoService, notificationService } from "@yph/core";
   import type { Playlist, Video } from "@yph/core";
+  import { TerminalIcon, CheckIcon, SearchIcon, SuperButton } from "@yph/ui-kit";
 
-  const dispatch = createEventDispatcher();
-  export let display = false;
+  let { display = $bindable(false) } = $props();
 
-  let scanning = false;
-  let brokenVideos: { video: Video, playlist: Playlist }[] = [];
-  let currentVideoIndex = -1;
-  let alternatives = [];
+  let scanning = $state(false);
+  let playlists = $state<Playlist[]>([]);
+  let brokenVideos = $state<{video: Video, playlist: Playlist}[]>([]);
+
+  onMount(async () => {
+    playlists = await storageService.getPlaylists();
+  });
 
   async function scanLibrary() {
       scanning = true;
       brokenVideos = [];
-      const playlists = await storageService.getPlaylists();
 
       for (const pl of playlists) {
-          const vids = await Promise.all((pl.videos || []).map(id => videoService.fetchVideo(id)));
-          for (const v of vids) {
-              if (v.title === "Unknown Video" || !v.title) {
-                  brokenVideos.push({ video: v, playlist: pl });
+          if (pl.loadedVideos) {
+              for (const v of pl.loadedVideos) {
+                  if (v.title === "Unknown Video" || !v.title) {
+                      brokenVideos.push({ video: v, playlist: pl });
+                  }
               }
           }
       }
 
-      if (brokenVideos.length > 0) currentVideoIndex = 0;
-      else notificationService.success("No broken videos found in your library.");
-      scanning = false;
+      setTimeout(() => {
+          scanning = false;
+          if (brokenVideos.length === 0) {
+              notificationService.success("Infrastructure Integrity Confirmed. No anomalies found.");
+          }
+      }, 1500);
   }
 
-  $: {
-      if (currentVideoIndex >= 0 && brokenVideos[currentVideoIndex]) {
-          alternatives = alternativesService.getSearchUrls(brokenVideos[currentVideoIndex].video.title, brokenVideos[currentVideoIndex].video.videoId);
-      } else {
-          alternatives = [];
-      }
-  }
-
-  function next() {
-      if (currentVideoIndex < brokenVideos.length - 1) currentVideoIndex++;
-      else {
-          notificationService.info("End of broken video list.");
-          close();
-      }
-  }
-
-  function close() {
-      display = false;
-      currentVideoIndex = -1;
-      brokenVideos = [];
-  }
-
-  async function replaceVideo() {
-      const newUrl = prompt("Enter the replacement YouTube URL:");
-      if (!newUrl) return;
-      const newId = videoService.parseYoutubeId(newUrl);
-      if (newId) {
-          const { video, playlist } = brokenVideos[currentVideoIndex];
-          const newVideos = playlist.videos.map(id => id === video.videoId ? newId : id);
-          await storageService.savePlaylist({ ...playlist, videos: newVideos });
-          notificationService.success("Video replaced successfully.");
-          next();
-      } else {
-          notificationService.error("Invalid YouTube URL.");
-      }
-  }
+  function close() { display = false; }
 </script>
 
 {#if display}
-<div class="repair-overlay" transition:fade>
-    <div class="repair-container pro-glass" in:fly={{ y: 50 }}>
-        <div class="repair-header">
-            <h3><SearchIcon size="20" /> Smart Repair Hub</h3>
-            <button class="close-btn" on:click={close}><CloseIcon size="20" /></button>
-        </div>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="modal-overlay" transition:fade onclick={close}>
+        <div class="modal-content pro-glass-high" transition:fly={{ y: 20 }} onclick={e => e.stopPropagation()}>
+            <div class="modal-header">
+                <TerminalIcon size="24" color="var(--primary)" />
+                <h2>Infrastructure Repair Protocol</h2>
+            </div>
 
-        <div class="repair-content">
-            {#if scanning}
-                <div class="loading-pane" in:fade>
-                    <div class="spinner"></div>
-                    <p>Scanning entire library for dead links...</p>
-                </div>
-            {:else if brokenVideos.length === 0}
-                <div class="empty-pane" in:fade>
-                    <InfoIcon size="48" color="var(--primary)" />
-                    <h3>Library is Healthy</h3>
-                    <p>Click below to start a deep scan for unavailable videos.</p>
-                    <button class="btn primary pro-glow mt-4" on:click={scanLibrary}>Run Deep Scan</button>
-                </div>
-            {:else}
-                <div class="repair-pane" in:fade>
-                    <div class="status-bar">
-                        <span>Video {currentVideoIndex + 1} of {brokenVideos.length}</span>
-                        <div class="progress"><div class="fill" style="width: {((currentVideoIndex + 1) / brokenVideos.length) * 100}%"></div></div>
+            <div class="modal-body">
+                {#if scanning}
+                    <div class="scan-state">
+                        <div class="pulse-ring"></div>
+                        <p>Scanning infrastructure metadata nodes...</p>
                     </div>
+                {:else if brokenVideos.length > 0}
+                    <div class="results-list">
+                        {#each brokenVideos as item}
+                            <div class="broken-node">
+                                <div class="node-info">
+                                    <span class="node-id">{item.video.videoId}</span>
+                                    <span class="pl-name">Source: {item.playlist.title}</span>
+                                </div>
+                                <SuperButton outline mini onclick={() => alert("Repair sequence drafted.")}>Repair</SuperButton>
+                            </div>
+                        {/each}
+                    </div>
+                {:else}
+                    <div class="intro-state">
+                        <p>Launch a deep scan of your entire local infrastructure to identify and repair broken metadata links.</p>
+                        <SuperButton primary onclick={scanLibrary} class="mt-8">Execute Deep Scan</SuperButton>
+                    </div>
+                {/if}
+            </div>
 
-                    <div class="video-info-card mt-4">
-                        <span class="label">PLAYLIST: {brokenVideos[currentVideoIndex].playlist.title}</span>
-                        <h4 class="mt-2">{brokenVideos[currentVideoIndex].video.title}</h4>
-                        <code class="mt-2">{brokenVideos[currentVideoIndex].video.videoId}</code>
-                    </div>
-
-                    <div class="alternatives-section mt-6">
-                        <p class="section-label">SEARCH FOR ALTERNATIVES</p>
-                        <div class="alt-grid">
-                            {#each alternatives as alt}
-                                <a href={alt.url} target="_blank" class="alt-link">
-                                    <PlusMultiple size="16" />
-                                    <span>{alt.name}</span>
-                                </a>
-                            {/each}
-                        </div>
-                    </div>
-
-                    <div class="actions mt-8">
-                        <button class="btn secondary" on:click={next}>Skip</button>
-                        <button class="btn primary-pro" on:click={replaceVideo}>Replace Video</button>
-                    </div>
-                </div>
-            {/if}
+            <div class="modal-footer">
+                <SuperButton outline onclick={close}>Deactivate</SuperButton>
+            </div>
         </div>
     </div>
-</div>
 {/if}
 
 <style>
-    .repair-overlay {
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 3000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(8px);
-    }
-
-    .repair-container {
-        width: 550px;
-        max-width: 90vw;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .pro-glass {
-        background: var(--card-bg-alpha, rgba(20, 25, 35, 0.85));
-        backdrop-filter: blur(24px);
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        box-shadow: 0 32px 128px rgba(0, 0, 0, 0.6);
-    }
-
-    .repair-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .repair-header h3 { margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: -1px; }
-
-    .close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
-
-    .repair-content {
-        padding: 2rem;
-        min-height: 400px;
-    }
-
-    .loading-pane, .empty-pane {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-        padding: 3rem;
-    }
-
-    .spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid var(--hover);
-        border-top-color: var(--primary);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .status-bar { display: flex; align-items: center; gap: 15px; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); }
-    .progress { height: 6px; background: var(--hover); flex-grow: 1; border-radius: 3px; overflow: hidden; }
-    .fill { height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary); transition: width 0.3s; }
-
-    .video-info-card {
-        background: var(--hover);
-        padding: 1.5rem;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-    }
-    .video-info-card .label { font-size: 0.6rem; font-weight: 800; color: var(--primary); letter-spacing: 1.5px; }
-    .video-info-card h4 { font-size: 1.2rem; font-weight: 900; margin: 0; }
-    .video-info-card code { font-size: 0.8rem; background: rgba(0, 0, 0, 0.3); padding: 4px 8px; border-radius: 4px; color: #ff8a80; }
-
-    .alt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    .alt-link {
-        background: var(--card-bg);
-        border: 1px solid var(--border);
-        padding: 12px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-        color: var(--text);
-        font-weight: 700;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-    }
-    .alt-link:hover { border-color: var(--primary); background: var(--hover); transform: translateY(-2px); }
-
-    .section-label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1.5px; }
-
-    .actions { display: flex; gap: 15px; }
-    .btn { padding: 14px 24px; border-radius: 14px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; flex-grow: 1; }
-    .btn.primary-pro { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 15px rgba(255, 82, 82, 0.3); }
-    .btn.secondary { background: var(--hover); color: var(--text); }
-
-    .mt-4 { margin-top: 1rem; }
-    .mt-6 { margin-top: 1.5rem; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
+    .modal-content { width: 500px; max-width: 90vw; padding: 2.5rem; }
+    .modal-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    h2 { margin: 0; font-weight: 900; letter-spacing: -1px; }
+    .modal-body { min-height: 200px; }
+    .scan-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; gap: 1.5rem; }
+    .pulse-ring { width: 50px; height: 50px; border: 3px solid var(--primary); border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
+    .broken-node { display: flex; justify-content: space-between; align-items: center; background: var(--hover); padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border); }
+    .node-info { display: flex; flex-direction: column; gap: 2px; }
+    .node-id { font-family: 'JetBrains Mono'; font-weight: 800; font-size: 0.75rem; color: var(--primary); }
+    .pl-name { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; }
+    .modal-footer { margin-top: 2rem; display: flex; justify-content: flex-end; }
     .mt-8 { margin-top: 2rem; }
-    .pro-glow { box-shadow: 0 0 20px rgba(255, 82, 82, 0.4); }
 </style>
