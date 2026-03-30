@@ -6,7 +6,12 @@
   import type { Video } from "@yph/core";
   import { aiService, notificationService } from "@yph/core";
 
-  let { video = $bindable(), display = $bindable(false) } = $props();
+  interface Props {
+    video: Video;
+    display?: boolean;
+  }
+
+  let { video = $bindable(), display = $bindable(false) }: Props = $props();
   const dispatch = createEventDispatcher();
   let loadingAi = $state(false);
 
@@ -22,8 +27,8 @@
       loadingAi = true;
       try {
           const res = await aiService.analyzeVideo(video);
-          video.aiSummary = res.summary;
-          video.aiTags = res.tags;
+          video.aiSummary = res.aiSummary;
+          video.aiTags = res.aiTags;
           notificationService.success("AI Analysis Complete.");
       } finally {
           loadingAi = false;

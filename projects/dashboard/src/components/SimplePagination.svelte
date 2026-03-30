@@ -1,6 +1,13 @@
 <svelte:options runes={true} />
 <script lang="ts">
-  let { totalItems, pageSize, currentPage = $bindable(1), onchange } = $props();
+  interface Props {
+    totalItems: number;
+    pageSize: number;
+    currentPage?: number;
+    onchange?: (page: number) => void;
+  }
+
+  let { totalItems, pageSize, currentPage = $bindable(1), onchange }: Props = $props();
   let totalPages = $derived(Math.ceil(totalItems / pageSize));
 
   function setPage(p: number) {

@@ -37,7 +37,7 @@
   let pageSize = 20;
 
   onMount(async () => {
-      const id = router.params?.id;
+      const id = $router.params?.id;
       if (id) {
           playlist = await storageService.getPlaylist(id);
           if (playlist) {
@@ -193,6 +193,7 @@
             totalItems={filteredVideos.length}
             {pageSize}
             bind:currentPage={currentPage}
+            onchange={(p) => currentPage = p}
         />
     {:else}
         <div class="error-state pro-glass">

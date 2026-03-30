@@ -9,5 +9,5 @@ export { default as ResizablePanel } from "./components/ResizablePanel.svelte";
 export { default as ParametricBackground } from "./components/ParametricBackground.svelte";
 export { default as Breadcrumbs } from "./components/Breadcrumbs.svelte";
 
-export * from "./components/icons/index.js";
+export * from "./components/icons/index.ts";
 export * from "./types.js";

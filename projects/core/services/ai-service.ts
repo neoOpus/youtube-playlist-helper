@@ -2,7 +2,8 @@ import type { Video, Playlist } from "../types/model.js";
 
 /**
  * AI Service for intelligent playlist analysis and optimization.
- * Part of the "Pro Edition" upgrade.
+ * Part of the "Professional Edition" upgrade.
+ * Optimized for high-throughput relevance scoring.
  */
 export const aiService = {
   /**
@@ -13,10 +14,11 @@ export const aiService = {
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const tags = ["AI-Enhanced"];
-    if (video.title.toLowerCase().includes("music")) tags.push("Music");
-    if (video.title.toLowerCase().includes("tutorial")) tags.push("Educational");
-    if (video.title.toLowerCase().includes("review")) tags.push("Analysis");
-    if (video.title.toLowerCase().includes("rick")) tags.push("Meme", "Classic");
+    const title = (video.title || "").toLowerCase();
+    if (title.includes("tutorial")) tags.push("Educational");
+    if (title.includes("review")) tags.push("Analysis");
+    if (title.includes("music")) tags.push("Music");
+    if (title.includes("rick")) tags.push("Meme", "Classic");
 
     return {
       aiSummary: `Automated neural summary: This node ("${video.title}") has been indexed with pro precision. It appears to focus on ${tags.join(", ")} content.`,
@@ -25,46 +27,72 @@ export const aiService = {
   },
 
   /**
-   * Calculates a relevance score for a video based on keywords.
+   * Calculates relevance score for a video based on keywords.
+   * Uses a multi-signal approach (Title, AI Tags, Rating).
+   * ⚡ PERFORMANCE: Keywords should be pre-lowercased for maximum speed in hot loops.
    */
   calculateVideoRelevance(video: Video, keywords: string[]): number {
-    if (!video) return 0;
+    if (!video || !keywords.length) return 0;
     let score = 0;
-    const lowerTitle = (video.title || "").toLowerCase();
-    const text = (lowerTitle + " " + (video.aiSummary?.toLowerCase() || "") + " " + (video.aiTags?.join(" ").toLowerCase() || ""));
+    const title = (video.title || "").toLowerCase();
+    const summary = (video.aiSummary || "").toLowerCase();
+    const tags = video.aiTags || [];
 
-    for (const word of keywords) {
-      const lowerWord = word.toLowerCase();
-      if (text.includes(lowerWord)) score += 10;
-      // Bonus for exact title matches
-      if (lowerTitle.includes(lowerWord)) score += 10;
+    // ⚡ PERFORMANCE: Pre-lowercase tags once per video, not per keyword.
+    const lowerTags = tags.map((t) => t.toLowerCase());
+
+    for (let i = 0; i < keywords.length; i++) {
+      const k = keywords[i];
+
+      // Signal 1: Title (High weight)
+      if (title.includes(k)) score += 10;
+      // Signal 2: Summary (Medium weight)
+      if (summary.includes(k)) score += 5;
+
+      // Signal 3: AI Tags (High weight)
+      for (let j = 0; j < lowerTags.length; j++) {
+        if (lowerTags[j].includes(k)) {
+          score += 15;
+          break;
+        }
+      }
     }
 
+    // Signal 4: Rating (Small boost)
     if (video.rating) score += video.rating * 5;
 
     return score;
   },
 
   /**
-   * Calculates a relevance score for a playlist based on keywords.
+   * Aggregates relevance for an entire playlist.
    */
   calculatePlaylistRelevance(playlist: Playlist, keywords: string[]): number {
+    if (!playlist || !keywords.length) return 0;
     let score = 0;
-    const lowerTitle = (playlist.title || "").toLowerCase();
-    const text = (lowerTitle + " " + (playlist.groups?.join(" ").toLowerCase() || ""));
+    const title = (playlist.title || "").toLowerCase();
+    const groups = (playlist.groups || []).map((g) => g.toLowerCase());
 
-    for (const word of keywords) {
-      const lowerWord = word.toLowerCase();
-      if (text.includes(lowerWord)) score += 20;
-      if (lowerTitle.includes(lowerWord)) score += 20;
+    for (let i = 0; i < keywords.length; i++) {
+      const k = keywords[i];
+      if (title.includes(k)) score += 20;
+
+      for (let j = 0; j < groups.length; j++) {
+        if (groups[j].includes(k)) {
+          score += 10;
+          break;
+        }
+      }
     }
 
     const videos = playlist.loadedVideos || [];
     if (videos.length > 0) {
-      const videoScores = videos.map(v => this.calculateVideoRelevance(v, keywords));
+      // Calculate average video relevance
+      const videoScores = videos.map((v) =>
+        this.calculateVideoRelevance(v, keywords)
+      );
       score += videoScores.reduce((a, b) => a + b, 0) / videos.length;
     }
-
     return score;
   },
 
@@ -73,34 +101,41 @@ export const aiService = {
    */
   expandKeywords(keywords: string[]): string[] {
     const expansion: Record<string, string[]> = {
-      "coding": ["programming", "developer", "software", "tutorial", "code", "github"],
-      "music": ["song", "audio", "track", "concert", "live", "album"],
-      "tech": ["technology", "gadget", "review", "hardware", "software", "innovation"],
-      "gaming": ["gameplay", "walkthrough", "playthrough", "esports", "streaming"]
+      coding: ["programming", "developer", "software", "tutorial", "code", "github"],
+      music: ["song", "audio", "track", "concert", "live", "album"],
+      tech: ["technology", "gadget", "review", "hardware", "software", "innovation"],
+      gaming: ["gameplay", "walkthrough", "playthrough", "esports", "streaming"],
     };
 
-    const expanded = [...keywords];
-    keywords.forEach(k => {
+    const expanded = new Set<string>();
+    for (const k of keywords) {
       const lowerK = k.toLowerCase();
+      expanded.add(lowerK);
       if (expansion[lowerK]) {
-        expanded.push(...expansion[lowerK]);
+        for (const expandedWord of expansion[lowerK]) {
+          expanded.add(expandedWord);
+        }
       }
-    });
-    return [...new Set(expanded)];
+    }
+    return Array.from(expanded);
   },
 
   /**
-   * Intelligent sorting based on relevance to a set of tags or keywords.
+   * Sorts videos by relevance using a Schwartzian transform for performance.
    */
   sortByRelevance(videos: Video[], keywords: string[]): Video[] {
     if (!keywords.length) return videos;
-    const expanded = this.expandKeywords(keywords);
+    const expandedAndNormalized = this.expandKeywords(keywords);
 
-    // Schwartzian Transform
+    // ⚡ PERFORMANCE: Schwartzian Transform
+    // Pre-calculating relevance scores prevents O(N log N) redundant calculations.
     return videos
-      .map(v => ({ video: v, score: this.calculateVideoRelevance(v, expanded) }))
+      .map((v) => ({
+        video: v,
+        score: this.calculateVideoRelevance(v, expandedAndNormalized),
+      }))
       .sort((a, b) => b.score - a.score)
-      .map(item => item.video);
+      .map((item) => item.video);
   },
 
   async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
@@ -113,6 +148,6 @@ export const aiService = {
      */
     optimize(videos: Video[]) {
       return [...videos].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    }
-  }
+    },
+  },
 };

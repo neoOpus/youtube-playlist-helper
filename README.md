@@ -58,20 +58,23 @@ My approach to software is built on four central pillars:
 ---
 
 ### 🚀 Featured Pro Projects
-*(Detailed project highlights coming soon)*
 
-- **Phoenix Form Recovery Suite**: The next generation of intelligent form recovery.
-- **YouTube Playlist Helper**: A "peace of mind" ecosystem for video management.
+- **YouTube Playlist Helper**: A "peace of mind" ecosystem for video management. Fully migrated to **Svelte 5** and high-fidelity **"Professional Edition"** design.
+- **Form Recovery Suite**: The next generation of intelligent form recovery.
+
+---
+
+### 📦 Installation & Build
+
+1. Install Node.js and npm.
+2. Run `npm install` from the root.
+3. Run `npm run build` to build all projects.
+4. The extension source files are in `projects/extension` and the built editor in `projects/extension/editor`.
 
 ---
 
 ### 📫 Let’s Connect
-*(Remind me to set this up later)*
-
 ⚡ Always building. Always improving. Always shipping.
-1. Install Node.js and npm.
-2. Run `npm run build`.
-3. The extension source files are in `projects/extension` and the built editor in `projects/extension/editor`.
 
 ## Related Projects
 

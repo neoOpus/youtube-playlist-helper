@@ -18,7 +18,7 @@
 </script>
 
 {#if playlists.length > 0}
-  <PlaylistsFilters bind:playlists bind:filteredPlaylists />
+  <PlaylistsFilters {playlists} bind:filteredPlaylists />
 {/if}
 
 <div class="playlists-list mt-6">

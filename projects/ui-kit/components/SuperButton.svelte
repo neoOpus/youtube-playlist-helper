@@ -2,29 +2,35 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
+  interface Props {
+    primary?: boolean;
+    secondary?: boolean;
+    danger?: boolean;
+    outline?: boolean;
+    mini?: boolean;
+    circle?: boolean;
+    title?: string;
+    disabled?: boolean;
+    onclick?: (e: MouseEvent) => void;
+    class?: string;
+    children?: Snippet;
+    ariaLabel?: string;
+  }
+
   let {
     primary = false,
     secondary = false,
     danger = false,
     outline = false,
     mini = false,
+    circle = false,
     title = "",
     disabled = false,
     onclick = (e: MouseEvent) => {},
     class: className = "",
-    children
-  }: {
-    primary?: boolean;
-    secondary?: boolean;
-    danger?: boolean;
-    outline?: boolean;
-    mini?: boolean;
-    title?: string;
-    disabled?: boolean;
-    onclick?: (e: MouseEvent) => void;
-    class?: string;
-    children?: Snippet;
-  } = $props();
+    children,
+    ariaLabel
+  }: Props = $props();
 
   function handleMouseMove(e: MouseEvent) {
       const target = e.currentTarget as HTMLElement;
@@ -38,13 +44,15 @@
 
 <button
   class="super-button luminous-hover {className}"
-  class:primary
-  class:secondary
-  class:danger
-  class:outline
-  class:mini
+  class:is-primary={primary}
+  class:is-secondary={secondary}
+  class:is-danger={danger}
+  class:is-outline={outline}
+  class:is-mini={mini}
+  class:is-circle={circle}
   {title}
   {disabled}
+  aria-label={ariaLabel || title}
   onclick={(e) => !disabled && onclick(e)}
   onmousemove={handleMouseMove}
 >
@@ -59,7 +67,7 @@
 <style>
   .super-button {
     position: relative;
-    padding: 12px 24px;
+    padding: var(--space-3) var(--space-6);
     border-radius: var(--radius-md);
     font-size: var(--font-sm);
     font-weight: 800;
@@ -73,15 +81,24 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: var(--space-2);
     text-transform: uppercase;
-    font-size: 0.75rem;
+    font-family: inherit;
+    outline: none;
   }
 
-  .super-button.mini {
-      padding: 6px 12px;
+  .super-button.is-mini {
+      padding: var(--space-1) var(--space-3);
       font-size: 0.65rem;
       border-radius: var(--radius-sm);
+  }
+
+  .super-button.is-circle {
+    padding: var(--space-2);
+    border-radius: var(--radius-full);
+    aspect-ratio: 1/1;
+    width: 42px;
+    height: 42px;
   }
 
   .super-button:hover:not(:disabled) {
@@ -94,30 +111,35 @@
       transform: scale(0.96) translateY(0);
   }
 
-  .primary {
+  .super-button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .is-primary {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
     border-color: var(--primary);
     color: white;
     box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
   }
 
-  .primary:hover:not(:disabled) {
+  .is-primary:hover:not(:disabled) {
       box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.4);
       border-color: white;
   }
 
-  .danger {
+  .is-danger {
     background: linear-gradient(135deg, var(--danger) 0%, #ff6b6b 100%);
     border-color: var(--danger);
     color: white;
   }
 
-  .outline {
+  .is-outline {
     background: transparent;
     border: 2px solid var(--border-strong);
   }
 
-  .outline:hover:not(:disabled) {
+  .is-outline:hover:not(:disabled) {
       background: var(--hover);
       border-color: var(--primary);
   }
@@ -127,6 +149,7 @@
       z-index: 2;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: inherit;
   }
 
@@ -149,7 +172,7 @@
       opacity: 1;
   }
 
-  .primary::after {
+  .is-primary::after {
       background: radial-gradient(circle, rgba(255, 255, 255, 0.4), transparent 70%);
   }
 

@@ -4,7 +4,7 @@
   import { debounce, playlistsSorter } from "@yph/core";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
   import { SearchIcon, Filter } from "@yph/ui-kit";
-  import { playlistsSearch } from "../stores/playlists-filters";
+  import { playlistsSearch, playlistsSorting } from "../stores/playlists-filters";
 
   let {
     playlists = [],
@@ -14,9 +14,7 @@
     filteredPlaylists: Playlist[];
   } = $props();
 
-  let search = $state("");
   let selectedGroup = $state("All");
-  let sortBy = $state<PlaylistsSorting>("date-created-desc");
   let useRegex = $state(false);
   let searchInVideos = $state(true);
   let showPowerFeatures = $state(false);
@@ -27,24 +25,23 @@
     filtersUpdated();
   }, 250);
 
-  function searchChanged() {
-    playlistsSearch.set(search);
-    debouncedFiltersUpdated();
-  }
-
   function filtersUpdated() {
     if (!playlists) return;
 
+    // ⚡ PERFORMANCE: Filter BEFORE sorting to minimize computational load on sort algorithms.
     let result = [...playlists];
 
+    // 1. Group Filter
     if (selectedGroup !== "All") {
       result = result.filter((p) => p.groups?.includes(selectedGroup));
     }
 
-    if (search.trim()) {
+    // 2. Search Filter
+    const searchStr = $playlistsSearch.trim();
+    if (searchStr) {
       if (useRegex) {
         try {
-          const regex = new RegExp(search, "i");
+          const regex = new RegExp(searchStr, "i");
           result = result.filter(
             (p) => regex.test(p.title || "") ||
                    p.groups?.some((g) => regex.test(g)) ||
@@ -52,7 +49,7 @@
           );
         } catch (e) {}
       } else {
-        const keywords = search.toLowerCase().split(/\s+/).filter(k => k);
+        const keywords = searchStr.toLowerCase().split(/\s+/).filter(k => k);
         result = result.filter((p) => {
           const lowerTitle = (p.title || "").toLowerCase();
           const matchesTitle = keywords.every((k) => lowerTitle.includes(k));
@@ -67,13 +64,26 @@
       }
     }
 
-    const keywords = search.split(/\s+/).filter((k) => k.length > 2);
-    result = playlistsSorter.sort(result, sortBy, keywords);
+    // 3. Sorting (Applied to the filtered subset)
+    const keywords = searchStr.split(/\s+/).filter((k) => k.length > 2);
+    result = playlistsSorter.sort(result, $playlistsSorting, keywords);
     filteredPlaylists = result;
   }
 
+  // Reactive dependencies for automatic filtering when state changes
   $effect(() => {
+      playlists;
+      $playlistsSorting;
+      selectedGroup;
+      useRegex;
+      searchInVideos;
       filtersUpdated();
+  });
+
+  // Search is debounced to avoid expensive filtering on every keystroke
+  $effect(() => {
+      $playlistsSearch;
+      debouncedFiltersUpdated();
   });
 
   function handleMouseMove(e: MouseEvent) {
@@ -100,8 +110,7 @@
               <SearchIcon size="16" color="var(--primary)" />
               <input
                 type="text"
-                bind:value={search}
-                oninput={searchChanged}
+                bind:value={$playlistsSearch}
                 placeholder={useRegex ? "Regex Search..." : "Deep Search nodes... (Press /)"}
               />
           </div>
@@ -112,16 +121,17 @@
 
       <div class="filters">
           <label>
+            <span>Group</span>
             <select bind:value={selectedGroup}>
-              <option value="All">All Groups</option>
-              {#each groups.filter(g => g !== 'All') as group}
-                <option value={group}>{group}</option>
+              {#each groups as group}
+                <option value={group}>{group === 'All' ? 'All Groups' : group}</option>
               {/each}
             </select>
           </label>
 
           <label>
-            <select bind:value={sortBy}>
+            <span>Sort</span>
+            <select bind:value={$playlistsSorting}>
               <optgroup label="Timeline">
                   <option value="date-created-desc">Recently Created</option>
                   <option value="last-modified-desc">Recently Modified</option>
@@ -224,8 +234,17 @@
   .checks { display: flex; gap: var(--space-8); }
   .check-opt { display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-xs); font-weight: 700; cursor: pointer; }
   .check-opt input { width: 16px; height: 16px; accent-color: var(--primary); }
-  .power-hint { font-size: var(--font-xs); color: var(--text-muted); font-weight: 600; opacity: 0.7; }
+  .power-hint { font-size: var(--font-xs); color: var(--text-muted); font-weight: 600; opacity: 0.7; font-style: italic; }
+
   .filters { display: flex; gap: var(--space-4); }
+
+  label {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-sm);
+      color: var(--text-muted);
+  }
 
   select {
       padding: var(--space-2) var(--space-4);

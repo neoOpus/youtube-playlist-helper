@@ -2,17 +2,19 @@
 <script lang="ts">
   import { scale } from "svelte/transition";
 
+  interface Props {
+    checked?: boolean | "mixed";
+    disabled?: boolean;
+    label?: string;
+    onchange?: (val: boolean | "mixed") => void;
+  }
+
   let {
     checked = $bindable(false),
     disabled = false,
     label = "",
     onchange = (val: boolean | "mixed") => {}
-  }: {
-    checked: boolean | "mixed";
-    disabled?: boolean;
-    label?: string;
-    onchange?: (val: boolean | "mixed") => void;
-  } = $props();
+  }: Props = $props();
 
   function toggle() {
     if (disabled) return;
@@ -25,6 +27,7 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
+    if (disabled) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       toggle();
@@ -38,7 +41,7 @@
     class:disabled
     onclick={(e) => { e.stopPropagation(); toggle(); }}
     role="checkbox"
-    aria-checked={checked}
+    aria-checked={checked === "mixed" ? "mixed" : checked}
     onkeydown={handleKeydown}
     tabindex={disabled ? -1 : 0}
 >
@@ -66,10 +69,22 @@
   .super-checkbox-container {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     cursor: pointer;
     user-select: none;
     outline: none;
+    padding: var(--space-1);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+  }
+
+  .super-checkbox-container:hover:not(.disabled) .checkbox-box {
+      border-color: var(--primary);
+  }
+
+  .super-checkbox-container:focus-visible {
+      box-shadow: 0 0 0 2px var(--primary);
+      outline-offset: 2px;
   }
 
   .checkbox-box {
@@ -83,16 +98,13 @@
     background: var(--bg-secondary);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     color: white;
+    flex-shrink: 0;
   }
 
   .checkbox-box.checked {
     background: var(--primary);
     border-color: var(--primary);
     box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
-  }
-
-  .super-checkbox-container:hover .checkbox-box {
-      border-color: var(--primary);
   }
 
   .checkbox-label {

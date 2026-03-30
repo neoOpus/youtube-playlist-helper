@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { debounce } from './utils';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { debounce } from "./utils";
 
-describe('debounce', () => {
+describe("debounce", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -10,7 +10,7 @@ describe('debounce', () => {
     vi.useRealTimers();
   });
 
-  it('should delay function execution', () => {
+  it("should delay function execution", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 100);
 
@@ -24,7 +24,7 @@ describe('debounce', () => {
     expect(func).toHaveBeenCalledTimes(1);
   });
 
-  it('should only execute the last call within the wait period', () => {
+  it("should only execute the last call within the wait period", () => {
     const func = vi.fn();
     const debouncedFunc = debounce(func, 100);
 
@@ -37,5 +37,19 @@ describe('debounce', () => {
     vi.advanceTimersByTime(100);
     expect(func).toHaveBeenCalledTimes(1);
     expect(func).toHaveBeenCalledWith("third");
+  });
+
+  it("should reset the timer on subsequent calls", () => {
+    const func = vi.fn();
+    const debouncedFunc = debounce(func, 100);
+
+    debouncedFunc();
+    vi.advanceTimersByTime(50);
+    debouncedFunc();
+    vi.advanceTimersByTime(50);
+    expect(func).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(50);
+    expect(func).toHaveBeenCalledTimes(1);
   });
 });
