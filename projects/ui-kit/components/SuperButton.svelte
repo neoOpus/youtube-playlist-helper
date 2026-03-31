@@ -85,6 +85,7 @@
     text-transform: uppercase;
     font-family: inherit;
     outline: none;
+    box-shadow: var(--shadow-sm);
   }
 
   .super-button.is-mini {
@@ -104,7 +105,7 @@
   .super-button:hover:not(:disabled) {
       border-color: var(--border-strong);
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px -10px var(--shadow);
+      box-shadow: var(--shadow-md);
   }
 
   .super-button:active:not(:disabled) {

@@ -9,7 +9,7 @@
   import PlaylistPreview from "../components/PlaylistPreview.svelte";
   import PlaylistCardSkeleton from "../components/PlaylistCardSkeleton.svelte";
   import EmptyState from "../components/EmptyState.svelte";
-  import { SearchIcon, PlaylistPlayIcon, DeleteIcon, SuperButton, Breadcrumbs } from "@yph/ui-kit";
+  import { SearchIcon, PlaylistPlayIcon, DeleteIcon, SuperButton, Breadcrumbs, InfoIcon } from "@yph/ui-kit";
   import { router } from "../stores/router";
 
   let playlists = $state<Playlist[]>([]);

@@ -15,8 +15,8 @@
   interface Props {
     playlist: Playlist;
     selected?: boolean;
-    ondeleted?: (pl: Playlist) => void;
-    onselect?: (selected: boolean) => void;
+    ondeleted?: (pl: Playlist) => {},
+    onselect?: (selected: boolean) => {}
   }
 
   let {
