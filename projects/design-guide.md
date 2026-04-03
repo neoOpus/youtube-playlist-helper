@@ -1,115 +1,112 @@
-# YouTube Playlist Helper: Professional Design & Implementation Guide
-**Architecture & Implementation Blueprint for the Pro Edition**
+# YouTube Playlist Helper: Next-Level Design & Implementation Guide
 
-This guide defines the exact visual specifications, interaction patterns, and implementation strategy for the YouTube Playlist Helper Professional UI. It ensures the extension feels like a polished, modern web application.
-
----
+This guide defines the front-end architecture, UI/UX standards, and implementation details for the "Quantum Edition" of the YouTube Playlist Helper. It ensures the extension feels like a polished, modern web application.
 
 ## 1. Core Design Principles
+- **Clarity & Consistency:** Use standard components and a unified color palette to reduce cognitive load.
+- **Glassmorphism:** Employ translucency, background blurs, and subtle borders to create depth and focus.
+- **Feedback & Delight:** Provide immediate visual feedback for all user actions via micro-interactions and transitions.
+- **Accessibility (WCAG 2.2 AA):** Minimum 4.5:1 contrast, visible focus outlines, ARIA labels for icons, and keyboard operability.
+- **Performance:** Limit animations to GPU-accelerated properties (`transform`, `opacity`) to maintain 60fps.
 
-*   **Clarity & Consistency:** 1.5 line-height for body text; 32px - 64px section breathing room. Standard components and a unified color palette.
-*   **Obsidian Depth (Glassmorphism):** Employ translucency, multi-layer background blurs (40px - 80px), and subtle borders to create depth and focus.
-*   **Feedback & Delight:** Provide immediate visual feedback for all user actions via micro-interactions and transitions (60fps, < 16ms per frame).
-*   **Accessibility (WCAG 2.2 AA):** Minimum 4.5:1 contrast, visible focus outlines, ARIA labels for icons, and keyboard-only operability.
-*   **Progressive Disclosure:** Advanced technical parameters are sequestered behind the "System Environment" section.
+## 2. UI Component Library
 
----
+### Color Palette
+| Token | Dark (SOTA Red) | GitHub Light | Dracula |
+| :--- | :--- | :--- | :--- |
+| `--primary` | `#ff5252` | `#0969da` | `#bd93f9` |
+| `--bg` | `#0b0f1a` | `#f6f8fa` | `#282a36` |
+| `--card-bg-alpha` | `rgba(10, 16, 28, 0.85)` | `rgba(246, 248, 250, 0.95)` | `rgba(40, 42, 54, 0.9)` |
+| `--border` | `rgba(255, 255, 255, 0.08)` | `rgba(208, 215, 222, 0.8)` | `rgba(68, 71, 90, 0.8)` |
+| `--text` | `#f1f5f9` | `#1f2328` | `#f8f8f2` |
 
-## 2. Layout & Grid Specifications (4px Baseline)
+### Typography Scale (4px Baseline)
+| Size | Token | Value | Weight | Use Case |
+| :--- | :--- | :--- | :--- | :--- |
+| XS | `--font-xs` | 0.75rem (12px) | 800 | Labels, Metadata, Badges |
+| SM | `--font-sm` | 0.875rem (14px) | 500/700 | Body text, Inputs, Buttons |
+| BASE | `--font-base` | 1rem (16px) | 500 | Main paragraphs |
+| LG | `--font-lg` | 1.125rem (18px) | 800 | Card titles |
+| XL | `--font-xl` | 1.25rem (20px) | 900 | Section headers, Sidebar Logo |
+| 4XL | `--font-4xl` | 2.25rem (36px) | 900 | Page titles (Saved Collection) |
 
-| Property | Value | Notes |
-| :--- | :--- | :--- |
-| **Baseline Grid** | 4px | All measurements (padding, margin, width) must be multiples. |
-| **Max Container Width** | 1600px | Centered in viewport. |
-| **Grid System** | 12-Column | Fluid percentage-based widths. |
-| **Gutter Width** | 24px | Standardized via `var(--space-6)`. |
-| **Sidebar Width** | 280px | Collapses to 80px on mobile. |
+### Elevation & Radius
+- **Radius Sm/Md/Lg/Xl:** 4px / 8px / 12px / 18px.
+- **Shadows:**
+  - `--shadow-sm`: 0 1px 2px rgba(0,0,0,0.05)
+  - `--shadow-xl`: 0 20px 25px -5px rgba(0,0,0,0.1)
 
----
+## 3. Interaction Patterns
+- **Hover:** Background shift (`var(--hover)`) + Lift (`translateY(-4px)`).
+- **Focus:** 2px solid primary outline with 2px offset (`focus-visible`).
+- **Keyboard Navigation:** Tab order follows logical flow (Sidebar -> Filters -> Results).
+- **Undo/Redo:** Toast notification with "Undo" action (250ms fade-in).
+- **Micro-interactions:**
+  - Button press ripple: 150ms transform scale down (0.96).
+  - Luminous Hover: Radial gradient (12% opacity primary) follows cursor.
 
-## 3. UI Component Specifications
+## 4. Accessibility Checklist
+- [ ] Contrast ratio ≥ 4.5:1 for all text.
+- [ ] `aria-label` on all icon-only buttons (e.g., Delete, Edit).
+- [ ] `aria-current="page"` on active navigation items.
+- [ ] Keyboard support (`Enter`/`Space`) for all custom controls (Checkboxes, Modals).
+- [ ] Focus trap in Modals and Wizards.
 
-### 3.1 Buttons (SuperButton)
-*   **Height:** 44px (Standard) / 32px (Mini).
-*   **Typography:** Inter Bold (800), 12px (0.75rem), All-Caps.
-*   **Corner Radius:** 12px (`var(--radius-md)`).
-*   **Types:**
-    *   *Primary:* Gradient (#ff5252 -> #ff7575), white text.
-    *   *Secondary:* `var(--bg-secondary)` with 1px border.
-    *   *Danger:* Gradient (#ef4444 -> #ff6b6b).
-*   **States:**
-    *   *Hover:* Scale 1.01; transform `translateY(-2px)`; Luminous radial glow.
-    *   *Active:* Scale 0.96; transform `translateY(0)`.
+## 5. Responsive & Adaptive Layout
+- **Mobile (≤ 480px):** Sidebar collapses to 60px icons only, 1-column grid.
+- **Tablet (481px - 1024px):** 2-column grid for playlists, sticky sidebar.
+- **Desktop (≥ 1025px):** 12-column layout (max-width 1200px), multi-column playlist grid.
 
-### 3.2 Form Elements
-*   **Input Fields / Selects:**
-    *   *Typography:* Inter Bold (700), 14px.
-    *   *Background:* Obsidian Glass (`var(--bg-secondary)`).
-    *   *Focus:* 2px solid `var(--primary)` + 4px soft outer glow.
-*   **Checkboxes:** 20px x 20px; 6px radius. Spring scale (0.8 -> 1.0) on state change.
+## 6. Motion & Performance
+- Limit animations to GPU-accelerated properties: `transform`, `opacity`.
+- Use `prefers-reduced-motion` to disable non-critical animations.
+- Lazy-load playlist videos beyond the first 10 using virtualization.
 
-### 3.3 Overlays
-*   **Modals:** 32px radius (`var(--radius-xl)`); 80px glass blur; `translateY(20px -> 0)` entry.
-*   **Tooltips:** 11px font; Black background; 150ms fade.
-*   **Action Toasts:** 64px height; Bottom-right fixed; 10s progress bar for undo visibility.
+## 7. Information Architecture (IA)
+1. **Extension Icon:** Primary entry point.
+2. **Popup:** Quick search and "Add Current Video" action.
+3. **Sidebar (Primary Nav):** Saved Playlists, New, Manage, Cloud Sync, Support.
+4. **Main View:** Filters/Sort at top, Results in grid, Modals for destructive actions.
 
----
+## 8. User-Testing Plan (Lightweight)
+- **Protocol:** 5-user remote "think-aloud" test.
+- **Tasks:** 1. Find a specific video using Smart Sort. 2. Create a new playlist. 3. Delete a playlist and undo.
+- **Metrics:** Success rate, Time-on-task, SUS (System Usability Scale) score.
 
-## 4. Interaction Patterns
+## 9. Deliverables
 
-### 4.1 Micro-Interaction Timings
-*   **Click Ripple:** 100ms.
-*   **Luminous Hover Expansion:** 300ms.
-*   **Sidebar Collapse:** 300ms `var(--easing-standard)`.
-
-### 4.2 Keyboard Navigation
-*   **Hierarchy:** [1] Global Search (/) -> [2] Navigation Sidebar -> [3] Filter Bar -> [4] Main Grid.
-*   **Shortcuts:** `/` for Search; `N` for New; `S` for Saved; `M` for Manage; `ESC` to clear.
-
----
-
-## 5. Accessibility Checklist
-- [x] Contrast ratio ≥ 4.5:1 for all text.
-- [x] `aria-label` on all icon-only buttons (e.g., Delete, Edit).
-- [x] `aria-current="page"` on active navigation items.
-- [x] Keyboard support (`Enter`/`Space`) for all custom controls (Checkboxes, Modals).
-- [x] Focus trap in Modals and Wizards.
-- [x] Visible focus outlines (2px solid primary).
-
----
-
-## 6. Implementation Snippets
-
-### 6.1 Svelte 5 Component (Primary)
-```svelte
-<script lang="ts">
-  let { primary = false, onclick, children } = $props();
-</script>
-
-<SuperButton {primary} {onclick}>
-  {@render children?.()}
-</SuperButton>
+### CSS Variables (`_variables.scss` / `app.css`)
+```css
+:root {
+  --space-4: 1rem;
+  --primary: #ff5252;
+  --radius-lg: 12px;
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
 ```
 
-### 6.2 React Component (Reference)
+### Component Snippets
+#### Svelte (Primary)
+```svelte
+<SuperButton primary on:click={save}>Save Changes</SuperButton>
+```
+
+#### React
 ```tsx
-export const SuperButton = ({ primary, onClick, children }) => (
-  <button
-    className={`super-button ${primary ? 'is-primary' : ''}`}
-    onClick={onClick}
-  >
+const SuperButton = ({ children, primary, onClick }) => (
+  <button className={`super-button ${primary ? 'is-primary' : ''}`} onClick={onClick}>
     {children}
   </button>
 );
 ```
 
----
+#### Vanilla JS
+```javascript
+const btn = document.createElement('button');
+btn.className = 'super-button is-primary';
+btn.textContent = 'Save Changes';
+btn.addEventListener('click', () => save());
+```
 
-## 7. Deliverables Index
-*   **SCSS Tokens:** `projects/pro-variables.scss`
-*   **Motion Spec:** `projects/pro-animations.json`
-*   **Accessibility:** `projects/accessibility-report.md`
-*   **Test Template:** `projects/user-test-template.md`
-
 ---
-*Authored by Jules, UI Architect.*
+*Created by Jules, Software Engineer.*

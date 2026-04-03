@@ -5,16 +5,16 @@ import type { Playlist } from '../types/model.js';
 describe('playlistsSorter', () => {
     const p1: Playlist = { id: '1', title: 'Beta Playlist', videos: [], timestamp: 1000 };
     const p2: Playlist = { id: '2', title: 'Alpha Playlist', videos: [], timestamp: 2000 };
-    const p3: Playlist = { id: '3', title: '10 Pro Tips', videos: [], timestamp: 1500 };
-    const p4: Playlist = { id: '4', title: '2 Pro Tips', videos: [], timestamp: 1200 };
+    const p3: Playlist = { id: '3', title: '10 Quantum Tips', videos: [], timestamp: 1500 };
+    const p4: Playlist = { id: '4', title: '2 Quantum Tips', videos: [], timestamp: 1200 };
 
     const playlists = [p1, p2, p3, p4];
 
     it('should sort by title A-Z (natural sort)', () => {
         const sorter = getPlaylistsSorter('title-az');
         const sorted = [...playlists].sort(sorter);
-        expect(sorted[0].title).toBe('2 Pro Tips');
-        expect(sorted[1].title).toBe('10 Pro Tips');
+        expect(sorted[0].title).toBe('2 Quantum Tips');
+        expect(sorted[1].title).toBe('10 Quantum Tips');
         expect(sorted[2].title).toBe('Alpha Playlist');
     });
 

@@ -1,25 +1,21 @@
-<svelte:options runes={true} />
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { fade, fly } from "svelte/transition";
+  import Router, { push, location } from "svelte-spa-router";
   import PlaylistEditor from "./components/PlaylistEditor.svelte";
   import New from "./views/New.svelte";
   import Saved from "./views/Saved.svelte";
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
   import PlaylistComparison from "./components/PlaylistComparison.svelte";
-  import ActionToast from "./components/ActionToast.svelte";
+  import UndoNotification from "./components/UndoNotification.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import Sync from "./views/Sync.svelte";
   import CommandPalette from "./components/CommandPalette.svelte";
-  import ProErrorBoundary from "./components/ProErrorBoundary.svelte";
+  import { onMount } from "svelte";
   import { playlistsSearch } from "./stores/playlists-filters";
-  import { themeState, initTheme } from "./stores/theme.svelte";
+  import { activeTheme } from "./stores/theme.store";
   import { ParametricBackground } from "@yph/ui-kit";
-  import { enrichmentAgent } from "@yph/core";
-  import { router } from "./stores/router";
 
-  const routes: Record<string, any> = {
+  const routes = {
     "/": Saved,
     "/new": New,
     "/manage": Manage,
@@ -27,24 +23,14 @@
     "/merge": PlaylistComparison,
     "/support": Support,
     "/edit/:id": PlaylistEditor,
+    "*": Saved,
   };
 
-  let showPalette = $state(false);
-  let CurrentView = $derived(routes[$router.path] || Saved);
-  let errorBoundary: any = $state();
+  let showPalette = false;
 
-  // Use $effect for theme attribute sync
-  $effect(() => {
-    if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute("data-theme", themeState.active);
-    }
-  });
-
+  import { enrichmentAgent } from "@yph/core";
+  onMount(() => { enrichmentAgent.start(); });
   onMount(() => {
-      initTheme()
-          .then(() => enrichmentAgent.start())
-          .catch((e) => errorBoundary?.catchError(e as Error));
-
       const handleKeyDown = (e: KeyboardEvent) => {
           if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
               if (e.key === "Escape") {
@@ -58,52 +44,32 @@
               const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
               if (searchInput) searchInput.focus();
           } else if (e.key.toLowerCase() === "n") {
-              router.push("/new");
+              push("/new");
           } else if (e.key.toLowerCase() === "s") {
-              router.push("/");
+              push("/");
           } else if (e.key.toLowerCase() === "m") {
-              router.push("/manage");
+              push("/manage");
           } else if (e.key === "Escape") {
               playlistsSearch.set("");
           }
       };
 
-      const handleError = (e: ErrorEvent) => errorBoundary?.catchError(e.error);
-      const handleRejection = (e: PromiseRejectionEvent) => errorBoundary?.catchError(e.reason);
-
       window.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("error", handleError);
-      window.addEventListener("unhandledrejection", handleRejection);
-
-      return () => {
-          window.removeEventListener("keydown", handleKeyDown);
-          window.removeEventListener("error", handleError);
-          window.removeEventListener("unhandledrejection", handleRejection);
-      };
+      return () => window.removeEventListener("keydown", handleKeyDown);
   });
 </script>
 
-<ProErrorBoundary bind:this={errorBoundary}>
-    <div class="app-container">
-      <ParametricBackground theme={themeState.active} />
-      <div class="sidebar-wrapper">
-        <Sidebar activeRoute={$router.fullPath} />
-      </div>
-      <main class="main-content">
-          {#key $router.path}
-            <div
-                class="view-transition-wrapper"
-                in:fly={{ y: 10, duration: 400, delay: 100 }}
-                out:fade={{ duration: 200 }}
-            >
-                <CurrentView params={$router.params} />
-            </div>
-          {/key}
-      </main>
-      <ActionToast />
-      <CommandPalette bind:display={showPalette} />
-    </div>
-</ProErrorBoundary>
+<div class="app-container">
+  <ParametricBackground theme={$activeTheme} />
+  <div class="sidebar-wrapper">
+    <Sidebar activeRoute={$location} />
+  </div>
+  <main class="main-content">
+      <Router {routes} />
+  </main>
+  <UndoNotification />
+  <CommandPalette bind:display={showPalette} />
+</div>
 
 <style>
     :global(:root) {
@@ -132,10 +98,6 @@
         position: relative;
         z-index: 1;
         padding: 0;
-    }
-
-    .view-transition-wrapper {
-        min-height: 100%;
     }
 
     @media (max-width: 768px) {

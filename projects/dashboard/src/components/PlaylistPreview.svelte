@@ -1,52 +1,23 @@
-<svelte:options runes={true} />
 <script lang="ts">
-  import { router } from "../stores/router";
+  import { createEventDispatcher } from "svelte";
+  import { DeleteIcon, PencilIcon, SuperButton } from "@yph/ui-kit";
   import type { Playlist } from "@yph/core";
-  import {
-    PlaylistPlayIcon,
-    PencilIcon,
-    DeleteIcon,
-    TerminalIcon,
-    SuperButton,
-    SuperCheckbox
-  } from "@yph/ui-kit";
   import { storageService, actionLogger } from "@yph/core";
+  import { scale } from "svelte/transition";
 
-  interface Props {
-    playlist: Playlist;
-    selected?: boolean;
-    ondeleted?: (pl: Playlist) => {},
-    onselect?: (selected: boolean) => {}
-  }
-
-  let {
-    playlist,
-    selected = false,
-    ondeleted = (pl: Playlist) => {},
-    onselect = (selected: boolean) => {}
-  }: Props = $props();
-
-  let videoCount = $derived(playlist.loadedVideos?.length || 0);
-  let lastModified = $derived(playlist.lastModified ? new Date(playlist.lastModified).toLocaleDateString() : 'N/A');
+  export let playlist: Playlist;
+  const dispatch = createEventDispatcher();
 
   async function deletePlaylist() {
-    if (confirm(`Decommission infrastructure node "${playlist.title}"?`)) {
-        const original = { ...playlist };
-        actionLogger.log(`Delete "${playlist.title}"`, async () => {
-            await storageService.savePlaylist(original);
-            ondeleted(original);
+    if (confirm(`Delete "${playlist.title}"?`)) {
+        const previous = { ...playlist };
+        actionLogger.log(`Delete ${playlist.title}`, async () => {
+            await storageService.savePlaylist(previous);
+            dispatch("restored", previous);
         });
         await storageService.removePlaylist(playlist);
-        ondeleted(playlist);
+        dispatch("deleted", playlist);
     }
-  }
-
-  function handleSelect(newVal: boolean) {
-      onselect(newVal);
-  }
-
-  function navigateToEdit() {
-      router.push(`/edit/${playlist.id}`);
   }
 
   function handleMouseMove(e: MouseEvent) {
@@ -59,229 +30,147 @@
   }
 </script>
 
-<button
-    type="button"
-    class="playlist-card pro-glass luminous-hover aura-glow"
-    class:is-selected={selected}
-    onmousemove={handleMouseMove}
-    onclick={(e) => {
-        if ((e.target as HTMLElement).closest('.selection-overlay, .actions, .card-actions')) return;
-        navigateToEdit();
-    }}
+<div
+    class="playlist-card pro-glass luminous-hover"
+    on:mousemove={handleMouseMove}
+    in:scale={{ start: 0.95, duration: 400 }}
+    role="region"
+    aria-label="Playlist card: {playlist.title}"
 >
   <div class="card-header">
-      <div class="selection-overlay">
-          <SuperCheckbox checked={selected} onchange={handleSelect} />
-      </div>
-      <div class="header-icon">
-          <PlaylistPlayIcon size="24" color="var(--primary)" />
-          {#if videoCount > 20}
-            <div class="pulse-indicator"></div>
-          {/if}
-      </div>
-      <div class="meta">
-          <span class="badge secondary">{videoCount} Nodes</span>
-          <span class="small muted">{lastModified}</span>
-      </div>
-  </div>
-
-  <div class="card-body">
-    <h3>{playlist.title}</h3>
-    {#if playlist.groups && playlist.groups.length > 0}
-      <div class="tags-row">
+    <div class="title-row">
+        <a href="#/edit/{playlist.id}" class="title">{playlist.title}</a>
+        <div class="meta-badge">{(playlist.videos || []).length}</div>
+    </div>
+    {#if playlist.groups?.length}
+      <div class="groups">
         {#each playlist.groups as group}
-          <span class="tag">#{group}</span>
+          <span class="group-tag">{group}</span>
         {/each}
       </div>
     {/if}
   </div>
 
-  <div class="card-footer">
-    <div class="actions">
-        <SuperButton outline onclick={navigateToEdit} title="Modify System">
-            <PencilIcon size="14" />
-        </SuperButton>
-        <SuperButton outline onclick={deletePlaylist} danger title="Decommission">
-            <DeleteIcon size="14" />
-        </SuperButton>
-    </div>
-    <div class="system-info">
-        <div class="timestamp">
-            Created: {new Date(playlist.timestamp).toLocaleDateString()}
-        </div>
-        <div class="system-id">
-            <TerminalIcon size="10" />
-            <span>{playlist.id.slice(0, 8)}</span>
-        </div>
-    </div>
+  <div class="card-actions">
+    <a href="#/edit/{playlist.id}" class="action-btn" title="Edit infrastructure" aria-label="Edit {playlist.title}">
+        <PencilIcon size="16" />
+    </a>
+    <SuperButton
+        on:click={deletePlaylist}
+        circle
+        className="action-btn danger-btn"
+        title="Decommission"
+        ariaLabel="Delete {playlist.title}"
+    >
+      <DeleteIcon size="16" />
+    </SuperButton>
   </div>
-</button>
+
+  <div class="timestamp">
+    Created: {new Date(playlist.timestamp).toLocaleDateString()}
+  </div>
+</div>
 
 <style>
   .playlist-card {
-    position: relative;
     padding: var(--space-6);
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
-    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    border: 1px solid var(--border);
-    cursor: pointer;
-    height: 100%;
-    min-height: 240px;
-    background: var(--card-bg-alpha);
-    text-align: left;
-    width: 100%;
-    color: inherit;
-    font-family: inherit;
-    overflow: hidden;
-  }
-
-  .playlist-card:hover {
-    transform: translateY(-8px) scale(1.01);
-    border-color: rgba(var(--primary-rgb), 0.5);
-    box-shadow:
-        0 20px 40px -10px rgba(0, 0, 0, 0.5),
-        0 0 0 1px rgba(var(--primary-rgb), 0.2),
-        var(--luminous-shadow, 0 0 0 transparent);
-    z-index: 10;
-  }
-
-  /* Custom mouse-following shadow enhancement */
-  .playlist-card:hover {
-      --luminous-shadow: 0 0 30px -5px rgba(var(--primary-rgb), 0.15);
-  }
-
-  .playlist-card.is-selected {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--primary);
-    background: rgba(var(--primary-rgb), 0.05);
-  }
-
-  .card-header { display: flex; align-items: flex-start; justify-content: space-between; position: relative; }
-  .header-icon {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    background: var(--bg-secondary);
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-md);
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .playlist-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .title-row {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px var(--shadow);
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-bottom: var(--space-2);
   }
 
-  .pulse-indicator {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    width: 12px;
-    height: 12px;
-    background: var(--primary);
-    border-radius: 50%;
-    box-shadow: 0 0 10px var(--primary);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.5); opacity: 0; }
-    100% { transform: scale(1); opacity: 0; }
-  }
-
-  .meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-
-  .card-body { flex-grow: 1; }
-  .card-body h3 {
+  .title {
     font-size: var(--font-lg);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 1.2;
-    margin-bottom: var(--space-3);
+    font-weight: 800;
     color: var(--text);
+    text-decoration: none;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    line-clamp: 2;
     overflow: hidden;
+    line-height: 1.4;
   }
 
-  .tags-row { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: var(--text-muted);
+  .title:hover { color: var(--primary); }
+
+  .meta-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--font-xs);
+    font-weight: 900;
     background: var(--hover);
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid transparent;
-    transition: border-color 0.3s;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    color: var(--primary);
+  }
+
+  .groups { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .group-tag {
+    font-size: var(--font-xs);
+    font-weight: 800;
+    background: var(--hover);
+    color: var(--text-muted);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  .playlist-card:hover .tag { border-color: rgba(var(--primary-rgb), 0.1); }
 
-  .card-footer {
+  .card-actions { display: flex; gap: var(--space-3); margin-top: auto; padding-top: var(--space-4); }
+
+  .action-btn {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid var(--border);
-    padding-top: var(--space-4);
-    margin-top: auto;
-    gap: var(--space-2);
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--hover);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: none;
   }
 
-  .actions { display: flex; gap: var(--space-2); }
+  .action-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+  }
 
-  .system-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
+  :global(.danger-btn:hover) {
+    background: var(--danger) !important;
+    border-color: var(--danger) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
   }
 
   .timestamp {
     font-size: var(--font-xs);
     font-weight: 700;
     color: var(--text-muted);
-    opacity: 0.5;
+    opacity: 0.6;
+    margin-top: var(--space-2);
   }
-
-  .system-id {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: var(--text-muted);
-    opacity: 0.3;
-    transition: opacity 0.3s;
-  }
-  .playlist-card:hover .system-id { opacity: 0.7; }
-
-  .selection-overlay {
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    z-index: 100;
-    opacity: 0;
-    transition: opacity 0.3s, transform 0.3s;
-    transform: scale(0.8);
-  }
-  .playlist-card:hover .selection-overlay, .playlist-card.is-selected .selection-overlay { opacity: 1; transform: scale(1); }
-
-  .aura-glow::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    left: -20px;
-    right: -20px;
-    bottom: -20px;
-    background: radial-gradient(circle at center, rgba(var(--primary-rgb), 0.05) 0%, transparent 70%);
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.5s;
-  }
-  .playlist-card:hover::before { opacity: 1; }
 </style>

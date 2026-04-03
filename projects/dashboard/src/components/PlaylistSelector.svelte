@@ -1,36 +1,35 @@
-<svelte:options runes={true} />
 <script lang="ts">
   import type { Playlist } from "@yph/core";
-  import PlaylistsFilters from "./PlaylistsFilters.svelte";
+  import { storageService } from "@yph/core";
   import PlaylistPreview from "./PlaylistPreview.svelte";
+  import PlaylistsFilters from "./PlaylistsFilters.svelte";
 
-  let {
-    playlists = $bindable([]),
-    filteredPlaylists = $bindable([])
-  }: {
-    playlists?: Playlist[];
-    filteredPlaylists: Playlist[];
-  } = $props();
+  export let playlists: Playlist[];
+  let filteredPlaylists = playlists;
 
-  function handleDeleted(pl: Playlist) {
-    playlists = playlists.filter(p => p.id !== pl.id);
-  }
+  let disableThumbnails = true;
+  storageService.getSettings().then((settings) => {
+    disableThumbnails = settings.disableThumbnails;
+  });
 </script>
 
 {#if playlists.length > 0}
-  <PlaylistsFilters {playlists} bind:filteredPlaylists />
+  <PlaylistsFilters bind:playlists bind:filteredPlaylists />
 {/if}
 
-<div class="playlists-list mt-6">
-  {#each filteredPlaylists as pl (pl.id)}
-    <PlaylistPreview playlist={pl} ondeleted={handleDeleted} />
+<div class="selector">
+  {#each filteredPlaylists as playlist (playlist.id)}
+    <PlaylistPreview {playlist} />
+  {:else}
+    <p style="text-align: center; padding: 1rem 0;">No playlist found</p>
   {/each}
 </div>
 
 <style>
-  .playlists-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  .selector {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
     gap: 1.5rem;
   }
 </style>

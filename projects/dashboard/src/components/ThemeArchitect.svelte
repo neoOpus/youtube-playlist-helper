@@ -1,128 +1,69 @@
-<svelte:options runes={true} />
 <script lang="ts">
-  import {
-    initTheme,
-    themes,
-    themeState,
-    setTheme
-  } from "../stores/theme.svelte";
+  import { themeChoice, themes, type ThemeName } from "../stores/theme.store";
+  import { InfoIcon, SaveIcon, CheckIcon } from "@yph/ui-kit";
+  import { fade, fly } from "svelte/transition";
+  import { notificationService } from "@yph/core";
+
+  function applyTheme(id: ThemeName) {
+      themeChoice.set(id);
+      notificationService.success("Neural aesthetics updated.");
+  }
 </script>
 
-<section class="pro-glass p-6">
-    <div class="header mb-6">
-        <h3 class="card-title">Professional Theme Engine</h3>
-        <p class="muted small">Customize the visual architecture of your intelligence hub.</p>
+<div class="theme-architect pro-glass p-6 mt-8" in:fade>
+    <div class="arch-header mb-6">
+        <h3><InfoIcon size="20" color="var(--primary)" /> Theme Architect</h3>
+        <p class="muted">Tune the visual resonance of your interface.</p>
     </div>
 
     <div class="theme-grid">
         {#each themes as theme}
             <button
                 class="theme-card"
-                class:active={themeState.choice === theme.id}
-                onclick={() => setTheme(theme.id)}
+                class:active={$themeChoice === theme.id}
+                on:click={() => applyTheme(theme.id)}
             >
-                <div class="swatch-container">
-                    <div class="swatch main" style="background: {theme.primary}"></div>
-                    <div class="swatch accent" style="background: {theme.accent}"></div>
+                <div class="swatch" style="background: {theme.primary}">
+                    <div class="accent" style="background: {theme.accent}"></div>
                 </div>
-                <div class="theme-info">
-                    <span class="theme-name">{theme.name}</span>
-                    {#if theme.id === 'pro-red'}
-                        <span class="badge">SIGNATURE</span>
-                    {/if}
-                </div>
-                {#if themeState.choice === theme.id}
-                    <div class="check-mark">✓</div>
+                <span class="t-name">{theme.name}</span>
+                {#if $themeChoice === theme.id}
+                    <div class="check"><CheckIcon size="14" /></div>
                 {/if}
             </button>
         {/each}
     </div>
-</section>
+
+    <div class="arch-actions mt-8">
+        <button class="btn primary sota-glow w-full" on:click={() => notificationService.success("Parameters committed.")}>
+            <SaveIcon size="18" /> Commit Visual Parameters
+        </button>
+    </div>
+</div>
 
 <style>
-    .theme-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1.25rem;
-    }
+    .theme-architect { border: 1px solid var(--border); }
+    h3 { margin: 0; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px; }
 
-    .theme-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 1rem;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        text-align: left;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        overflow: hidden;
-    }
+    .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; }
 
-    .theme-card:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.15);
-        transform: translateY(-2px);
-    }
+    .theme-card { background: var(--hover); border: 2px solid transparent; border-radius: 16px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: all 0.2s; position: relative; width: 100%; border: none; }
+    .theme-card:hover { transform: translateY(-4px); border-color: var(--border); }
+    .theme-card.active { border: 2px solid var(--primary); background: var(--card-bg); }
 
-    .theme-card.active {
-        background: rgba(255, 82, 82, 0.05);
-        border-color: var(--primary);
-        box-shadow: 0 0 20px rgba(255, 82, 82, 0.1);
-    }
+    .swatch { width: 50px; height: 50px; border-radius: 12px; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid var(--border); }
+    .accent { position: absolute; bottom: 0; right: 0; width: 50%; height: 50%; border-radius: 12px 0 0 0; }
 
-    .swatch-container {
-        height: 60px;
-        border-radius: 6px;
-        overflow: hidden;
-        display: flex;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
+    .t-name { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text); }
 
-    .swatch {
-        height: 100%;
-    }
+    .check { position: absolute; top: -5px; right: -5px; background: var(--primary); color: white; border-radius: 50%; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 
-    .swatch.main { flex: 7; }
-    .swatch.accent { flex: 3; }
+    .btn { padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .sota-glow { box-shadow: 0 0 15px rgba(255, 82, 82, 0.4); }
 
-    .theme-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .theme-name {
-        font-weight: 600;
-        font-size: 0.9rem;
-        color: var(--text);
-    }
-
-    .badge {
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 0.2rem 0.4rem;
-        background: var(--primary);
-        color: white;
-        border-radius: 4px;
-        letter-spacing: 0.02em;
-    }
-
-    .check-mark {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        width: 20px;
-        height: 20px;
-        background: var(--primary);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        font-weight: 800;
-    }
+    .p-6 { padding: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .w-full { width: 100%; }
 </style>

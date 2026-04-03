@@ -1,5 +1,4 @@
-<svelte:options runes={true} />
-<script lang="ts">
+<script>
   import PlaylistEditor from "../components/PlaylistEditor.svelte";
 </script>
 

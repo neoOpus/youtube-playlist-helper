@@ -1,4 +1,3 @@
-<svelte:options runes={true} />
 <div class="loading-modal">
   <svg
     version="1.1"
