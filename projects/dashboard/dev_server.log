@@ -1,0 +1,35 @@
+
+> @yph/dashboard@1.0.0 dev
+> vite --port 5000
+
+4:13:06 AM [vite-plugin-svelte] The following packages have a svelte field in their package.json but no exports condition for svelte.
+
+svelte-fa@3.0.4
+svelte-spa-router@3.3.0
+
+Please see https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md#missing-exports-condition for details.
+
+  VITE v7.3.1  ready in 620 ms
+
+  ➜  Local:   http://localhost:5000/
+  ➜  Network: use --host to expose
+4:15:26 AM [vite-plugin-svelte] src/views/Sync.svelte:153:4 Unused CSS selector ".flex-1"
+https://svelte.dev/e/css_unused_selector
+4:15:27 AM [vite-plugin-svelte] src/components/PlaylistPreview.svelte:36:6 `showMenu` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update
+4:15:27 AM [vite-plugin-svelte] src/components/PlaylistPreview.svelte:37:6 `menuX` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update
+4:15:27 AM [vite-plugin-svelte] src/components/PlaylistPreview.svelte:38:6 `menuY` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update
+4:15:27 AM [vite-plugin-svelte] src/components/ImportWizard.svelte:56:8 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:15:27 AM [vite-plugin-svelte] src/components/VideoIdCard.svelte:40:2 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:15:27 AM [vite-plugin-svelte] src/components/VideoIdCard.svelte:40:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:15:27 AM [vite-plugin-svelte] src/components/VideoIdCard.svelte:41:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:15:27 AM [vite-plugin-svelte] src/components/VideoIdCard.svelte:41:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:15:27 AM [vite-plugin-svelte] src/components/VideoIdCard.svelte:118:4 Unused CSS selector ".w-full"
+https://svelte.dev/e/css_unused_selector

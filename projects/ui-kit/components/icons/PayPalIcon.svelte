@@ -1,6 +1,4 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  export let size = "24"; export let color = "currentColor";
+  let { size = "24", color = "currentColor" } = $props();
 </script>
-<svg width={size} height={size} viewBox="0 0 48 48">
-    <path fill={color} d="M38.16,14.65c-1.34-6.41-6.42-8.65-13.3-8.65H11.59c-0.89,0-1.63,0.67-1.77,1.55L4.17,40.12 c-0.1,0.6,0.36,1.14,0.96,1.14h7.52l2.36-14.93c0.14-0.89,0.92-1.55,1.82-1.55h4.15c6.53,0,11.64-2.65,13.13-10.27 C34.36,13.34,34.1,13.34,38.16,14.65z" />
-</svg>

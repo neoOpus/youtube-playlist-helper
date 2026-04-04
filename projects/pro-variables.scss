@@ -1,0 +1,77 @@
+// YouTube Playlist Helper: Professional Edition Design Tokens
+// 4px Baseline Grid System
+
+:root {
+  // Brand Colors
+  --primary: #ff5252;
+  --primary-rgb: 255, 82, 82;
+  --primary-hover: #ff7575;
+  --secondary: #00e5ff;
+  --accent: #ff4081;
+
+  // Neutral Palette (Obsidian Depth)
+  --bg-primary: #030712;
+  --bg-secondary: rgba(17, 24, 39, 0.7);
+  --card-bg-alpha: rgba(3, 7, 18, 0.85);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --hover: rgba(255, 255, 255, 0.05);
+
+  // Typography Colors
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  // Spacing (4px Steps)
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  // Radius
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
+
+  // Shadows
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  --shadow-luminous: 0 0 50px -10px rgba(var(--primary-rgb), 0.4);
+
+  // Typography Scale
+  --font-xs: 0.7rem;
+  --font-sm: 0.825rem;
+  --font-base: 0.95rem;
+  --font-lg: 1.125rem;
+  --font-xl: 1.4rem;
+  --font-2xl: 2rem;
+  --font-4xl: 4.5rem;
+
+  // Animation Timing
+  --duration-fast: 150ms;
+  --duration-standard: 300ms;
+  --duration-slow: 600ms;
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-emphasized: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+// Utilities
+%glass {
+  background: var(--card-bg-alpha);
+  backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--border);
+}
+
+%luminous-glow {
+  box-shadow: var(--shadow-luminous);
+  border-color: rgba(var(--primary-rgb), 0.3);
+}

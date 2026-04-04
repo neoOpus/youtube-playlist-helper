@@ -1,39 +1,30 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  import { push } from "svelte-spa-router";
-  import { fade, fly } from "svelte/transition";
   import {
-    PlaylistPlusIcon,
-    PlaylistPlayIcon,
-    SaveIcon,
-    CloudSyncIcon,
-    MergeIcon,
-    SupportIcon,
-    TerminalIcon,
-    type IconComponent
-  } from "@yph/ui-kit";
-  import { activeTheme, themes } from "../stores/theme.store";
-  import { viewMode } from "../stores/view-mode";
+    LayoutDashboard,
+    PlusCircle,
+    Settings,
+    MessageSquare,
+    ChevronDown,
+    ChevronRight,
+    Monitor,
+    Shield,
+    RefreshCw,
+    Database,
+    Terminal,
+    Merge,
+    Layers
+  } from "lucide-svelte";
+  import { Tooltip } from "@yph/ui-kit";
+  import { themeState, themes, setTheme } from "../stores/theme.svelte";
+  import { router } from "../stores/router";
+  import { fly, fade } from "svelte/transition";
 
-  export let activeRoute = "/";
+  let { activeRoute } = $props<{ activeRoute: string }>();
+  let systemSettingsExpanded = $state(true);
 
-  interface NavItem {
-      id: string;
-      label: string;
-      icon: IconComponent;
-      color: string;
-  }
-
-  const navItems: NavItem[] = [
-    { id: "/", label: "Saved playlists", icon: PlaylistPlayIcon as any, color: "var(--primary)" },
-    { id: "/new", label: "New playlist", icon: PlaylistPlusIcon as any, color: "var(--primary)" },
-    { id: "/manage", label: "Manage Hub", icon: SaveIcon as any, color: "var(--primary)" },
-    { id: "/sync", label: "Cloud Sync", icon: CloudSyncIcon as any, color: "var(--primary)" },
-    { id: "/merge", label: "Merge Tool", icon: MergeIcon as any, color: "var(--primary)" },
-    { id: "/support", label: "Support", icon: SupportIcon as any, color: "var(--primary)" },
-  ];
-
-  function navigate(id: string) {
-    push(id);
+  function isActive(path: string) {
+    return activeRoute === path;
   }
 
   function handleMouseMove(e: MouseEvent) {
@@ -46,83 +37,164 @@
   }
 </script>
 
-<nav class="sidebar pro-glass" in:fly={{ x: -20, duration: 600 }}>
+<aside class="pro-sidebar pro-glass" in:fly={{ x: -20, duration: 600 }}>
   <div class="sidebar-header">
     <div class="logo-area">
-        <div class="logo-icon"><PlaylistPlayIcon size="24" /></div>
-        <h1 class="logo-text">YPH <span class="badge primary">PRO</span></h1>
+      <div class="logo-icon"><Shield size="24" /></div>
+      <span class="logo-text">YPH <span class="badge primary">PRO</span></span>
     </div>
   </div>
 
-  <div class="nav-section">
-    <p class="section-label">NAVIGATE</p>
-    {#each navItems as item}
-      <button
-        class="nav-item luminous-hover"
-        class:active={activeRoute === item.id}
-        on:click={() => navigate(item.id)}
-        on:mousemove={handleMouseMove}
-        aria-current={activeRoute === item.id ? 'page' : undefined}
-      >
-        <div class="icon-wrapper" style="--icon-color: ${item.color}">
-            <svelte:component this={item.icon} size="20" />
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="section-label">Main Navigation</span>
+      <Tooltip text="Saved Collection" position="right">
+        <button
+          class="nav-item luminous-hover"
+          class:active={isActive("/")}
+          onclick={() => router.push("/")}
+          onmousemove={handleMouseMove}
+          aria-current={isActive("/") ? 'page' : undefined}
+        >
+          <div class="icon-wrapper"><LayoutDashboard size="20" /></div>
+          <span class="nav-text">Saved Collection</span>
+          {#if isActive("/")}<div class="active-indicator" in:fade></div>{/if}
+        </button>
+      </Tooltip>
+
+      <Tooltip text="New Intelligence" position="right">
+        <button
+          class="nav-item luminous-hover"
+          class:active={isActive("/new")}
+          onclick={() => router.push("/new")}
+          onmousemove={handleMouseMove}
+          aria-current={isActive("/new") ? 'page' : undefined}
+        >
+          <div class="icon-wrapper"><PlusCircle size="20" /></div>
+          <span class="nav-text">New Intelligence</span>
+          {#if isActive("/new")}<div class="active-indicator" in:fade></div>{/if}
+        </button>
+      </Tooltip>
+    </div>
+
+    <div class="nav-section">
+      <span class="section-label">Infrastructure</span>
+      <Tooltip text="Manage Hub" position="right">
+        <button
+          class="nav-item luminous-hover"
+          class:active={isActive("/manage")}
+          onclick={() => router.push("/manage")}
+          onmousemove={handleMouseMove}
+          aria-current={isActive("/manage") ? 'page' : undefined}
+        >
+          <div class="icon-wrapper"><Database size="20" /></div>
+          <span class="nav-text">Manage Hub</span>
+          {#if isActive("/manage")}<div class="active-indicator" in:fade></div>{/if}
+        </button>
+      </Tooltip>
+
+      <Tooltip text="Cloud Node" position="right">
+        <button
+          class="nav-item luminous-hover"
+          class:active={isActive("/sync")}
+          onclick={() => router.push("/sync")}
+          onmousemove={handleMouseMove}
+          aria-current={isActive("/sync") ? 'page' : undefined}
+        >
+          <div class="icon-wrapper"><RefreshCw size="20" /></div>
+          <span class="nav-text">Cloud Node</span>
+          {#if isActive("/sync")}<div class="active-indicator" in:fade></div>{/if}
+        </button>
+      </Tooltip>
+
+      <Tooltip text="Merge Protocol" position="right">
+        <button
+          class="nav-item luminous-hover"
+          class:active={isActive("/merge")}
+          onclick={() => router.push("/merge")}
+          onmousemove={handleMouseMove}
+          aria-current={isActive("/merge") ? 'page' : undefined}
+        >
+          <div class="icon-wrapper"><Merge size="20" /></div>
+          <span class="nav-text">Merge Protocol</span>
+          {#if isActive("/merge")}<div class="active-indicator" in:fade></div>{/if}
+        </button>
+      </Tooltip>
+    </div>
+
+    <div class="nav-section">
+      <button class="nav-group-trigger" onclick={() => systemSettingsExpanded = !systemSettingsExpanded}>
+        <div class="trigger-label">
+            <Settings size="20" />
+            <span class="nav-text">System Environment</span>
         </div>
-        <span class="label">{item.label}</span>
-        {#if activeRoute === item.id}
-            <div class="active-indicator" in:fade></div>
+        {#if systemSettingsExpanded}
+            <ChevronDown size="16" />
+        {:else}
+            <ChevronRight size="16" />
         {/if}
       </button>
-    {/each}
-  </div>
 
-  <div class="spacer"></div>
+      {#if systemSettingsExpanded}
+        <div class="nav-group-content" in:fly={{ y: -5, duration: 200 }}>
+            <div class="nav-sub-item">
+                <Monitor size="16" />
+                <div class="sub-controls">
+                    <span class="small-label">Theme Engine</span>
+                    <select value={themeState.choice} onchange={(e) => setTheme(e.currentTarget.value as any)} class="theme-select">
+                        {#each themes as theme}
+                            <option value={theme.id}>{theme.name}</option>
+                        {/each}
+                    </select>
+                </div>
+            </div>
+        </div>
+      {/if}
+    </div>
+  </nav>
 
   <div class="sidebar-footer">
     <div class="palette-hint">
-        <TerminalIcon size="12" />
+        <Terminal size="12" />
         <span>/ for Search</span>
     </div>
 
-    <div class="theme-controls">
-        <p class="section-label">THEME</p>
-        <select bind:value={$activeTheme} class="theme-select">
-          {#each themes as theme}
-            <option value={theme.id}>{theme.name}</option>
-          {/each}
-        </select>
-    </div>
-
-    <div class="quick-actions">
-        <button class="view-toggle-btn" on:click={viewMode.toggle}>
-            {$viewMode === 'simple' ? 'Advanced' : 'Simple'} View
-        </button>
-    </div>
+    <Tooltip text="Security Protocol" position="right">
+      <button
+        class="nav-item support-btn luminous-hover"
+        class:active={isActive("/support")}
+        onclick={() => router.push("/support")}
+        onmousemove={handleMouseMove}
+      >
+        <MessageSquare size="20" />
+        <span class="nav-text">Security Protocol</span>
+      </button>
+    </Tooltip>
   </div>
-</nav>
+</aside>
 
 <style>
-  .sidebar {
-    width: 100%;
+  .pro-sidebar {
     height: 100%;
+    background: var(--card-bg-alpha);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding: var(--space-6) var(--space-4);
-    border-right: 1px solid var(--border);
-    position: relative;
+    color: var(--text-muted);
     z-index: 20;
-    color: var(--text);
-    background: var(--card-bg-alpha);
-    border-radius: 0; /* Sidebar should span full height */
+    width: var(--sidebar-width);
+    transition: width var(--duration-standard) var(--easing-standard);
   }
 
   .sidebar-header {
-    padding: var(--space-2) var(--space-3) var(--space-8);
+    padding: 2rem 1.5rem;
   }
 
   .logo-area {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
 
   .logo-icon {
@@ -131,59 +203,69 @@
       padding: var(--space-2);
       border-radius: var(--radius-md);
       box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
   }
 
   .logo-text {
-      font-size: var(--font-xl);
-      font-weight: 900;
-      letter-spacing: -0.05em;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 0 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
   }
 
   .nav-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: 0.25rem;
   }
 
   .section-label {
-      font-size: var(--font-xs);
-      font-weight: 800;
-      color: var(--text-muted);
-      letter-spacing: 0.1em;
-      padding-left: var(--space-3);
-      margin-bottom: var(--space-2);
-      text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    padding: 0 0.75rem 0.5rem;
   }
 
   .nav-item {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: var(--radius-lg);
     border: none;
     background: transparent;
-    color: var(--text);
-    font-size: var(--font-sm);
-    font-weight: 700;
+    color: inherit;
     cursor: pointer;
-    border-radius: var(--radius-lg);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     text-align: left;
+    width: 100%;
     overflow: hidden;
   }
 
   .nav-item:hover {
-    background: var(--hover);
-    transform: translateX(4px);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
   }
 
   .nav-item.active {
-    background: var(--hover);
+    background: rgba(var(--primary-rgb), 0.1);
     color: var(--primary);
   }
 
@@ -191,7 +273,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--icon-color, var(--text-muted));
       transition: all 0.2s;
   }
 
@@ -211,14 +292,83 @@
       box-shadow: 0 0 10px var(--primary);
   }
 
-  .spacer { flex-grow: 1; }
+  .nav-text {
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
 
-  .sidebar-footer {
+  .nav-group-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    width: 100%;
+    border-radius: var(--radius-md);
+  }
+
+  .nav-group-trigger:hover {
+      background: rgba(255, 255, 255, 0.03);
+  }
+
+  .trigger-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .nav-group-content {
+    margin-left: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
-    padding: var(--space-6) var(--space-3) 0;
+    gap: 0.5rem;
+  }
+
+  .nav-sub-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .sub-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+  }
+
+  .small-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .theme-select {
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.4rem;
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .sidebar-footer {
+    padding: 1.5rem 0.75rem;
     border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
   }
 
   .palette-hint {
@@ -234,52 +384,23 @@
       border: 1px solid var(--border);
   }
 
-  .theme-select {
-    width: 100%;
-    padding: var(--space-2);
-    border-radius: var(--radius-md);
-    background: var(--hover);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-size: var(--font-xs);
-    font-weight: 700;
-    cursor: pointer;
-    outline: none;
+  .support-btn {
+    opacity: 0.7;
   }
 
-  .view-toggle-btn {
-      width: 100%;
-      padding: var(--space-2);
-      font-size: var(--font-xs);
-      font-weight: 800;
-      background: var(--hover);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: all 0.2s;
-  }
-
-  .view-toggle-btn:hover {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-  }
+  .support-btn:hover { opacity: 1; }
 
   @media (max-width: 768px) {
-    .label, .section-label, .logo-text, .palette-hint, .theme-controls, .quick-actions {
-      display: none;
-    }
-    .sidebar {
-      padding: var(--space-4) var(--space-2);
+    .pro-sidebar {
       width: var(--sidebar-collapsed-width);
     }
-    .nav-item {
-      justify-content: center;
-      padding: var(--space-3);
+    .nav-text, .section-label, .sidebar-header .logo-text, .nav-group-trigger :global(.lucide-chevron-down), .nav-group-trigger :global(.lucide-chevron-right), .nav-group-content, .palette-hint {
+      display: none;
     }
-    .logo-area {
+    .nav-item, .logo-area, .nav-group-trigger {
         justify-content: center;
+        padding: 0.75rem;
     }
+    .nav-section { gap: 0.5rem; }
   }
 </style>

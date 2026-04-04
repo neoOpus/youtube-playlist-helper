@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { aiService } from "./ai-service";
 import type { Video, Playlist } from "../types/model";
 
@@ -53,11 +53,11 @@ describe("aiService", () => {
 
   describe("summarizePlaylist", () => {
     it("should generate a valid summary string", async () => {
-        const playlist = { title: "Test Playlist" } as Playlist;
-        const videos = [{} as Video, {} as Video];
-        const summary = await aiService.summarizePlaylist(playlist, videos);
-        expect(summary).toContain("2 videos");
-        expect(summary).toContain("Test Playlist");
+      const playlist = { title: "Test Playlist" } as Playlist;
+      const videos = [{} as Video, {} as Video];
+      const summary = await aiService.summarizePlaylist(playlist, videos);
+      expect(summary).toContain("2 videos");
+      expect(summary).toContain("Test Playlist");
     });
   });
 

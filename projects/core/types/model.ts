@@ -34,6 +34,7 @@ export interface Playlist {
   timestamp: number;
   saved?: boolean;
   groups?: string[];
+  lastModified?: number;
 }
 
 export interface Settings {
@@ -59,7 +60,10 @@ export type PlaylistsSorting =
   | "date-created-desc"
   | "title-az"
   | "title-za"
-  | "relevance";
+  | "relevance"
+  | "video-count-desc"
+  | "video-count-asc"
+  | "last-modified-desc";
 
 export type Theme = "light" | "dark";
 export type ThemeChoice = "device" | Theme;

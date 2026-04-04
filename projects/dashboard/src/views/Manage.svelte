@@ -1,3 +1,4 @@
+<svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade, fly } from "svelte/transition";
@@ -8,14 +9,17 @@
     TerminalIcon,
     PlusMultiple,
     CheckIcon,
-    InfoIcon
+    InfoIcon,
+    SuperButton,
+    CloudSyncIcon
   } from "@yph/ui-kit";
   import LibraryAuditor from "../components/LibraryAuditor.svelte";
-  import NeuralMap from "../components/NeuralMap.svelte";
+  import InfrastructureMap from "../components/InfrastructureMap.svelte";
   import ThemeArchitect from "../components/ThemeArchitect.svelte";
   import ImportWizard from "../components/ImportWizard.svelte";
 
-  let showImport = false;
+  let showImport = $state(false);
+  let advancedMode = $state(false);
 
   async function exportData() {
       const playlists = await storageService.getPlaylists();
@@ -38,45 +42,62 @@
   }
 </script>
 
-<div class="manage-view p-8" in:fade>
-    <header class="mb-12">
-        <h1 class="row items-center gap-4">
-            <div class="icon-blob"><TerminalIcon size="32" /></div>
-            <span>System Management Hub</span>
-        </h1>
-        <p class="muted mt-2">Oversee neural connections, library quality, and global aesthetics.</p>
+<div class="manage-view view-container" in:fade>
+    <header class="view-header">
+        <div class="header-content aura-glow">
+            <div class="title-row">
+                <div class="icon-blob"><TerminalIcon size="32" /></div>
+                <h1>System Management</h1>
+            </div>
+            <p class="muted">Oversee infrastructure connections, library quality, and global aesthetics.</p>
+        </div>
     </header>
 
     <div class="manage-grid">
         <div class="main-stats">
-            <NeuralMap />
-            <LibraryAuditor />
+            <div class="stat-card">
+                <InfrastructureMap />
+            </div>
+            <div class="stat-card">
+                <LibraryAuditor />
+            </div>
         </div>
 
         <aside class="actions-sidebar">
-            <div class="action-section pro-glass p-6">
-                <h3><SaveIcon size="18" /> Data Governance</h3>
+            <div class="action-card pro-glass">
+                <h3 class="card-title"><SaveIcon size="18" /> Data Governance</h3>
                 <div class="btns-stack mt-6">
-                    <button class="btn secondary w-full" on:click={() => showImport = true}>
+                    <SuperButton primary onclick={() => showImport = true}>
                         <PlusMultiple size="18" /> Import Logic Snapshot
-                    </button>
-                    <button class="btn secondary w-full" on:click={exportData}>
+                    </SuperButton>
+                    <SuperButton outline onclick={exportData}>
                         <SaveIcon size="18" /> Export Global Map (JSON)
-                    </button>
-                    <button class="btn danger-outline w-full mt-4" on:click={clearAll}>
+                    </SuperButton>
+                    <SuperButton danger onclick={clearAll} class="mt-4">
                         <DeleteIcon size="18" /> Decommission System
-                    </button>
+                    </SuperButton>
                 </div>
             </div>
 
             <ThemeArchitect />
 
-            <div class="system-info pro-glass p-6 mt-8">
-                <h3><InfoIcon size="18" /> Infrastructure Core</h3>
-                <div class="v-list mt-4">
-                    <div class="v-row"><span>SOTA Version</span> <span class="v-val">2.1 Quantum</span></div>
+            <div class="system-info pro-glass mt-8">
+                <h3 class="card-title"><InfoIcon size="18" /> Infrastructure Core</h3>
+                <div class="v-list mt-6">
+                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2 Pro</span></div>
                     <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
                     <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
+
+                    {#if advancedMode}
+                      <div in:fly={{ y: -10, duration: 300 }}>
+                        <div class="v-row"><span>Data Density</span> <span class="v-val">High (Optimized)</span></div>
+                        <div class="v-row"><span>E2EE Status</span> <span class="val success">Active (Pro-Resistant)</span></div>
+                      </div>
+                    {/if}
+
+                    <button class="toggle-advanced" onclick={() => advancedMode = !advancedMode}>
+                        {advancedMode ? 'Hide Detailed Params' : 'Show Advanced Params'}
+                    </button>
                 </div>
             </div>
         </aside>
@@ -86,39 +107,95 @@
 <ImportWizard bind:display={showImport} on:complete={() => window.location.reload()} />
 
 <style>
-    .manage-view { max-width: 1400px; margin: 0 auto; }
-    h1 { font-weight: 900; letter-spacing: -2px; font-size: 3rem; margin: 0; }
+    .view-header { margin-bottom: var(--space-12); }
+    .header-content { display: flex; flex-direction: column; gap: var(--space-3); }
+    .header-content h1 { font-size: 3rem; margin: 0; }
 
-    .icon-blob { background: var(--primary); color: white; padding: 12px; border-radius: 18px; box-shadow: 0 8px 24px rgba(255, 82, 82, 0.3); }
+    .title-row { display: flex; align-items: center; gap: var(--space-5); }
 
-    .manage-grid { display: grid; grid-template-columns: 1fr 350px; gap: 3rem; margin-top: 2rem; }
+    .icon-blob {
+        background: var(--primary);
+        color: white;
+        padding: var(--space-3);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 8px 32px rgba(var(--primary-rgb), 0.4);
+    }
 
-    .main-stats { display: flex; flex-direction: column; gap: 2rem; }
+    .manage-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: var(--space-12);
+        margin-top: var(--space-8);
+    }
 
-    .pro-glass { background: var(--card-bg-alpha, rgba(20, 25, 35, 0.6)); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 24px; }
-    h3 { margin: 0; font-weight: 800; display: flex; align-items: center; gap: 10px; font-size: 1.1rem; }
+    .main-stats { display: flex; flex-direction: column; gap: var(--space-8); }
 
-    .btns-stack { display: flex; flex-direction: column; gap: 12px; }
-    .btn { padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text); background: var(--hover); }
-    .btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
-    .btn.danger-outline { color: #dc3545; border-color: rgba(220, 53, 69, 0.3); }
-    .btn.danger-outline:hover { background: #dc3545; color: white; }
+    .stat-card {
+        transition: transform 0.3s var(--easing-standard);
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
 
-    .v-list { display: flex; flex-direction: column; gap: 8px; }
-    .v-row { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
-    .v-val { color: var(--text); font-family: 'JetBrains Mono'; }
+    .pro-glass {
+        padding: var(--space-8);
+        border-radius: var(--radius-xl);
+    }
 
-    .row { display: flex; }
-    .items-center { align-items: center; }
-    .gap-4 { gap: 1rem; }
-    .mt-2 { margin-top: 0.5rem; }
-    .mt-4 { margin-top: 1rem; }
-    .mt-6 { margin-top: 1.5rem; }
-    .mt-8 { margin-top: 2rem; }
-    .mb-12 { margin-bottom: 3rem; }
-    .p-6 { padding: 1.5rem; }
-    .p-8 { padding: 2rem; }
-    .w-full { width: 100%; }
+    .card-title {
+        margin: 0;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        font-size: var(--font-lg);
+        color: var(--text);
+    }
 
-    @media (max-width: 1100px) { .manage-grid { grid-template-columns: 1fr; } .actions-sidebar { order: -1; } }
+    .btns-stack { display: flex; flex-direction: column; gap: var(--space-3); }
+
+    .v-list { display: flex; flex-direction: column; gap: var(--space-3); }
+    .v-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: var(--font-sm);
+        font-weight: 700;
+        color: var(--text-muted);
+        padding: var(--space-2) 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .v-row:last-child { border-bottom: none; }
+    .v-val { color: var(--text); font-family: 'JetBrains Mono', monospace; font-weight: 800; }
+
+    .toggle-advanced {
+        margin-top: var(--space-2);
+        font-size: var(--font-xs);
+        font-weight: 800;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+        text-align: center;
+        background: none;
+        border: none;
+        padding: var(--space-2);
+    }
+
+    .toggle-advanced:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    .val.success { color: var(--success); }
+
+    :global(.mt-4) { margin-top: var(--space-4) !important; }
+    .mt-6 { margin-top: var(--space-6); }
+    .mt-8 { margin-top: var(--space-8); }
+
+    @media (max-width: 1200px) {
+        .manage-grid { grid-template-columns: 1fr; }
+        .actions-sidebar { order: -1; }
+    }
 </style>

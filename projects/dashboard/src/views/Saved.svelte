@@ -1,3 +1,4 @@
+<svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade, fly, scale } from "svelte/transition";
@@ -6,79 +7,112 @@
   import type { Playlist } from "@yph/core";
   import PlaylistsFilters from "../components/PlaylistsFilters.svelte";
   import PlaylistPreview from "../components/PlaylistPreview.svelte";
-  import { InfoIcon, SearchIcon, PlaylistPlayIcon } from "@yph/ui-kit";
+  import PlaylistCardSkeleton from "../components/PlaylistCardSkeleton.svelte";
+  import EmptyState from "../components/EmptyState.svelte";
+  import { SearchIcon, PlaylistPlayIcon, DeleteIcon, SuperButton, Breadcrumbs, InfoIcon } from "@yph/ui-kit";
+  import { router } from "../stores/router";
 
-  let playlists: Playlist[] = [];
-  let filteredPlaylists: Playlist[] = [];
-  let virtualFolders: { title: string, count: number, type: 'tag' | 'rating' }[] = [];
-  let selectedFolder = "all";
+  let playlists = $state<Playlist[]>([]);
+  let filteredPlaylists = $state<Playlist[]>([]);
+  let selectedFolder = $state("all");
+  let selectedIds = $state(new Set<string>());
+  let loading = $state(true);
 
-  onMount(async () => {
-    playlists = await storageService.getPlaylists();
-    generateVirtualFolders();
-  });
-
-  function generateVirtualFolders() {
+  let virtualFolders = $derived.by(() => {
       const tagMap = new Map<string, number>();
       const ratings = { high: 0 };
-
       playlists.forEach(pl => {
           (pl.loadedVideos || []).forEach(v => {
               (v.aiTags || []).forEach(t => tagMap.set(t, (tagMap.get(t) || 0) + 1));
               if (v.rating && v.rating >= 4) ratings.high++;
           });
       });
-
-      virtualFolders = [
+      return [
           { title: "Favorites (4+ ★)", count: ratings.high, type: 'rating' },
-          ...Array.from(tagMap.entries())
-              .sort((a, b) => b[1] - a[1])
-              .slice(0, 5)
-              .map(([tag, count]) => ({ title: `#${tag}`, count, type: 'tag' as const }))
+          ...Array.from(tagMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([tag, count]) => ({ title: `#${tag}`, count, type: 'tag' as const }))
       ];
+  });
+
+  let displayedPlaylists = $derived(
+      selectedFolder === "all"
+        ? filteredPlaylists
+        : filteredPlaylists.filter(pl => {
+            if (selectedFolder.startsWith("#")) {
+                const tag = selectedFolder.slice(1);
+                return (pl.loadedVideos || []).some(v => (v.aiTags || []).includes(tag));
+            }
+            if (selectedFolder === "Favorites (4+ ★)") {
+                return (pl.loadedVideos || []).some(v => v.rating && v.rating >= 4);
+            }
+            return true;
+        })
+  );
+
+  onMount(async () => {
+    try {
+        const data = await storageService.getPlaylists();
+        if (data && data.length > 0) {
+            playlists = data;
+        }
+    } finally {
+        setTimeout(() => loading = false, 800); // Visual breathing room for skeleton
+    }
+  });
+
+  function handleDeleted(pl: Playlist) {
+      playlists = playlists.filter(p => p.id !== pl.id);
+      selectedIds.delete(pl.id);
+      selectedIds = new Set(selectedIds);
   }
 
-  $: displayedPlaylists = selectedFolder === "all"
-      ? filteredPlaylists
-      : filteredPlaylists.filter(pl => {
-          if (selectedFolder.startsWith("#")) {
-              const tag = selectedFolder.slice(1);
-              return (pl.loadedVideos || []).some(v => (v.aiTags || []).includes(tag));
-          }
-          if (selectedFolder === "Favorites (4+ ★)") {
-              return (pl.loadedVideos || []).some(v => v.rating && v.rating >= 4);
-          }
-          return true;
-      });
+  function handleSelection(id: string, isSelected: boolean) {
+      if (isSelected) selectedIds.add(id); else selectedIds.delete(id);
+      selectedIds = new Set(selectedIds);
+  }
 
-  function handleDeleted(e: any) {
-      const pl = (e as CustomEvent<Playlist>).detail;
-      playlists = playlists.filter(p => p.id !== pl.id);
+  function clearSelection() {
+      selectedIds = new Set();
+  }
+
+  async function deleteSelected() {
+      if (confirm(`Decommission ${selectedIds.size} nodes?`)) {
+          for (const id of selectedIds) {
+              const pl = playlists.find(p => p.id === id);
+              if (pl) await storageService.removePlaylist(pl);
+          }
+          playlists = playlists.filter(p => !selectedIds.has(p.id));
+          clearSelection();
+      }
   }
 </script>
 
 <main in:fade class="view-container">
-  <header class="saved-header">
-      <div class="header-left">
-          <h1>Saved Collection</h1>
-          <p class="muted">Access your curated YouTube infrastructure.</p>
+  <header class="view-header">
+      <div class="header-content aura-glow">
+          <Breadcrumbs items={[{label: 'INFRASTRUCTURE'}, {label: 'SAVED NODES', active: true}]} />
+          <h1>Saved Infrastructure</h1>
+          <p class="muted">Access your curated YouTube nodes and collections.</p>
       </div>
   </header>
 
-  <div class="saved-layout">
+  <div class="view-layout">
       <aside class="folders-sidebar">
-          <p class="section-label">VIRTUAL FOLDERS</p>
-          <button class="folder-item" class:active={selectedFolder === 'all'} on:click={() => selectedFolder = 'all'}>
+          <p class="section-label">VIRTUAL NODES</p>
+          <button
+            class="folder-item luminous-hover"
+            class:active={selectedFolder === 'all'}
+            onclick={() => selectedFolder = 'all'}
+          >
               <PlaylistPlayIcon size="16" />
-              <span>All Playlists</span>
+              <span>All Infrastructure</span>
               <span class="count">{playlists.length}</span>
           </button>
 
           {#each virtualFolders as folder (folder.title)}
               <button
-                class="folder-item"
+                class="folder-item luminous-hover"
                 class:active={selectedFolder === folder.title}
-                on:click={() => selectedFolder = folder.title}
+                onclick={() => selectedFolder = folder.title}
                 in:fly={{ x: -10, delay: 100 }}
               >
                   <SearchIcon size="16" color="var(--primary)" />
@@ -91,40 +125,57 @@
       <section class="content-area">
           <PlaylistsFilters {playlists} bind:filteredPlaylists />
 
-          <div class="results-grid mt-6">
-              {#if displayedPlaylists.length > 0}
+          <div class="results-grid mt-8">
+              {#if loading}
+                  {#each Array(4) as _}
+                      <PlaylistCardSkeleton />
+                  {/each}
+              {:else if displayedPlaylists.length > 0}
                   {#each displayedPlaylists as pl (pl.id)}
-                      <div animate:flip={{ duration: 400 }} in:scale={{ start: 0.9, duration: 300 }}>
-                          <PlaylistPreview playlist={pl} on:deleted={handleDeleted} />
+                      <div animate:flip={{ duration: 500 }} in:scale={{ start: 0.98, duration: 400 }}>
+                          <PlaylistPreview
+                            playlist={pl}
+                            selected={selectedIds.has(pl.id)}
+                            ondeleted={handleDeleted}
+                            onselect={(val) => handleSelection(pl.id, val)}
+                          />
                       </div>
                   {/each}
               {:else}
-                  <div class="empty-state pro-glass" in:fade>
-                      <InfoIcon size="48" color="var(--text-muted)" />
-                      <h3>No Matches Found</h3>
-                      <p>Adjust your filters or select a different folder.</p>
+                  <div class="full-width" in:fade>
+                      <EmptyState
+                        title="Intelligence Grid Offline"
+                        message="No curated nodes found in this sector. Start a new intake to populate your infrastructure."
+                        actionLabel="Begin New Intake"
+                        actionClick={() => router.push('/new')}
+                      />
                   </div>
               {/if}
           </div>
       </section>
   </div>
+
+  {#if selectedIds.size > 0}
+    <div class="selection-bar pro-glass-high visible" transition:fly={{ y: 100, duration: 600 }}>
+        <div class="selection-info">
+            <span class="badge primary">{selectedIds.size}</span>
+            <span class="bold ml-2">Nodes Selected</span>
+        </div>
+        <div class="selection-actions">
+            <SuperButton outline onclick={clearSelection}>Cancel</SuperButton>
+            <SuperButton danger onclick={deleteSelected} title="Decommission All">
+                <DeleteIcon size="18" />
+            </SuperButton>
+        </div>
+    </div>
+  {/if}
 </main>
 
 <style>
-  .view-container {
-    padding: var(--space-8);
-    max-width: var(--container-max-width);
-    margin: 0 auto;
-    color: var(--text);
-  }
+  .view-header { margin-bottom: var(--space-8); padding-bottom: var(--space-6); border-bottom: 1px solid var(--border); }
+  .header-content { display: flex; flex-direction: column; gap: var(--space-4); }
 
-  .saved-header {
-    margin-bottom: var(--space-12);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: var(--space-6);
-  }
-
-  .saved-layout {
+  .view-layout {
     display: grid;
     grid-template-columns: var(--sidebar-width) 1fr;
     gap: var(--space-12);
@@ -134,81 +185,79 @@
   .folders-sidebar {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-2);
     position: sticky;
-    top: var(--space-8);
+    top: var(--space-12);
   }
 
   .section-label {
-    font-size: var(--font-xs);
-    font-weight: 800;
+    font-size: 0.65rem;
+    font-weight: 900;
     color: var(--text-muted);
-    letter-spacing: 0.1em;
-    padding-left: var(--space-3);
-    margin-bottom: var(--space-3);
+    letter-spacing: 0.15em;
+    padding-left: var(--space-4);
+    margin-bottom: var(--space-4);
     text-transform: uppercase;
+    opacity: 0.6;
   }
 
   .folder-item {
     border: none;
     background: transparent;
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-4) var(--space-5);
     border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-4);
     cursor: pointer;
-    color: var(--text);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-muted);
+    transition: all 0.3s var(--easing-standard);
     text-align: left;
-  }
-
-  .folder-item:hover {
-    background: var(--hover);
-    transform: translateX(4px);
-  }
-
-  .folder-item.active {
-    background: var(--hover);
-    color: var(--primary);
     font-weight: 700;
-    box-shadow: inset 4px 0 0 var(--primary);
   }
 
+  .folder-item:hover { background: var(--hover); color: var(--text); transform: translateX(6px); }
+  .folder-item.active { background: var(--hover); color: var(--primary); box-shadow: inset 4px 0 0 var(--primary); font-weight: 800; }
   .folder-item span { flex-grow: 1; }
+
   .count {
-    font-size: var(--font-xs);
-    font-weight: 700;
+    font-size: 0.65rem;
+    font-weight: 800;
     font-family: 'JetBrains Mono', monospace;
-    opacity: 0.6;
+    opacity: 0.5;
   }
 
   .results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-8);
   }
 
-  .empty-state {
-    grid-column: 1 / -1;
-    padding: var(--space-16);
-    text-align: center;
+  .full-width { grid-column: 1 / -1; }
+  .mt-8 { margin-top: var(--space-8); }
+
+  .selection-bar {
+    position: fixed;
+    bottom: var(--space-12);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    padding: var(--space-5) var(--space-12);
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--space-4);
+    gap: var(--space-12);
+    border-radius: var(--radius-xl);
   }
 
-  .empty-state h3 { margin: 0; font-weight: 800; }
+  .selection-info { display: flex; align-items: center; gap: var(--space-4); }
+  .selection-actions { display: flex; align-items: center; gap: var(--space-4); }
 
-  .mt-6 { margin-top: var(--space-6); }
-
-  @media (max-width: 1024px) {
-    .saved-layout { grid-template-columns: 200px 1fr; gap: var(--space-6); }
+  @media (max-width: 1200px) {
+    .view-layout { grid-template-columns: 200px 1fr; gap: var(--space-8); }
   }
 
-  @media (max-width: 768px) {
-    .saved-layout { grid-template-columns: 1fr; }
+  @media (max-width: 900px) {
+    .view-layout { grid-template-columns: 1fr; }
     .folders-sidebar { display: none; }
     .view-container { padding: var(--space-4); }
   }
