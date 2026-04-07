@@ -1,3 +1,4 @@
+@import "./notyf-overrides.css";
 :root {
   /* --- Pro Design System (Hyper-Polished V2) --- */
 
@@ -77,7 +78,7 @@
 
   --sidebar-width: 280px;
   --sidebar-collapsed-width: 80px;
-  --container-max-width: 1600px;
+  --container-max-width: 1200px;
 }
 
 [data-theme="github-light"] {
@@ -241,7 +242,7 @@ h3 { font-size: var(--font-xl); letter-spacing: -0.03em; }
 }
 
 .pro-glass-high {
-  background: rgba(3, 7, 18, 0.95);
+  background: var(--card-bg-alpha);
   backdrop-filter: blur(80px);
   -webkit-backdrop-filter: blur(80px);
   border: 1px solid var(--border-strong);

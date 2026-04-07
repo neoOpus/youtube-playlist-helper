@@ -12,6 +12,9 @@ export { default as SuperToggle } from "./components/SuperToggle.svelte";
 export { default as RadioGroup } from "./components/RadioGroup.svelte";
 export { default as Tooltip } from "./components/Tooltip.svelte";
 export { default as ContextMenu } from "./components/ContextMenu.svelte";
+export { default as LoadingSpinner } from "./components/LoadingSpinner.svelte";
+export { default as SuperInput } from "./components/SuperInput.svelte";
+export { default as SuperSelect } from "./components/SuperSelect.svelte";
 
-export * from "./components/icons/index.ts";
+export * from "./components/icons/index.js";
 export * from "./types.js";

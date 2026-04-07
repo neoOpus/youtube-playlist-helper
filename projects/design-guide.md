@@ -1,124 +1,126 @@
 # YouTube Playlist Helper: Professional Design & Implementation Guide
 
-This guide defines the front-end architecture, UI/UX standards, and implementation details for the "Professional Edition" of the YouTube Playlist Helper. It ensures the extension feels like a polished, modern web application.
+This document provides a comprehensive design-and-implementation framework for the YouTube Playlist Helper. It is designed to ensure a "Professional Edition" experience: sleek, modern, and high-performance.
 
 ---
 
 ## 1. Core Design Principles
 
 - **Clarity & Consistency:** 1.5 line-height for body text; 32px - 64px section breathing room. Standard components and a unified color palette.
-- **Obsidian Depth (Glassmorphism):** Employ translucency, multi-layer background blurs (40px - 80px), and subtle borders to create depth and focus.
-- **Feedback & Delight:** Provide immediate visual feedback for all user actions via micro-interactions and transitions (60fps, < 16ms per frame).
-- **Accessibility (WCAG 2.2 AA):** Minimum 4.5:1 contrast, visible focus outlines, ARIA labels for icons, and keyboard-only operability.
-- **Progressive Disclosure:** Advanced technical parameters are sequestered behind the "System Environment" section.
+- **Obsidian Depth (Glassmorphism):** Multi-layer background blurs (40px - 80px), and 1px borders (`var(--border-strong)`) to create depth.
+- **Feedback & Delight:** Immediate visual feedback for all actions. 60fps animations (< 16ms frame time).
+- **Accessibility (WCAG 2.2 AA):** Minimum 4.5:1 contrast, visible focus outlines, ARIA labels, and keyboard-only operability.
+- **Solid Information Architecture:** Logical grouping of related functions and progressive disclosure of advanced settings.
 
 ---
 
-## 2. Layout & Grid Specifications (4px Baseline)
+## 2. Layout & Grid Specifications
 
 | Property | Value | Notes |
 | :--- | :--- | :--- |
-| **Baseline Grid** | 4px | All measurements (padding, margin, width) must be multiples. |
-| **Max Container Width** | 1600px | Centered in viewport. |
-| **Grid System** | 12-Column | Fluid percentage-based widths. |
+| **Baseline Grid** | 4px | All spacing/sizing is a multiple of 4px. |
+| **Max Container Width** | 1200px | Centered in viewport. |
+| **Grid System** | 12-Column | Fluid percentage-based columns. |
 | **Gutter Width** | 24px | Standardized via `var(--space-6)`. |
-| **Sidebar Width** | 280px | Collapses to 80px on mobile. |
+| **Breakpoints** | ≤ 480px (M) / 481-768px (T) / ≥ 769px (D) | Responsive reflow down to 320px. |
 
 ### Typography Scale (4px Baseline)
-| Size | Token | Value | Weight | Use Case |
-| :--- | :--- | :--- | :--- | :--- |
-| XS | `--font-xs` | 0.7rem (11.2px) | 900 | Labels, Metadata, Badges |
-| SM | `--font-sm` | 0.825rem (13.2px) | 700 | Body text, Inputs, Buttons |
-| BASE | `--font-base` | 0.95rem (15.2px) | 500 | Main paragraphs |
-| LG | `--font-lg` | 1.125rem (18px) | 800 | Card titles |
-| XL | `--font-xl` | 1.4rem (22.4px) | 900 | Section headers, Sidebar Logo |
-| 4XL | `--font-4xl` | 4.5rem (72px) | 900 | Page titles (Saved Collection) |
+| Token | Size | Weight | Use Case |
+| :--- | :--- | :--- | :--- |
+| `--font-xs` | 0.7rem (11.2px) | 900 | Labels, Metadata, Badges |
+| `--font-sm` | 0.825rem (13.2px) | 700 | Body text, Inputs, Buttons |
+| `--font-base` | 0.95rem (15.2px) | 500 | Main paragraphs |
+| `--font-lg` | 1.125rem (18px) | 800 | Card titles |
+| `--font-xl` | 1.4rem (22.4px) | 900 | Section headers |
+| `--font-4xl` | 4.5rem (72px) | 900 | Hero titles |
 
 ---
 
-## 3. UI Component Specifications
+## 3. UI Component Library
 
 ### 3.1 Buttons (SuperButton)
-*   **Height:** 44px (Standard) / 32px (Mini).
-*   **Typography:** Inter Bold (800), 12px (0.75rem), All-Caps.
-*   **Corner Radius:** 12px (`var(--radius-md)`).
-*   **Types:**
-    *   *Primary:* Gradient (#ff5252 -> #ff7575), white text.
-    *   *Secondary:* `var(--bg-secondary)` with 1px border.
-    *   *Danger:* Gradient (#ef4444 -> #ff6b6b).
-*   **States:**
-    *   *Hover:* Scale 1.01; transform `translateY(-2px)`; Luminous radial glow.
-    *   *Active:* Scale 0.96; transform `translateY(0)`.
+- **Primary:** Gradient (#ff5252 -> #ff7575), white text, 100ms ripple.
+- **Secondary:** `var(--bg-secondary)`, 1px border.
+- **Danger:** Gradient (#ef4444 -> #ff6b6b).
+- **Link:** `var(--primary)`, no background, underline on hover.
+- **Micro-interaction:** Press scale 0.96, 100ms ripple effect.
 
 ### 3.2 Form Elements
-*   **Input Fields / Selects:**
-    *   *Typography:* Inter Bold (700), 14px.
-    *   *Background:* Obsidian Glass (`var(--bg-secondary)`).
-    *   *Focus:* 2px solid `var(--primary)` + 4px soft outer glow.
-*   **Checkboxes:** 20px x 20px; 6px radius. Spring scale (0.8 -> 1.0) on state change.
+- **SuperInput:** 12px radius, 1px border, 2px focus ring (primary, 0.2 opacity).
+- **SuperSelect:** Custom arrow, obsidian glass background.
+- **SuperToggle:** 44x22px track, 16px thumb, 150ms slide.
+- **SuperCheckbox:** 20x20px, 6px radius, spring scale (0.8 -> 1.0).
 
-### 3.3 Overlays
-*   **Modals:** 32px radius (`var(--radius-xl)`); 80px glass blur; `translateY(20px -> 0)` entry.
-*   **Tooltips:** 11px font; Black background; 150ms fade.
-*   **Action Toasts:** 64px height; Bottom-right fixed; 10s progress bar for undo visibility.
+### 3.3 Overlays & Feedback
+- **Modals:** 32px radius, 80px blur, `fly` entry (y: 20 -> 0).
+- **Tooltips:** 11px font, 150ms fade.
+- **Notification Badges:** `var(--primary)`, All-caps bold, 4px radius.
+- **Toasts:** 200ms fade-in, 10s visibility with undo option.
+- **Loading Spinner:** 2Hz frequency (0.5s rotation period).
 
 ---
 
 ## 4. Interaction Patterns
 
-### 4.1 Micro-Interaction Timings
-*   **Click Ripple:** 100ms.
-*   **Luminous Hover Expansion:** 300ms.
-*   **Sidebar Collapse:** 300ms `var(--easing-standard)`.
-
-### 4.2 Keyboard Navigation
-*   **Hierarchy:** [1] Global Search (/) -> [2] Navigation Sidebar -> [3] Filter Bar -> [4] Main Grid.
-*   **Shortcuts:** `/` for Search; `N` for New; `S` for Saved; `M` for Manage; `ESC` to clear.
-
----
-
-## 5. Accessibility Checklist
-- [x] Contrast ratio ≥ 4.5:1 for all text.
-- [x] `aria-label` on all icon-only buttons (e.g., Delete, Edit).
-- [x] `aria-current="page"` on active navigation items.
-- [x] Keyboard support (`Enter`/`Space`) for all custom controls (Checkboxes, Modals).
-- [x] Focus trap in Modals and Wizards.
-- [x] Visible focus outlines (2px solid primary).
+| Pattern | Expected Behavior | Timing |
+| :--- | :--- | :--- |
+| **Click/Tap** | Visual ripple + subtle scale down. | 100ms |
+| **Hover** | Luminous radial glow + Elevation lift (-2px). | 300ms |
+| **Focus** | 2px solid primary outline with 2px offset. | Immediate |
+| **Drag-and-Drop** | Visual ghosting, target highlight, spring reorder. | 400ms |
+| **Undo/Redo** | Toast action + ActionLogger state recovery. | 200ms fade |
+| **Navigation** | Tab order: Sidebar -> Filters -> Search -> Grid. | N/A |
 
 ---
 
-## 6. Implementation Snippets
+## 5. Information Architecture
 
-### 6.1 Svelte 5 Component (Primary)
-```svelte
-<script lang="ts">
-  let { primary = false, onclick, children } = $props();
-</script>
+1. **Extension Icon:** Primary entry point for quick actions.
+2. **Dashboard (Options Page):** Central hub for infrastructure management.
+   - **Saved Collection:** Primary data view.
+   - **New Intelligence:** Wizard/Editor for ingestion.
+   - **Manage Hub:** Power tools and health stats.
+   - **System Environment:** Progressive disclosure for settings/theming.
 
-<SuperButton {primary} {onclick}>
-  {@render children?.()}
-</SuperButton>
-```
+---
 
-### 6.2 React Component (Reference)
+## 6. Accessibility & Performance
+- **WCAG 2.2 AA:** 4.5:1 contrast, ARIA labels on icons, keyboard Space/Enter/Escape support.
+- **Motion:** GPU-accelerated (`transform`, `opacity`), respects `prefers-reduced-motion`.
+- **Latency:** All dashboard filtering is debounced to avoid layout thrashing.
+
+---
+
+## 7. User-Testing & Iteration Plan
+- **Protocol:** 5-user remote usability test (Think-Aloud).
+- **Metrics:** Task success rate, Time-on-task, SUS score (Target > 80).
+- **Iteration:** Resolve high-priority blockers (Severity 1-2) before release.
+
+---
+
+## 8. Implementation Snippets
+
+### React (SuperInput)
 ```tsx
-export const SuperButton = ({ primary, onClick, children }) => (
-  <button
-    className={`super-button ${primary ? 'is-primary' : ''}`}
-    onClick={onClick}
-  >
-    {children}
-  </button>
+export const SuperInput = ({ label, value, onChange }) => (
+  <div className="super-input-wrapper">
+    <label className="input-label">{label}</label>
+    <div className="input-container">
+      <input className="pro-input" value={value} onChange={onChange} />
+      <div className="focus-ring" />
+    </div>
+  </div>
 );
 ```
 
----
-
-## 7. Deliverables Index
-*   **SCSS Tokens:** `projects/pro-variables.scss`
-*   **Motion Spec:** `projects/pro-animations.json`
-*   **Accessibility:** `projects/accessibility-report.md`
-*   **Test Template:** `projects/user-test-template.md`
+### Vue (SuperToggle)
+```vue
+<template>
+  <button class="super-toggle" :class="{ 'is-active': active }" @click="toggle">
+    <div class="toggle-track"><div class="toggle-thumb" /></div>
+  </button>
+</template>
+```
 
 ---
 *Authored by Jules, UI Architect.*

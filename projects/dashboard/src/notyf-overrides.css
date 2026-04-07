@@ -1,0 +1,36 @@
+/* Professional Edition Notification Polish */
+.notyf {
+    font-family: 'Inter', sans-serif !important;
+}
+
+.notyf__toast {
+    border-radius: var(--radius-md) !important;
+    backdrop-filter: blur(20px) !important;
+    background: var(--card-bg-alpha) !important;
+    border: 1px solid var(--border-strong) !important;
+    box-shadow: var(--shadow-md) !important;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: pro-toast-in 200ms var(--easing-standard) forwards; /* 200ms fade-in */
+}
+
+.notyf__toast--success {
+    border-left: 4px solid var(--success) !important;
+}
+
+.notyf__toast--error {
+    border-left: 4px solid var(--danger) !important;
+}
+
+.notyf__message {
+    font-weight: 700 !important;
+    color: var(--text) !important;
+    font-size: var(--font-sm) !important;
+}
+
+@keyframes pro-toast-in {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

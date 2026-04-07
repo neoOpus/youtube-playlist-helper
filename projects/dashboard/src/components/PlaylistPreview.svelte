@@ -33,9 +33,9 @@
   let videoCount = $derived(playlist.loadedVideos?.length || 0);
   let lastModified = $derived(playlist.lastModified ? new Date(playlist.lastModified).toLocaleDateString() : 'N/A');
 
-  let showMenu = false;
-  let menuX = 0;
-  let menuY = 0;
+  let showMenu = $state(false);
+  let menuX = $state(0);
+  let menuY = $state(0);
 
   async function deletePlaylist() {
     if (confirm(`Decommission infrastructure node "${playlist.title}"?`)) {

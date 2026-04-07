@@ -52,11 +52,20 @@
 </script>
 
 {#if display}
-    <div class="wizard-overlay" transition:fade onclick={close} role="presentation">
+    <div
+        class="wizard-overlay"
+        transition:fade
+        onclick={close}
+        onkeydown={(e) => e.key === 'Enter' && close()}
+        role="button"
+        tabindex="0"
+        aria-label="Close Wizard Overlay"
+    >
         <div
             class="wizard-content pro-glass-high"
             transition:fly={{ y: 20 }}
             onclick={e => e.stopPropagation()}
+            onkeydown={e => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-labelledby="wizard-title"
@@ -97,8 +106,8 @@
 {/if}
 
 <style>
-    .wizard-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 7000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); padding: var(--space-5); }
-    .wizard-content { width: 600px; max-width: 95vw; padding: 2.5rem; position: relative; outline: none; }
+    .wizard-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 7000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); padding: var(--space-5); border: none; cursor: default; }
+    .wizard-content { width: 600px; max-width: 95vw; padding: 2.5rem; position: relative; outline: none; cursor: auto; }
     .wizard-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
     h2 { margin: 0; font-weight: 900; flex-grow: 1; font-size: var(--font-xl); }
     .close-btn {

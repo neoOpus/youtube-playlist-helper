@@ -14,9 +14,19 @@
     "slow": 600
   },
   "interactions": {
-    "button_press": {
-      "scale": 0.96,
+    "button_press_ripple": {
       "duration": 100,
+      "easing": "standard"
+    },
+    "loading_spinner": {
+      "frequency": "2Hz",
+      "period": "0.5s",
+      "easing": "linear"
+    },
+    "success_toast_fade": {
+      "duration": 200,
+      "opacity": [0, 1],
+      "translateY": [20, 0],
       "easing": "standard"
     },
     "card_hover": {

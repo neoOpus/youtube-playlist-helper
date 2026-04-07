@@ -7,6 +7,7 @@
     secondary?: boolean;
     danger?: boolean;
     outline?: boolean;
+    link?: boolean;
     mini?: boolean;
     circle?: boolean;
     title?: string;
@@ -15,6 +16,7 @@
     class?: string;
     children?: Snippet;
     ariaLabel?: string;
+    style?: string;
   }
 
   let {
@@ -22,6 +24,7 @@
     secondary = false,
     danger = false,
     outline = false,
+    link = false,
     mini = false,
     circle = false,
     title = "",
@@ -29,8 +32,12 @@
     onclick = (e: MouseEvent) => {},
     class: className = "",
     children,
-    ariaLabel
+    ariaLabel,
+    style = ""
   }: Props = $props();
+
+  let ripples = $state<{id: number, x: number, y: number}[]>([]);
+  let rippleId = 0;
 
   function handleMouseMove(e: MouseEvent) {
       const target = e.currentTarget as HTMLElement;
@@ -40,6 +47,27 @@
       target.style.setProperty("--x", `${x}px`);
       target.style.setProperty("--y", `${y}px`);
   }
+
+  function createRipple(e: MouseEvent) {
+      if (disabled || link) return;
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const id = rippleId++;
+      ripples = [...ripples, { id, x, y }];
+
+      setTimeout(() => {
+          ripples = ripples.filter(r => r.id !== id);
+      }, 600);
+  }
+
+  function handleClick(e: MouseEvent) {
+      if (disabled) return;
+      createRipple(e);
+      onclick(e);
+  }
 </script>
 
 <button
@@ -48,15 +76,21 @@
   class:is-secondary={secondary}
   class:is-danger={danger}
   class:is-outline={outline}
+  class:is-link={link}
   class:is-mini={mini}
   class:is-circle={circle}
   {title}
   {disabled}
+  {style}
   aria-label={ariaLabel || title}
-  onclick={(e) => !disabled && onclick(e)}
+  onclick={handleClick}
   onmousemove={handleMouseMove}
 >
-  <div class="glow-container"></div>
+  <div class="ripple-container">
+      {#each ripples as ripple (ripple.id)}
+          <span class="ripple" style="left: ${ripple.x}px; top: ${ripple.y}px;"></span>
+      {/each}
+  </div>
   <span class="content">
       {#if children}
         {@render children()}
@@ -86,6 +120,7 @@
     font-family: inherit;
     outline: none;
     box-shadow: var(--shadow-sm);
+    user-select: none;
   }
 
   .super-button.is-mini {
@@ -145,6 +180,23 @@
       border-color: var(--primary);
   }
 
+  .is-link {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: var(--space-1) var(--space-2);
+      color: var(--primary);
+      text-transform: none;
+      font-weight: 700;
+      min-height: auto;
+  }
+
+  .is-link:hover:not(:disabled) {
+      transform: none;
+      text-decoration: underline;
+      background: rgba(var(--primary-rgb), 0.05);
+  }
+
   .content {
       position: relative;
       z-index: 2;
@@ -152,6 +204,31 @@
       align-items: center;
       justify-content: center;
       gap: inherit;
+  }
+
+  .ripple-container {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+  }
+
+  .ripple {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      animation: ripple-effect 0.6s ease-out;
+  }
+
+  @keyframes ripple-effect {
+      to {
+          transform: translate(-50%, -50%) scale(4);
+          opacity: 0;
+      }
   }
 
   .luminous-hover::after {

@@ -81,7 +81,7 @@
             </div>
 
             <div class="btns mt-10">
-                <SuperButton onclick={save} class="flex-1">
+                <SuperButton onclick={save} >
                     <CheckIcon size="18" /> Lock Config
                 </SuperButton>
                 <SuperButton outline onclick={test} disabled={testing}>
@@ -150,7 +150,6 @@
     .connected .pulse-indicator { background: var(--success); box-shadow: 0 0 20px var(--success); }
     .pulse-indicator { position: absolute; top: var(--space-8); right: var(--space-8); width: 16px; height: 16px; border-radius: 50%; background: var(--text-muted); }
     .diff-status { display: flex; align-items: center; gap: 10px; font-size: var(--font-sm); color: var(--text); font-weight: 700; }
-    .flex-1 { flex: 1; }
     .mt-4 { margin-top: 1rem; }
     .mt-6 { margin-top: 1.5rem; }
     .mt-8 { margin-top: 2rem; }

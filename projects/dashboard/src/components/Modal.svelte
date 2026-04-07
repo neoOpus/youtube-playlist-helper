@@ -31,11 +31,20 @@
 </script>
 
 {#if display}
-  <div class="modal-overlay" transition:fade onclick={close} role="presentation">
+  <div
+    class="modal-overlay"
+    transition:fade
+    onclick={close}
+    onkeydown={(e) => e.key === 'Enter' && close()}
+    role="button"
+    tabindex="0"
+    aria-label="Close Modal Overlay"
+  >
     <div
       class="modal-container pro-glass-high"
       transition:fly={{ y: 20 }}
       onclick={e => e.stopPropagation()}
+      onkeydown={e => e.stopPropagation()}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -70,6 +79,8 @@
     justify-content: center;
     backdrop-filter: blur(10px);
     padding: var(--space-5);
+    border: none;
+    cursor: default;
   }
 
   .modal-container {
@@ -81,6 +92,7 @@
     padding: var(--space-8);
     border: 1px solid var(--border-strong);
     outline: none;
+    cursor: auto;
   }
 
   .modal-header {
