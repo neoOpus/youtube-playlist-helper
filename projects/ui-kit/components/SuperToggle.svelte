@@ -1,33 +1,32 @@
 <svelte:options runes={true} />
 <script lang="ts">
   interface Props {
-    checked?: boolean;
+    active?: boolean;
     disabled?: boolean;
     label?: string;
     onchange?: (val: boolean) => void;
   }
 
-  let { checked = $bindable(false), disabled = false, label = "", onchange }: Props = $props();
+  let { active = $bindable(false), disabled = false, label = "", onchange }: Props = $props();
 
   function toggle() {
     if (disabled) return;
-    checked = !checked;
-    if (onchange) onchange(checked);
+    active = !active;
+    if (onchange) onchange(active);
   }
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="super-toggle-container"
   class:disabled
   onclick={toggle}
   role="switch"
-  aria-checked={checked}
+  aria-checked={active}
   tabindex={disabled ? -1 : 0}
   onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle())}
 >
-  <div class="toggle-track" class:checked>
-    <div class="toggle-thumb" class:checked></div>
+  <div class="toggle-track" class:checked={active}>
+    <div class="toggle-thumb" class:checked={active}></div>
   </div>
   {#if label}
     <span class="toggle-label">{label}</span>

@@ -7,6 +7,7 @@
   import Saved from "./views/Saved.svelte";
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
+  import Gallery from "./views/Gallery.svelte";
   import PlaylistComparison from "./components/PlaylistComparison.svelte";
   import ActionToast from "./components/ActionToast.svelte";
   import Sidebar from "./components/Sidebar.svelte";
@@ -26,6 +27,7 @@
     "/sync": Sync,
     "/merge": PlaylistComparison,
     "/support": Support,
+    "/gallery": Gallery,
     "/edit/:id": PlaylistEditor,
   };
 
@@ -63,6 +65,8 @@
               router.push("/");
           } else if (e.key.toLowerCase() === "m") {
               router.push("/manage");
+          } else if (e.key.toLowerCase() === "g") {
+              router.push("/gallery");
           } else if (e.key === "Escape") {
               playlistsSearch.set("");
           }

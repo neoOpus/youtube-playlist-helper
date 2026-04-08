@@ -137,6 +137,15 @@
 
       {#if systemSettingsExpanded}
         <div class="nav-group-content" in:fly={{ y: -5, duration: 200 }}>
+            <button
+              class="nav-sub-item-btn luminous-hover"
+              class:active={isActive("/gallery")}
+              onclick={() => router.push("/gallery")}
+            >
+                <Layers size="16" />
+                <span class="sub-label">Component Gallery</span>
+            </button>
+
             <div class="nav-sub-item">
                 <Monitor size="16" />
                 <div class="sub-controls">
@@ -329,10 +338,31 @@
     gap: 0.5rem;
   }
 
+  .nav-sub-item-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      transition: all 0.2s;
+  }
+
+  .nav-sub-item-btn:hover { background: var(--hover); color: var(--text); }
+  .nav-sub-item-btn.active { color: var(--primary); font-weight: 700; }
+
+  .sub-label { font-size: 0.8rem; font-weight: 700; }
+
   .nav-sub-item {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
     color: var(--text-muted);
   }
 
@@ -344,10 +374,11 @@
   }
 
   .small-label {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.6rem;
+    font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    opacity: 0.6;
   }
 
   .theme-select {
@@ -357,7 +388,7 @@
     color: var(--text);
     padding: 0.4rem;
     border-radius: var(--radius-md);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 700;
     outline: none;
     cursor: pointer;
