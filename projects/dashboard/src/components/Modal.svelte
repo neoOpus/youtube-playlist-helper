@@ -1,9 +1,16 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  import { fade, fly, scale } from "svelte/transition";
+  import { createEventDispatcher, onMount } from "svelte";
+  import { fade, fly } from "svelte/transition";
   import { CloseIcon } from "@yph/ui-kit";
 
-  export let display = false;
+  interface Props {
+    display?: boolean;
+    title?: string;
+    children?: import("svelte").Snippet;
+  }
+
+  let { display = $bindable(false), title = "", children }: Props = $props();
   const dispatch = createEventDispatcher();
 
   function close() {
@@ -11,28 +18,51 @@
     dispatch("close");
   }
 
-  function handleKeydown(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && display) {
+      close();
+    }
   }
+
+  onMount(() => {
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
+  });
 </script>
 
 {#if display}
-  <div role="presentation" class="modal-overlay" on:click={close} transition:fade={{ duration: 300 }}>
+  <div
+    class="modal-overlay"
+    transition:fade
+    onclick={close}
+    onkeydown={(e) => e.key === 'Enter' && close()}
+    role="button"
+    tabindex="0"
+    aria-label="Close Modal Overlay"
+  >
     <div
+      class="modal-container pro-glass-high"
+      transition:fly={{ y: 20 }}
+      onclick={e => e.stopPropagation()}
+      onkeydown={e => e.stopPropagation()}
       role="dialog"
       aria-modal="true"
+      aria-labelledby="modal-title"
       tabindex="-1"
-      class="modal-container pro-glass"
-      on:click|stopPropagation
-      on:keydown={handleKeydown}
-      in:fly={{ y: 20, duration: 500 }}
-      out:scale={{ start: 0.95, duration: 200 }}
     >
-      <button class="close-btn" on:click={close} aria-label="Close modal">
-        <CloseIcon size="20" />
-      </button>
-      <div class="content">
-        <slot />
+      <header class="modal-header">
+        <h2 id="modal-title">{title}</h2>
+        <button
+          class="close-btn"
+          onclick={close}
+          aria-label="Close"
+          title="Close Modal"
+        >
+          <CloseIcon size="20" />
+        </button>
+      </header>
+      <div class="modal-body">
+        {@render children?.()}
       </div>
     </div>
   </div>
@@ -41,45 +71,50 @@
 <style>
   .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(8px);
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 6000;
     display: flex;
-    justify-content: center;
     align-items: center;
-    z-index: 3000;
+    justify-content: center;
+    backdrop-filter: blur(10px);
     padding: var(--space-5);
+    border: none;
+    cursor: default;
   }
 
   .modal-container {
+    width: 600px;
     max-width: 95vw;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    padding: var(--space-6);
+    padding: var(--space-8);
+    border: 1px solid var(--border-strong);
     outline: none;
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-xl);
+    cursor: auto;
   }
 
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+  }
+
+  h2 { margin: 0; font-weight: 900; font-size: var(--font-xl); }
+
   .close-btn {
-    position: absolute;
-    top: var(--space-6);
-    right: var(--space-6);
     background: var(--hover);
     border: none;
+    color: var(--text-muted);
+    cursor: pointer;
     padding: var(--space-2);
     border-radius: var(--radius-md);
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
+    transition: all var(--duration-fast);
   }
 
   .close-btn:hover {
@@ -88,7 +123,7 @@
     transform: scale(1.1) rotate(90deg);
   }
 
-  .content {
-    margin-top: var(--space-3);
+  .modal-body {
+    margin-top: var(--space-2);
   }
 </style>

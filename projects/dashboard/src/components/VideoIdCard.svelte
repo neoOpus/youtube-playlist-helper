@@ -1,175 +1,147 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  import type { Video } from "@yph/core";
-  import Modal from "./Modal.svelte";
-  import {
-    FloatingButton,
-    SaveIcon,
-    SearchIcon,
-    TagManager,
-    InfoIcon,
-    ReverseIcon
-  } from "@yph/ui-kit";
   import { createEventDispatcher, onMount } from "svelte";
-  import { aiService, historyService, notificationService } from "@yph/core";
-  import { fade, slide } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
+  import { CloseIcon, SaveIcon, TerminalIcon, SuperButton } from "@yph/ui-kit";
+  import type { Video } from "@yph/core";
+  import { aiService, notificationService } from "@yph/core";
 
-  export let video: Video;
-  export let display = false;
-  let loadingAi = false;
-  let history: any[] = [];
-  let showHistory = false;
+  interface Props {
+    video: Video;
+    display?: boolean;
+  }
 
+  let { video = $bindable(), display = $bindable(false) }: Props = $props();
   const dispatch = createEventDispatcher();
+  let loadingAi = $state(false);
 
-  onMount(async () => {
-      if (video.videoId) {
-          history = await historyService.getHistory(video.videoId);
+  function close() { display = false; }
+
+  async function save() {
+    dispatch("save", video);
+    close();
+    notificationService.success("Intelligence updated.");
+  }
+
+  async function runAiScan() {
+      loadingAi = true;
+      try {
+          const res = await aiService.analyzeVideo(video);
+          video.aiSummary = res.aiSummary;
+          video.aiTags = res.aiTags;
+          notificationService.success("AI Analysis Complete.");
+      } finally {
+          loadingAi = false;
       }
-  });
+  }
 
-  async function analyze() {
-    loadingAi = true;
-    try {
-      const enrichment = await aiService.analyzeVideo(video);
-      video = { ...video, ...enrichment };
-    } finally {
-      loadingAi = false;
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && display) {
+      close();
     }
   }
 
-  function handleTagsChange(event: CustomEvent<string[]>) {
-    video.aiTags = event.detail;
-  }
-
-  function restoreVersion(version: any) {
-      video.title = version.title;
-      video.channel = version.channel;
-      notificationService.success("Metadata restored from history.");
-  }
-
-  function save() {
-    dispatch("save", video);
-    display = false;
-  }
+  onMount(() => {
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
+  });
 </script>
 
-<Modal bind:display>
+{#if display}
   <div
-    class="video-id-card pro-glass p-6"
-    role="dialog"
-    aria-label="Video Intelligence Card for {video.title}"
+    class="modal-overlay"
+    transition:fade
+    onclick={close}
+    onkeydown={(e) => e.key === 'Enter' && close()}
+    role="button"
+    tabindex="0"
+    aria-label="Close Video Intelligence Node Overlay"
   >
-    <div class="id-header mb-6">
-        <h3><InfoIcon size="20" color="var(--primary)" /> Video Intelligence Card</h3>
-        <code class="small muted">{video.videoId}</code>
-    </div>
-
-    <div class="field">
-      <label for="video-title">Title</label>
-      <input id="video-title" type="text" bind:value={video.title} />
-    </div>
-
-    <div class="field mt-4">
-      <label for="video-notes">Private Engineering Notes</label>
-      <textarea id="video-notes" bind:value={video.notes} placeholder="Add persistent technical notes here..."></textarea>
-    </div>
-
-    <div class="row gap-6 mt-4">
-        <div class="field flex-1">
-          <label for="video-rating">Performance Rating (1-5)</label>
-          <input id="video-rating" type="number" min="1" max="5" bind:value={video.rating} />
-        </div>
-        <div class="field checkbox-field flex-1">
-            <label class="row items-center gap-2 cursor-pointer">
-                <input id="video-watched" type="checkbox" bind:checked={video.watched} />
-                <span class="bold">Mark as Analyzed</span>
-            </label>
-        </div>
-    </div>
-
-    <div class="ai-section mt-8">
-        <div class="row justify-between items-center mb-4">
-            <span class="section-title">AI Enrichment & Tags</span>
-            <button on:click={analyze} disabled={loadingAi} class="btn-ai mini" aria-label="Run neural scan">
-                {loadingAi ? 'Processing...' : 'Neural Scan'}
-            </button>
+    <div
+        class="modal-content pro-glass-high"
+        transition:fly={{ y: 20 }}
+        onclick={e => e.stopPropagation()}
+        onkeydown={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="video-node-title"
+        tabindex="-1"
+    >
+        <div class="modal-header">
+            <TerminalIcon size="24" color="var(--primary)" />
+            <h2 id="video-node-title">Video Intelligence Node</h2>
+            <button class="close-btn" onclick={close} aria-label="Close"><CloseIcon size="20" /></button>
         </div>
 
-        {#if video.aiSummary}
-            <div class="ai-summary" in:fade>
-                <p>{video.aiSummary}</p>
+        <div class="modal-body">
+            <div class="meta-section">
+                <span class="label">TITLE</span>
+                <input bind:value={video.title} placeholder="Unknown Metadata..." aria-label="Video Title" />
             </div>
-        {/if}
 
-        <TagManager tags={video.aiTags || []} on:change={handleTagsChange} placeholder="Add semantic tag..." />
-    </div>
-
-    {#if history.length > 0}
-        <div class="history-section mt-6">
-            <button class="btn secondary mini w-full" on:click={() => showHistory = !showHistory} aria-expanded={showHistory}>
-                <ReverseIcon size="14" /> {showHistory ? 'Hide' : 'View'} Metadata Time Machine ({history.length})
-            </button>
-
-            {#if showHistory}
-                <div class="history-list mt-4" transition:slide>
-                    {#each history as version}
-                        <div class="history-item">
-                            <div class="v-info">
-                                <span class="v-title">{version.title}</span>
-                                <span class="v-meta small muted">{version.channel} • {new Date(version.timestamp).toLocaleDateString()}</span>
-                            </div>
-                            <button class="btn primary mini" on:click={() => restoreVersion(version)}>Restore</button>
-                        </div>
-                    {/each}
+            <div class="grid-2 mt-6">
+                <div class="meta-section">
+                    <span class="label">RATING</span>
+                    <select bind:value={video.rating} aria-label="Rating">
+                        <option value={0}>Unrated</option>
+                        {#each [1,2,3,4,5] as n}
+                            <option value={n}>{n} Stars</option>
+                        {/each}
+                    </select>
                 </div>
-            {/if}
-        </div>
-    {/if}
+                <div class="meta-section">
+                    <span class="label">STATUS</span>
+                    <label class="check-label">
+                        <input type="checkbox" bind:checked={video.watched} />
+                        <span>Watched</span>
+                    </label>
+                </div>
+            </div>
 
-    <div class="actions mt-8">
-      <button class="btn primary-sota sota-glow w-full" on:click={save}>
-        <SaveIcon size="18" /> Commit Changes to Infrastructure
-      </button>
+            <div class="meta-section mt-6">
+                <span class="label">AI SUMMARY</span>
+                {#if video.aiSummary}
+                    <p class="summary-text">{video.aiSummary}</p>
+                {:else}
+                    <div class="ai-cta">
+                        <p class="small muted">No intelligence found for this node.</p>
+                        <SuperButton outline mini onclick={runAiScan} disabled={loadingAi}>
+                            {loadingAi ? 'Processing...' : 'Infrastructure Scan'}
+                        </SuperButton>
+                    </div>
+                {/if}
+            </div>
+
+            <div class="meta-section mt-6">
+                <span class="label">LOCAL NOTES</span>
+                <textarea bind:value={video.notes} placeholder="Enter observations..." aria-label="Local Notes"></textarea>
+            </div>
+        </div>
+
+        <div class="modal-footer mt-8">
+            <SuperButton onclick={save} >
+                <SaveIcon size="18" /> Commit Updates
+            </SuperButton>
+        </div>
     </div>
   </div>
-</Modal>
+{/if}
 
 <style>
-  .video-id-card { min-width: 500px; }
-  .id-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
-  h3 { margin: 0; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px; }
-
-  .field { display: flex; flex-direction: column; gap: 8px; }
-  label, .section-title { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-
-  input, textarea { background: var(--hover); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-weight: 700; outline: none; }
-  input:focus, textarea:focus { border-color: var(--primary); }
-  textarea { height: 100px; resize: vertical; font-family: inherit; }
-
-  .ai-section { background: rgba(255, 82, 82, 0.03); border: 1px dashed var(--primary); border-radius: 16px; padding: 1.5rem; }
-  .ai-summary { background: var(--hover); padding: 1rem; border-radius: 10px; border-left: 3px solid var(--primary); margin-bottom: 1rem; font-size: 0.85rem; font-style: italic; color: var(--text); }
-
-  .history-item { background: var(--hover); border: 1px solid var(--border); padding: 10px 14px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .v-info { display: flex; flex-direction: column; min-width: 0; }
-  .v-title { font-weight: 800; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  .btn { padding: 12px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text); }
-  .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
-  .btn.primary-sota { background: var(--primary); color: white; border-color: var(--primary); }
-  .btn.secondary { background: var(--hover); }
-  .btn.mini { padding: 6px 12px; font-size: 0.7rem; }
-
-  .btn-ai { background: linear-gradient(135deg, #6200ea, #d500f9); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 0.75rem; cursor: pointer; }
-
-  .row { display: flex; }
-  .items-center { align-items: center; }
-  .justify-between { justify-content: space-between; }
-  .gap-2 { gap: 0.5rem; }
-  .gap-6 { gap: 1.5rem; }
-  .mt-4 { margin-top: 1rem; }
-  .mt-6 { margin-top: 1.5rem; }
-  .mt-8 { margin-top: 2rem; }
-  .mb-4 { margin-bottom: 1rem; }
-  .p-6 { padding: 1.5rem; }
-  .cursor-pointer { cursor: pointer; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); border: none; cursor: default; }
+    .modal-content { width: 500px; max-width: 90vw; padding: 2.5rem; position: relative; outline: none; cursor: auto; }
+    .modal-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    h2 { margin: 0; font-weight: 900; flex-grow: 1; letter-spacing: -1px; font-size: var(--font-xl); }
+    .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+    .close-btn:hover { color: var(--primary); }
+    .meta-section { display: flex; flex-direction: column; gap: 8px; }
+    .label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+    input, select, textarea { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: var(--text); font-weight: 600; font-size: 0.9rem; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    textarea { height: 100px; resize: none; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .check-label { display: flex; align-items: center; gap: 10px; cursor: pointer; height: 44px; padding: 0 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; font-weight: 700; font-size: 0.9rem; }
+    .check-label input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .summary-text { font-size: 0.85rem; line-height: 1.6; color: var(--text); background: var(--hover); padding: 1rem; border-radius: 8px; border: 1px dashed var(--border-strong); }
+    .ai-cta { background: rgba(255, 82, 82, 0.05); border: 1px solid rgba(255, 82, 82, 0.2); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
 </style>

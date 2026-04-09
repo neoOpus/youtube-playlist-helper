@@ -1,0 +1,52 @@
+{
+  "name": "Professional Edition Tokens",
+  "version": "1.0",
+  "palette": {
+    "primary": "#ff5252",
+    "primary_hover": "#ff7575",
+    "bg": "#030712",
+    "card_alpha": "rgba(3, 7, 18, 0.85)",
+    "border": "rgba(255, 255, 255, 0.08)",
+    "text": "#f8fafc",
+    "muted": "#94a3b8"
+  },
+  "spacing": {
+    "unit": "4px",
+    "scale": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64]
+  },
+  "typography": {
+    "font_family": "Inter, sans-serif",
+    "scale": {
+      "xs": "11.2px",
+      "sm": "13.2px",
+      "base": "15.2px",
+      "lg": "18px",
+      "xl": "22.4px",
+      "hero": "72px"
+    }
+  },
+  "geometry": {
+    "radius": {
+      "sm": "8px",
+      "md": "12px",
+      "lg": "20px",
+      "xl": "32px"
+    },
+    "grid": {
+      "columns": 12,
+      "max_width": "1200px",
+      "gutter": "24px"
+    }
+  },
+  "motion": {
+    "durations": {
+      "fast": "150ms",
+      "standard": "300ms",
+      "slow": "600ms"
+    },
+    "easings": {
+      "standard": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "emphasized": "cubic-bezier(0.19, 1, 0.22, 1)"
+    }
+  }
+}

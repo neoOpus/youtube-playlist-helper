@@ -1,6 +1,10 @@
+<svelte:options runes={true} />
 <script lang="ts">
-  export let size = "24"; export let color = "currentColor";
+  let { size = "24", color = "currentColor" } = $props();
 </script>
-<svg viewBox="0 0 24 24" width={size} height={size}>
-    <path fill={color} d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" />
+
+<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+  <polyline points="7 3 7 8 15 8"></polyline>
 </svg>

@@ -1,0 +1,57 @@
+{
+  "theme": "Professional Edition",
+  "version": "1.0",
+  "easings": {
+    "standard": [0.4, 0, 0.2, 1],
+    "decelerate": [0, 0, 0.2, 1],
+    "accelerate": [0.4, 0, 1, 1],
+    "emphasized": [0.19, 1, 0.22, 1]
+  },
+  "durations": {
+    "micro": 100,
+    "fast": 150,
+    "standard": 300,
+    "slow": 600
+  },
+  "interactions": {
+    "button_press_ripple": {
+      "duration": 100,
+      "easing": "standard"
+    },
+    "loading_spinner": {
+      "frequency": "2Hz",
+      "period": "0.5s",
+      "easing": "linear"
+    },
+    "success_toast_fade": {
+      "duration": 200,
+      "opacity": [0, 1],
+      "translateY": [20, 0],
+      "easing": "standard"
+    },
+    "card_hover": {
+      "translateY": -8,
+      "scale": 1.01,
+      "duration": 300,
+      "easing": "emphasized"
+    },
+    "luminous_glow": {
+      "opacity_range": [0, 0.4],
+      "radius_range": [0, 50],
+      "duration": 400
+    },
+    "sidebar_transition": {
+      "type": "fly",
+      "x": -20,
+      "duration": 600,
+      "easing": "emphasized"
+    },
+    "modal_entry": {
+      "type": "fly",
+      "y": 20,
+      "opacity": 0,
+      "duration": 400,
+      "easing": "emphasized"
+    }
+  }
+}

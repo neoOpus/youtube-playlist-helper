@@ -1,35 +1,43 @@
 import { Notyf } from "notyf";
 
-let notify: Notyf;
-let inform: Notyf;
+let notifyInstance: Notyf | null = null;
+let informInstance: Notyf | null = null;
 
+/**
+ * Lazy-initializes Notyf for main notifications.
+ * Browser-only.
+ */
 function getNotyf() {
   if (typeof window === "undefined") return null;
-  if (notify) return notify;
-
-  notify = new Notyf({
-    duration: 5000,
-    dismissible: true,
-  });
-  return notify;
+  if (!notifyInstance) {
+    notifyInstance = new Notyf({
+      duration: 5000,
+      dismissible: true,
+    });
+  }
+  return notifyInstance;
 }
 
+/**
+ * Lazy-initializes Notyf for information-type notifications.
+ * Browser-only.
+ */
 function getInform() {
   if (typeof window === "undefined") return null;
-  if (inform) return inform;
-
-  inform = new Notyf({
-    duration: 5000,
-    dismissible: true,
-    types: [
-      {
-        type: "info",
-        background: "#007bff",
-        icon: false,
-      },
-    ],
-  });
-  return inform;
+  if (!informInstance) {
+    informInstance = new Notyf({
+      duration: 5000,
+      dismissible: true,
+      types: [
+        {
+          type: "info",
+          background: "#007bff",
+          icon: false,
+        },
+      ],
+    });
+  }
+  return informInstance;
 }
 
 export const notificationService = {
@@ -61,11 +69,14 @@ export function debounce<T extends (...args: any[]) => any>(
   let timeout: ReturnType<typeof setTimeout> | null = null;
   return (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    timeout = setTimeout(() => {
+      func(...args);
+    }, wait);
   };
 }
 
-if (typeof window !== 'undefined') {
+// Global legacy support for extension background/popup scripts
+if (typeof window !== "undefined") {
   (window as any).error = notificationService.error;
   (window as any).success = notificationService.success;
   (window as any).info = notificationService.info;
