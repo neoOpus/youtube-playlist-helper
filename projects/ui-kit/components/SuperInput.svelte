@@ -1,31 +1,48 @@
-<svelte:options runes={true} />
 <script lang="ts">
+  interface Props {
+    value?: string;
+    placeholder?: string;
+    label?: string;
+    error?: string;
+    type?: string;
+    disabled?: boolean;
+    class?: string;
+    ariaLabel?: string;
+    oninput?: (e: Event) => void;
+    onchange?: (e: Event) => void;
+  }
+
   let {
-    value = $bindable(""),
-    placeholder = "",
-    type = "text",
-    id = "",
-    label = "",
-    error = "",
-    disabled = false
-  } = $props();
+    value = $state(''),
+    placeholder = '',
+    label = '',
+    error = '',
+    type = 'text',
+    disabled = false,
+    class: className = '',
+    ariaLabel = '',
+    oninput,
+    onchange
+  }: Props = $props();
 </script>
 
-<div class="super-input-wrapper" class:has-error={error}>
+<div class="sota-input-wrapper {className} {error ? 'has-error' : ''}">
   {#if label}
-    <label for={id} class="input-label">{label}</label>
+    <label for="input" class="sota-label">{label}</label>
   {/if}
   <div class="input-container">
-      <input
-          {id}
-          {type}
-          bind:value={value}
-          {placeholder}
-          {disabled}
-          class="pro-input"
-          aria-invalid={!!error}
-      />
-      <div class="focus-ring"></div>
+    <input
+      id="input"
+      {type}
+      {placeholder}
+      {disabled}
+      bind:value={value}
+      oninput={oninput}
+      onchange={onchange}
+      aria-label={ariaLabel || label || placeholder}
+      aria-invalid={!!error}
+    />
+    <div class="focus-ring"></div>
   </div>
   {#if error}
     <span class="error-text" transition:fade>{error}</span>
@@ -33,33 +50,77 @@
 </div>
 
 <style>
-  .super-input-wrapper { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; }
-  .input-label { font-size: var(--font-xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
-  .input-container { position: relative; }
-  .pro-input {
-      width: 100%;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: var(--space-4);
-      border-radius: var(--radius-md);
-      font-size: var(--font-sm);
-      font-weight: 700;
-      transition: all 0.3s;
-      outline: none;
+  .sota-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    width: 100%;
   }
-  .pro-input:focus { border-color: var(--primary); }
+
+  .sota-label {
+    font-size: var(--size-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .input-container {
+    position: relative;
+    width: 100%;
+  }
+
+  input {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-3) var(--spacing-4);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: var(--size-sm);
+    transition: all var(--trans-fast);
+    outline: none;
+  }
+
+  input:hover:not(:disabled) {
+    border-color: var(--border-strong);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  input:focus {
+    border-color: var(--accent-color);
+    background: rgba(0, 0, 0, 0.3);
+  }
+
   .focus-ring {
-      position: absolute;
-      inset: -4px;
-      border: 2px solid var(--primary);
-      border-radius: calc(var(--radius-md) + 4px);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s;
-      transform: scale(0.98);
+    position: absolute;
+    inset: -3px;
+    border: 2px solid var(--accent-color);
+    border-radius: calc(var(--radius-md) + 3px);
+    opacity: 0;
+    transition: all var(--trans-fast);
+    pointer-events: none;
+    transform: scale(0.98);
   }
-  .pro-input:focus ~ .focus-ring { opacity: 0.2; transform: scale(1); }
-  .error-text { font-size: var(--font-xs); font-weight: 700; color: var(--danger); margin-top: 2px; }
-  .has-error .pro-input { border-color: var(--danger); }
+
+  input:focus + .focus-ring {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .has-error input {
+    border-color: #ff3232;
+  }
+
+  .error-text {
+    font-size: var(--size-xs);
+    color: #ff3232;
+    margin-top: var(--spacing-1);
+  }
 </style>

@@ -1,41 +1,70 @@
-<svelte:options runes={true} />
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  interface Props {
+    tag?: string;
+    class?: string;
+    interactive?: boolean;
+    glass?: boolean;
+    children?: any;
+    onclick?: (e: MouseEvent) => void;
+  }
 
   let {
-    active = false,
-    selected = false,
-    disabled = false,
-    className = "",
-    ariaLabel = "",
-    style = "",
+    tag = 'div',
+    class: className = '',
+    interactive = false,
+    glass = true,
+    onclick,
     children
-  } = $props();
-
-  const dispatch = createEventDispatcher();
-
-  function handleClick(e: MouseEvent) {
-      if (disabled) return;
-      dispatch("click", e);
-  }
+  }: Props = $props();
 </script>
 
-<div
-  class="smart-element {className}"
-  class:active
-  class:selected
-  class:disabled
-  {style}
-  role="presentation"
-  aria-label={ariaLabel}
-  onclick={handleClick}
+<svelte:element
+  this={tag}
+  class="sota-element {glass ? 'glass' : ''} {interactive ? 'interactive' : ''} {className}"
+  on:click={onclick}
+  role={interactive ? 'button' : undefined}
+  tabindex={interactive ? 0 : undefined}
 >
   {@render children?.()}
-</div>
+</svelte:element>
 
 <style>
-  .smart-element { display: flex; width: 100%; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-  .smart-element.active { background: var(--hover); }
-  .smart-element.selected { background: rgba(var(--primary-rgb), 0.1); border-color: var(--primary); }
-  .smart-element.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+  .sota-element {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    transition: all var(--trans-normal);
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  .glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border-color: var(--border-strong);
+  }
+
+  .interactive {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .interactive:hover {
+    border-color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .interactive:active {
+    transform: translateY(0);
+    filter: brightness(0.9);
+  }
+
+  /* Focus states for accessibility */
+  .interactive:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 4px;
+  }
 </style>

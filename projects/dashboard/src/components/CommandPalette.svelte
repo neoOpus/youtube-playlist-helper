@@ -8,9 +8,14 @@
     TerminalIcon,
     PlaylistPlayIcon,
     PlaylistPlusIcon,
-    SaveIcon
+    SaveIcon,
+    CloudSyncIcon,
+    SupportIcon,
+    MergeIcon,
+    Filter
   } from '@yph/ui-kit';
   import { storageService } from '@yph/core';
+  import { themeState, setTheme } from '../stores/theme.svelte';
   import type { Playlist, Video } from '@yph/core';
 
   let { display = $bindable(false) } = $props();
@@ -21,11 +26,18 @@
   let playlists = $state<Playlist[]>([]);
   let filteredPlaylists = $state<Playlist[]>([]);
   let videoResults = $state<{video: Video, playlist: Playlist}[]>([]);
+  let commandResults = $state<any[]>([]);
 
-  const staticActions = [
-      { id: 'new', title: 'Create New Playlist', icon: PlaylistPlusIcon, action: () => router.push('/new') },
-      { id: 'manage', title: 'Go to Manage Hub', icon: SaveIcon, action: () => router.push('/manage') },
-      { id: 'saved', title: 'View Saved Playlists', icon: PlaylistPlayIcon, action: () => router.push('/') }
+  const baseCommands = [
+      { id: 'new', title: 'Create New Playlist', icon: PlaylistPlusIcon, category: 'Actions', action: () => router.push('/new') },
+      { id: 'manage', title: 'Go to Manage Hub', icon: SaveIcon, category: 'Navigation', action: () => router.push('/manage') },
+      { id: 'saved', title: 'View Saved Playlists', icon: PlaylistPlayIcon, category: 'Navigation', action: () => router.push('/') },
+      { id: 'sync', title: 'WebDAV Sync Settings', icon: CloudSyncIcon, category: 'Settings', action: () => router.push('/sync') },
+      { id: 'merge', title: 'Merge Playlists', icon: MergeIcon, category: 'Actions', action: () => router.push('/merge') },
+      { id: 'support', title: 'Project Support & Feedback', icon: SupportIcon, category: 'Meta', action: () => router.push('/support') },
+      { id: 'theme-dark', title: 'Switch to Dark Mode', icon: TerminalIcon, category: 'Appearance', action: () => setTheme('dark') },
+      { id: 'theme-light', title: 'Switch to Light Mode', icon: TerminalIcon, category: 'Appearance', action: () => setTheme('light') },
+      { id: 'theme-pro', title: 'Activate Pro Red Theme', icon: Filter, category: 'Appearance', action: () => setTheme('pro-red') }
   ];
 
   onMount(async () => {
@@ -41,23 +53,26 @@
 
   function executeSelected(index: number) {
       if (query.trim() === "") {
-          staticActions[index].action();
-      } else if (index < filteredPlaylists.length) {
-          router.push(`/edit/${filteredPlaylists[index].id}`);
+          baseCommands[index].action();
       } else {
-          const res = videoResults[index - filteredPlaylists.length];
-          router.push(`/edit/${res.playlist.id}?videoId=${res.video.videoId}`);
+          // Calculate which list the index belongs to
+          if (index < commandResults.length) {
+              commandResults[index].action();
+          } else if (index < commandResults.length + filteredPlaylists.length) {
+              const pl = filteredPlaylists[index - commandResults.length];
+              router.push(`/edit/${pl.id}`);
+          } else {
+              const res = videoResults[index - commandResults.length - filteredPlaylists.length];
+              router.push(`/edit/${res.playlist.id}?videoId=${res.video.videoId}`);
+          }
       }
       close();
   }
 
   function close() { display = false; query = ""; }
 
-  function handleMouseMove(e: MouseEvent) {
-      const target = e.currentTarget as HTMLElement;
-      const rect = target.getBoundingClientRect();
-      target.style.setProperty("--x", `${e.clientX - rect.left}px`);
-      target.style.setProperty("--y", `${e.clientY - rect.top}px`);
+  function handleMouseMove(index: number) {
+      selectedIndex = index;
   }
 
   onMount(() => {
@@ -69,34 +84,42 @@
   });
 
   $effect(() => {
-      if (query.trim().length < 2) {
+      if (query.trim().length === 0) {
+          commandResults = baseCommands;
           filteredPlaylists = [];
           videoResults = [];
       } else {
           const q = query.toLowerCase();
-          filteredPlaylists = playlists.filter(p => p.title.toLowerCase().includes(q)).slice(0, 4);
+          commandResults = baseCommands.filter(c =>
+              c.title.toLowerCase().includes(q) || c.category.toLowerCase().includes(q)
+          );
+
+          filteredPlaylists = playlists.filter(p =>
+              p.title.toLowerCase().includes(q)
+          ).slice(0, 5);
+
           const matches: {video: Video, playlist: Playlist}[] = [];
           for (const pl of playlists) {
               if (pl.loadedVideos) {
                   for (const v of pl.loadedVideos) {
                       if (v.title.toLowerCase().includes(q)) {
                           matches.push({ video: v, playlist: pl });
-                          if (matches.length >= 6) break;
+                          if (matches.length >= 5) break;
                       }
                   }
               }
-              if (matches.length >= 6) break;
+              if (matches.length >= 5) break;
           }
           videoResults = matches;
       }
       selectedIndex = 0;
   });
 
-  let totalItems = $derived(query.trim() === "" ? staticActions.length : filteredPlaylists.length + videoResults.length);
+  let totalItems = $derived(commandResults.length + filteredPlaylists.length + videoResults.length);
 
   $effect(() => {
       if (display && inputElement) {
-          setTimeout(() => inputElement?.focus(), 10);
+          setTimeout(() => inputElement?.focus(), 50);
       }
   });
 </script>
@@ -105,103 +128,305 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div class="palette-overlay" transition:fade={{ duration: 200 }} onclick={close} onkeydown={handleKeydown}>
-    <div class="palette-container pro-glass" transition:fly={{ y: -40, duration: 400 }} onclick={e => e.stopPropagation()}>
+    <div class="palette-container pro-glass-high" transition:fly={{ y: -40, duration: 400 }} onclick={e => e.stopPropagation()}>
         <div class="search-box">
-            <TerminalIcon size="20" color="var(--primary)" />
+            <div class="search-icon-wrapper aura-glow">
+                <SearchIcon size="20" color="var(--primary)" />
+            </div>
             <input
                 bind:this={inputElement}
                 bind:value={query}
-                placeholder="Search playlists, videos, or commands (Ctrl+K)..."
+                placeholder="Type a command or search..."
                 type="text"
+                spellcheck="false"
+                autocomplete="off"
             />
+            <div class="k-hint">ESC</div>
         </div>
         <div class="results-list" role="listbox">
-            {#if query.trim() === ""}
-                <div class="section-label">Quick Actions</div>
-                {#each staticActions as action, i}
+            {#if commandResults.length > 0}
+                <div class="section-label">Commands</div>
+                {#each commandResults as cmd, i}
                     <button
                         role="option"
                         aria-selected={selectedIndex === i}
-                        class="result-item luminous-hover"
+                        class="result-item"
                         class:active={selectedIndex === i}
                         onclick={() => executeSelected(i)}
-                        onmousemove={handleMouseMove}
+                        onmouseenter={() => handleMouseMove(i)}
                     >
-                        <action.icon size="18" />
-                        <span>{action.title}</span>
-                        <span class="shortcut">PRO</span>
+                        <div class="icon-box">
+                            <cmd.icon size="18" />
+                        </div>
+                        <div class="item-meta">
+                            <span class="item-title">{cmd.title}</span>
+                            <span class="item-sub">{cmd.category}</span>
+                        </div>
+                        {#if selectedIndex === i}
+                            <span class="enter-hint" in:fade>ENTER</span>
+                        {/if}
                     </button>
                 {/each}
-            {:else}
-                {#if filteredPlaylists.length > 0}
-                    <div class="section-label">Playlists</div>
-                    {#each filteredPlaylists as pl, i}
-                        <button
-                            role="option"
-                            aria-selected={selectedIndex === i}
-                            class="result-item luminous-hover"
-                            class:active={selectedIndex === i}
-                            onclick={() => executeSelected(i)}
-                            onmousemove={handleMouseMove}
-                        >
+            {/if}
+
+            {#if filteredPlaylists.length > 0}
+                <div class="section-label mt-4">Playlists</div>
+                {#each filteredPlaylists as pl, i}
+                    {@const index = i + commandResults.length}
+                    <button
+                        role="option"
+                        aria-selected={selectedIndex === index}
+                        class="result-item"
+                        class:active={selectedIndex === index}
+                        onclick={() => executeSelected(index)}
+                        onmouseenter={() => handleMouseMove(index)}
+                    >
+                        <div class="icon-box pl-icon">
                             <PlaylistPlayIcon size="18" />
-                            <span>{pl.title}</span>
-                            <span class="badge">Collection</span>
-                        </button>
-                    {/each}
-                {/if}
-                {#if videoResults.length > 0}
-                    <div class="section-label mt-4">Deep Search (Videos)</div>
-                    {#each videoResults as res, i}
-                        {@const index = i + filteredPlaylists.length}
-                        <button
-                            role="option"
-                            aria-selected={selectedIndex === index}
-                            class="result-item luminous-hover"
-                            class:active={selectedIndex === index}
-                            onclick={() => executeSelected(index)}
-                            onmousemove={handleMouseMove}
-                        >
-                            <TerminalIcon size="18" color="var(--primary)" />
-                            <div class="vid-meta">
-                                <span class="v-title">{res.video.title}</span>
-                                <span class="v-pl">{res.playlist.title}</span>
-                            </div>
-                            <span class="badge secondary">Video</span>
-                        </button>
-                    {/each}
-                {/if}
-                {#if filteredPlaylists.length === 0 && videoResults.length === 0}
-                    <div class="empty-results">No matches found for "{query}"</div>
-                {/if}
+                        </div>
+                        <div class="item-meta">
+                            <span class="item-title">{pl.title}</span>
+                            <span class="item-sub">Saved Infrastructure</span>
+                        </div>
+                    </button>
+                {/each}
+            {/if}
+
+            {#if videoResults.length > 0}
+                <div class="section-label mt-4">Videos</div>
+                {#each videoResults as res, i}
+                    {@const index = i + commandResults.length + filteredPlaylists.length}
+                    <button
+                        role="option"
+                        aria-selected={selectedIndex === index}
+                        class="result-item"
+                        class:active={selectedIndex === index}
+                        onclick={() => executeSelected(index)}
+                        onmouseenter={() => handleMouseMove(index)}
+                    >
+                        <div class="icon-box vid-icon">
+                            <TerminalIcon size="18" />
+                        </div>
+                        <div class="item-meta">
+                            <span class="item-title">{res.video.title}</span>
+                            <span class="item-sub">Node: {res.playlist.title}</span>
+                        </div>
+                    </button>
+                {/each}
+            {/if}
+
+            {#if totalItems === 0}
+                <div class="empty-results" in:fade>
+                    <TerminalIcon size="48" color="var(--text-muted)" />
+                    <p>No results found for "<span class="highlight">{query}</span>"</p>
+                </div>
             {/if}
         </div>
         <div class="palette-footer">
-            <span><strong>↑↓</strong> to navigate</span>
-            <span><strong>Enter</strong> to select</span>
-            <span><strong>Esc</strong> to close</span>
+            <div class="kb-hints">
+                <span><kbd>↑↓</kbd> Navigate</span>
+                <span><kbd>↵</kbd> Select</span>
+                <span><kbd>ESC</kbd> Close</span>
+            </div>
+            <div class="branding">SOTA COMMANDS</div>
         </div>
     </div>
   </div>
 {/if}
 
 <style>
-    .palette-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 5000; display: flex; justify-content: center; padding-top: 15vh; backdrop-filter: blur(8px); }
-    .palette-container { width: 650px; max-width: 90vw; max-height: 550px; overflow: hidden; display: flex; flex-direction: column; cursor: default; }
-    .search-box { padding: 1.5rem; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
-    .search-box input { background: transparent; border: none; color: var(--text); font-size: 1.2rem; width: 100%; outline: none; font-weight: 800; }
-    .results-list { padding: 1rem; overflow-y: auto; flex-grow: 1; }
-    .section-label { padding: 0.5rem 1rem; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
-    .result-item { width: 100%; border: none; background: transparent; padding: 12px 16px; border-radius: 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.2s; font-weight: 700; color: var(--text); text-align: left; position: relative; overflow: hidden; }
-    .result-item.active { background: var(--primary); color: white; transform: scale(1.02); box-shadow: 0 8px 24px rgba(255, 82, 82, 0.3); }
-    .vid-meta { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }
-    .v-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .v-pl { font-size: 0.7rem; opacity: 0.6; }
-    .shortcut, .badge { font-size: 0.6rem; font-weight: 900; padding: 4px 8px; background: var(--hover); color: var(--text-muted); border-radius: 6px; text-transform: uppercase; }
-    .badge.secondary { border: 1px solid var(--border); background: transparent; }
-    .result-item.active .shortcut, .result-item.active .badge { background: rgba(255,255,255,0.2); color: white; }
-    .empty-results { padding: 3rem; text-align: center; color: var(--text-muted); font-weight: 600; }
-    .palette-footer { padding: 1rem 1.5rem; background: var(--hover); border-top: 1px solid var(--border); display: flex; gap: 2rem; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); }
-    .palette-footer strong { color: var(--primary); }
-    .mt-4 { margin-top: 1.5rem; }
+    .palette-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 5000;
+        display: flex;
+        justify-content: center;
+        padding-top: 10vh;
+        backdrop-filter: blur(12px);
+    }
+
+    .palette-container {
+        width: 700px;
+        max-width: 95vw;
+        max-height: 600px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.1), var(--shadow-2xl);
+        border-radius: var(--radius-2xl);
+    }
+
+    .search-box {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255,255,255,0.02);
+    }
+
+    .search-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--hover);
+        border-radius: var(--radius-lg);
+    }
+
+    .search-box input {
+        background: transparent;
+        border: none;
+        color: var(--text);
+        font-size: 1.25rem;
+        flex-grow: 1;
+        outline: none;
+        font-weight: 600;
+        font-family: inherit;
+    }
+
+    .k-hint {
+        padding: 4px 8px;
+        background: var(--hover);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--text-muted);
+    }
+
+    .results-list {
+        padding: 0.75rem;
+        overflow-y: auto;
+        flex-grow: 1;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+    }
+
+    .section-label {
+        padding: 0.75rem 1rem 0.5rem;
+        font-size: 0.65rem;
+        font-weight: 900;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+    }
+
+    .result-item {
+        width: 100%;
+        border: none;
+        background: transparent;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: left;
+        color: var(--text);
+        position: relative;
+    }
+
+    .result-item.active {
+        background: var(--hover);
+        box-shadow: inset 0 0 0 1px var(--border);
+    }
+
+    .icon-box {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--hover);
+        border-radius: var(--radius-lg);
+        color: var(--text-muted);
+        transition: all 0.2s;
+    }
+
+    .active .icon-box {
+        background: var(--primary);
+        color: white;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .pl-icon { color: #60a5fa; }
+    .vid-icon { color: #f472b6; }
+
+    .item-meta {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .item-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .item-sub {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .enter-hint {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        color: var(--text-muted);
+    }
+
+    .empty-results {
+        padding: 4rem 2rem;
+        text-align: center;
+        color: var(--text-muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .empty-results p { font-weight: 600; font-size: 1.1rem; }
+    .highlight { color: var(--primary); }
+
+    .palette-footer {
+        padding: 0.85rem 1.5rem;
+        background: rgba(255,255,255,0.02);
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .kb-hints { display: flex; gap: 1.5rem; }
+    .kb-hints span { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; }
+
+    kbd {
+        background: var(--hover);
+        padding: 2px 6px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+    }
+
+    .branding {
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 0.2em;
+        color: var(--primary);
+        opacity: 0.8;
+    }
+
+    .mt-4 { margin-top: 1rem; }
 </style>

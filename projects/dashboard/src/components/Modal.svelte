@@ -1,129 +1,145 @@
-<svelte:options runes={true} />
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte";
-  import { fade, fly } from "svelte/transition";
-  import { CloseIcon } from "@yph/ui-kit";
+  import { onMount, createEventDispatcher } from 'svelte';
+  import { fade, scale } from 'svelte/transition';
+  import { CloseIcon } from '@yph/ui-kit/components/icons';
+  import { SimpleButton } from '@yph/ui-kit';
 
-  interface Props {
-    display?: boolean;
-    title?: string;
-    children?: import("svelte").Snippet;
-  }
-
-  let { display = $bindable(false), title = "", children }: Props = $props();
   const dispatch = createEventDispatcher();
 
+  interface Props {
+    title?: string;
+    show?: boolean;
+    maxWidth?: string;
+    children?: any;
+    footer?: any;
+  }
+
+  let {
+    title = '',
+    show = $state(false),
+    maxWidth = '500px',
+    children,
+    footer
+  }: Props = $props();
+
   function close() {
-    display = false;
-    dispatch("close");
+    dispatch('close');
   }
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && display) {
-      close();
-    }
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') close();
   }
-
-  onMount(() => {
-    window.addEventListener('keydown', handleKeydown);
-    return () => window.removeEventListener('keydown', handleKeydown);
-  });
 </script>
 
-{#if display}
+<svelte:window on:keydown={handleKeydown} />
+
+{#if show}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="modal-overlay"
-    transition:fade
-    onclick={close}
-    onkeydown={(e) => e.key === 'Enter' && close()}
-    role="button"
-    tabindex="0"
-    aria-label="Close Modal Overlay"
+    class="modal-backdrop"
+    transition:fade={{ duration: 200 }}
+    on:click={close}
+    aria-hidden="true"
   >
     <div
-      class="modal-container pro-glass-high"
-      transition:fly={{ y: 20 }}
-      onclick={e => e.stopPropagation()}
-      onkeydown={e => e.stopPropagation()}
+      class="modal-container"
+      style="max-width: {maxWidth}"
+      transition:scale={{ duration: 300, start: 0.95, opacity: 0 }}
+      on:click|stopPropagation
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      tabindex="-1"
     >
       <header class="modal-header">
         <h2 id="modal-title">{title}</h2>
-        <button
-          class="close-btn"
-          onclick={close}
-          aria-label="Close"
-          title="Close Modal"
-        >
-          <CloseIcon size="20" />
+        <button class="close-btn" onclick={close} aria-label="Close Modal">
+          <CloseIcon size={20} />
         </button>
       </header>
-      <div class="modal-body">
+
+      <main class="modal-body">
         {@render children?.()}
-      </div>
+      </main>
+
+      {#if footer}
+        <footer class="modal-footer">
+          {@render footer()}
+        </footer>
+      {/if}
     </div>
   </div>
 {/if}
 
 <style>
-  .modal-overlay {
+  .modal-backdrop {
     position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 6000;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     display: flex;
-    align-items: center;
     justify-content: center;
-    backdrop-filter: blur(10px);
-    padding: var(--space-5);
-    border: none;
-    cursor: default;
+    align-items: center;
+    z-index: 2000;
+    padding: var(--spacing-4);
   }
 
   .modal-container {
-    width: 600px;
-    max-width: 95vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    padding: var(--space-8);
+    background: var(--bg-surface);
     border: 1px solid var(--border-strong);
-    outline: none;
-    cursor: auto;
+    border-radius: var(--radius-lg);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    overflow: hidden;
   }
 
   .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-6);
+    padding: var(--spacing-6) var(--spacing-8);
+    border-bottom: 1px solid var(--border-subtle);
   }
 
-  h2 { margin: 0; font-weight: 900; font-size: var(--font-xl); }
+  h2 {
+    margin: 0;
+    font-size: var(--size-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
 
   .close-btn {
-    background: var(--hover);
+    background: none;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: var(--space-2);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--duration-fast);
+    padding: var(--spacing-2);
+    border-radius: var(--radius-sm);
+    transition: all var(--trans-fast);
   }
 
   .close-btn:hover {
-    background: var(--primary);
-    color: white;
-    transform: scale(1.1) rotate(90deg);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
   }
 
   .modal-body {
-    margin-top: var(--space-2);
+    padding: var(--spacing-8);
+    overflow-y: auto;
+    max-height: 70vh;
+  }
+
+  .modal-footer {
+    padding: var(--spacing-6) var(--spacing-8);
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-4);
   }
 </style>

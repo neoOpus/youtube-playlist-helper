@@ -17,3 +17,4 @@ export { default as SaveIcon } from "./SaveIcon.svelte";
 export { default as SearchIcon } from "./SearchIcon.svelte";
 export { default as SupportIcon } from "./SupportIcon.svelte";
 export { default as TerminalIcon } from "./TerminalIcon.svelte";
+export { default as DnaIcon } from "./DnaIcon.svelte";

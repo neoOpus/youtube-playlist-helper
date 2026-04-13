@@ -1,41 +1,69 @@
 <svelte:options runes={true} />
 <script lang="ts">
-  import Skeleton from "./Skeleton.svelte";
+  import { SuperSkeleton } from "@yph/ui-kit";
 </script>
 
-<div class="skeleton-card pro-glass p-6">
-    <div class="card-head">
-        <Skeleton width="48px" height="48px" borderRadius="12px" />
-        <div class="meta">
-            <Skeleton width="180px" height="1.2rem" />
-            <Skeleton width="100px" height="0.8rem" className="mt-2" />
+<div class="skeleton-card pro-glass">
+    <div class="header">
+        <SuperSkeleton width="40px" height="40px" radius="12px" />
+        <div class="title-meta">
+            <SuperSkeleton width="70%" height="18px" />
+            <SuperSkeleton width="40%" height="12px" />
         </div>
     </div>
-    <div class="card-body mt-6">
-        <div class="stats">
-            <Skeleton width="60px" height="1.5rem" borderRadius="20px" />
-            <Skeleton width="80px" height="1.5rem" borderRadius="20px" />
-        </div>
-        <div class="actions mt-6">
-            <Skeleton width="100%" height="40px" borderRadius="8px" />
+
+    <div class="preview-grid">
+        <SuperSkeleton height="80px" radius="12px" />
+        <SuperSkeleton height="80px" radius="12px" />
+        <SuperSkeleton height="80px" radius="12px" />
+    </div>
+
+    <div class="footer">
+        <SuperSkeleton width="30%" height="12px" />
+        <div class="actions">
+            <SuperSkeleton width="24px" height="24px" radius="50%" />
+            <SuperSkeleton width="24px" height="24px" radius="50%" />
         </div>
     </div>
 </div>
 
 <style>
     .skeleton-card {
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        border-radius: var(--radius-2xl);
     }
-    .card-head {
+
+    .header {
         display: flex;
         gap: 1rem;
         align-items: center;
     }
-    .meta {
-        flex: 1;
-    }
-    .stats {
+
+    .title-meta {
+        flex-grow: 1;
         display: flex;
+        flex-direction: column;
         gap: 0.5rem;
+    }
+
+    .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+
+    .actions {
+        display: flex;
+        gap: 0.75rem;
     }
 </style>

@@ -2,24 +2,30 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade, fly } from "svelte/transition";
-  import { storageService, notificationService, actionLogger } from "@yph/core";
+  import { storageService, notificationService } from "@yph/core";
   import {
     DeleteIcon,
     SaveIcon,
     TerminalIcon,
     PlusMultiple,
-    CheckIcon,
     InfoIcon,
-    SuperButton,
-    CloudSyncIcon
+    SuperButton
   } from "@yph/ui-kit";
   import LibraryAuditor from "../components/LibraryAuditor.svelte";
   import InfrastructureMap from "../components/InfrastructureMap.svelte";
   import ThemeArchitect from "../components/ThemeArchitect.svelte";
   import ImportWizard from "../components/ImportWizard.svelte";
+  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  import SystemHealth from "../components/SystemHealth.svelte";
+  import TopologyGraph from "../components/TopologyGraph.svelte";
 
   let showImport = $state(false);
   let advancedMode = $state(false);
+  let loading = $state(true);
+
+  onMount(() => {
+    setTimeout(() => loading = false, 1200);
+  });
 
   async function exportData() {
       const playlists = await storageService.getPlaylists();
@@ -43,65 +49,71 @@
 </script>
 
 <div class="manage-view view-container" in:fade>
-    <header class="view-header">
-        <div class="header-content aura-glow">
-            <div class="title-row">
-                <div class="icon-blob"><TerminalIcon size="32" /></div>
-                <h1>System Management</h1>
-            </div>
-            <p class="muted">Oversee infrastructure connections, library quality, and global aesthetics.</p>
-        </div>
-    </header>
-
-    <div class="manage-grid">
-        <div class="main-stats">
-            <div class="stat-card">
-                <InfrastructureMap />
-            </div>
-            <div class="stat-card">
-                <LibraryAuditor />
-            </div>
-        </div>
-
-        <aside class="actions-sidebar">
-            <div class="action-card pro-glass">
-                <h3 class="card-title"><SaveIcon size="18" /> Data Governance</h3>
-                <div class="btns-stack mt-6">
-                    <SuperButton primary onclick={() => showImport = true}>
-                        <PlusMultiple size="18" /> Import Logic Snapshot
-                    </SuperButton>
-                    <SuperButton outline onclick={exportData}>
-                        <SaveIcon size="18" /> Export Global Map (JSON)
-                    </SuperButton>
-                    <SuperButton danger onclick={clearAll} class="mt-4">
-                        <DeleteIcon size="18" /> Decommission System
-                    </SuperButton>
+    {#if loading}
+        <ManageSkeleton />
+    {:else}
+        <header class="view-header" in:fade={{ duration: 400 }}>
+            <div class="header-content aura-glow">
+                <div class="title-row">
+                    <div class="icon-blob"><TerminalIcon size="32" /></div>
+                    <h1>System Management</h1>
                 </div>
+                <p class="muted">Oversee infrastructure connections, library quality, and global aesthetics.</p>
             </div>
+        </header>
 
-            <ThemeArchitect />
-
-            <div class="system-info pro-glass mt-8">
-                <h3 class="card-title"><InfoIcon size="18" /> Infrastructure Core</h3>
-                <div class="v-list mt-6">
-                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2 Pro</span></div>
-                    <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
-                    <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
-
-                    {#if advancedMode}
-                      <div in:fly={{ y: -10, duration: 300 }}>
-                        <div class="v-row"><span>Data Density</span> <span class="v-val">High (Optimized)</span></div>
-                        <div class="v-row"><span>E2EE Status</span> <span class="val success">Active (Pro-Resistant)</span></div>
-                      </div>
-                    {/if}
-
-                    <button class="toggle-advanced" onclick={() => advancedMode = !advancedMode}>
-                        {advancedMode ? 'Hide Detailed Params' : 'Show Advanced Params'}
-                    </button>
+        <div class="manage-grid" in:fly={{ y: 20, duration: 600 }}>
+            <div class="main-stats">
+                <div class="stat-card">
+                    <InfrastructureMap />
                 </div>
+                <div class="stat-card">
+                    <LibraryAuditor />
+                </div>
+                <SystemHealth />
+                <TopologyGraph />
             </div>
-        </aside>
-    </div>
+
+            <aside class="actions-sidebar">
+                <div class="action-card pro-glass">
+                    <h3 class="card-title"><SaveIcon size="18" /> Data Governance</h3>
+                    <div class="btns-stack mt-6">
+                        <SuperButton primary onclick={() => showImport = true}>
+                            <PlusMultiple size="18" /> Import Logic Snapshot
+                        </SuperButton>
+                        <SuperButton outline onclick={exportData}>
+                            <SaveIcon size="18" /> Export Global Map (JSON)
+                        </SuperButton>
+                        <SuperButton danger onclick={clearAll} class="mt-4">
+                            <DeleteIcon size="18" /> Decommission System
+                        </SuperButton>
+                    </div>
+                </div>
+
+                <ThemeArchitect />
+
+                <div class="system-info pro-glass mt-8">
+                    <h3 class="card-title"><InfoIcon size="18" /> Infrastructure Core</h3>
+                    <div class="v-list mt-6">
+                        <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2 Pro</span></div>
+                        <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
+                        <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
+
+                        {#if advancedMode}
+                        <div in:fly={{ y: -10, duration: 300 }}>
+                            <div class="v-row"><span>Data Density</span> <span class="v-val">High (Optimized)</span></div>
+                            <div class="v-row"><span>E2EE Status</span> <span class="val success">Active (Pro-Resistant)</span></div>
+                        </div>
+                        {/if}
+
+                        <button class="toggle-advanced" onclick={() => advancedMode = !advancedMode}>
+                            {advancedMode ? 'Hide Detailed Params' : 'Show Advanced Params'}
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    {/if}
 </div>
 
 <ImportWizard bind:display={showImport} on:complete={() => window.location.reload()} />

@@ -1,34 +1,37 @@
-import { writable, derived } from "svelte/store";
+import { writable, derived } from 'svelte/store';
+import Gallery from '../views/Gallery.svelte';
+import Saved from '../views/Saved.svelte';
+import Manage from '../views/Manage.svelte';
+import Support from '../views/Support.svelte';
+import New from '../views/New.svelte';
 
-function createRouter() {
-    const hash = writable(window.location.hash || "#/");
+const createRouter = () => {
+  const { subscribe, set } = writable(window.location.hash || '#/');
 
-    window.addEventListener("hashchange", () => {
-        hash.set(window.location.hash || "#/");
-    });
+  const views: Record<string, any> = {
+    '#/': Gallery,
+    '#/new': New,
+    '#/saved': Saved,
+    '#/manage': Manage,
+    '#/support': Support
+  };
 
-    const route = derived(hash, ($hash) => {
-        const path = $hash.slice(1) || "/";
-        const parts = path.split("/");
-
-        // Simple regex-like param extraction
-        let params: Record<string, string> = {};
-        let activePath = path;
-
-        if (path.startsWith("/edit/")) {
-            params.id = parts[2];
-            activePath = "/edit/:id";
-        }
-
-        return { path: activePath, fullPath: path, params };
-    });
-
-    return {
-        subscribe: route.subscribe,
-        push: (path: string) => {
-            window.location.hash = path.startsWith("/") ? path : `/${path}`;
-        }
-    };
-}
+  return {
+    subscribe,
+    navigate: (path: string) => {
+      window.location.hash = path;
+      set(path);
+    },
+    get currentView() {
+      return derived({ subscribe }, $path => views[$path] || Gallery);
+    }
+  };
+};
 
 export const router = createRouter();
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => {
+    router.navigate(window.location.hash);
+  });
+}

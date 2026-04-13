@@ -37,3 +37,487 @@ https://svelte.dev/e/css_unused_selector
 https://svelte.dev/e/css_unused_selector
 10:30:54 AM [vite] (client) hmr update /src/views/Gallery.svelte, /src/views/Gallery.svelte?svelte&type=style&lang.css
 10:30:54 AM [vite] (client) hmr update /src/views/Gallery.svelte?svelte&type=style&lang.css
+3:35:52 AM [vite] (client) hmr update /src/components/CommandPalette.svelte, /src/components/CommandPalette.svelte?svelte&type=style&lang.css
+3:43:59 AM [vite] (client) hmr update /src/components/PlaylistCardSkeleton.svelte, /src/components/PlaylistCardSkeleton.svelte?svelte&type=style&lang.css
+3:45:58 AM [vite] (client) hmr update /src/App.svelte, /src/components/PlaylistEditor.svelte, /src/views/Manage.svelte, /src/views/Saved.svelte, /src/views/Support.svelte, /src/components/PlaylistComparison.svelte, /src/components/ActionToast.svelte, /src/components/Sidebar.svelte, /src/components/CommandPalette.svelte, /src/views/Sync.svelte, /src/components/PlaylistVideo.svelte, /src/components/LibraryAuditor.svelte, /src/components/ImportWizard.svelte, /src/components/PlaylistsFilters.svelte, /src/components/PlaylistPreview.svelte, /src/components/VideoIdCard.svelte, /src/views/Gallery.svelte, /src/components/Modal.svelte, /src/components/PlaylistCardSkeleton.svelte
+3:50:37 AM [vite] (client) hmr update /@fs/app/projects/ui-kit/components/SuperInput.svelte
+3:54:58 AM [vite] (client) hmr update /src/App.svelte, /src/components/PlaylistsFilters.svelte
+4:02:17 AM [vite] (client) hmr update /@fs/app/projects/ui-kit/components/Tooltip.svelte, /@fs/app/projects/ui-kit/components/Tooltip.svelte?svelte&type=style&lang.css
+4:11:38 AM [vite-plugin-svelte] src/components/ManageSkeleton.svelte:44:4 Unused CSS selector ".mt-2"
+https://svelte.dev/e/css_unused_selector
+4:11:38 AM [vite-plugin-svelte] src/components/ManageSkeleton.svelte:45:4 Unused CSS selector ".mt-4"
+https://svelte.dev/e/css_unused_selector
+4:11:38 AM [vite] (client) hmr update /src/views/Manage.svelte
+6:42:10 PM [vite] (client) hmr update /src/App.svelte, /src/components/PlaylistEditor.svelte, /src/views/Manage.svelte, /src/views/Saved.svelte, /src/views/Support.svelte, /src/components/PlaylistComparison.svelte, /src/components/ActionToast.svelte, /src/components/Sidebar.svelte, /src/components/CommandPalette.svelte, /src/views/Sync.svelte, /src/components/PlaylistVideo.svelte, /src/components/LibraryAuditor.svelte, /src/components/ImportWizard.svelte, /src/components/PlaylistsFilters.svelte, /src/components/PlaylistPreview.svelte, /src/components/VideoIdCard.svelte, /src/views/Gallery.svelte, /src/components/Modal.svelte, /src/components/PlaylistCardSkeleton.svelte, /src/components/ManageSkeleton.svelte, /@fs/app/projects/ui-kit/components/TagManager.svelte
+6:50:05 PM [vite] (client) hmr update /src/components/PlaylistEditor.svelte, /src/components/PlaylistEditor.svelte?svelte&type=style&lang.css
+7:00:18 PM [vite-plugin-svelte] src/components/SmartRules.svelte:144:4 Unused CSS selector ".w-full"
+https://svelte.dev/e/css_unused_selector
+7:00:18 PM [vite] (client) hmr update /src/components/PlaylistEditor.svelte
+7:10:18 PM [vite-plugin-svelte] src/components/BulkOpsOverlay.svelte:35:2 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+7:10:18 PM [vite-plugin-svelte] src/components/BulkOpsOverlay.svelte:35:2 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+7:10:18 PM [vite-plugin-svelte] src/components/BulkOpsOverlay.svelte:36:6 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+7:10:18 PM [vite-plugin-svelte] src/components/BulkOpsOverlay.svelte:36:6 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+7:10:18 PM [vite] (client) hmr update /src/components/PlaylistEditor.svelte, /src/components/PlaylistEditor.svelte?svelte&type=style&lang.css
+7:27:12 PM [vite] (client) hmr update /src/components/PlaylistEditor.svelte
+7:32:14 PM [vite-plugin-svelte] src/components/MetadataTimeMachine.svelte:90:4 Unused CSS selector ".w-full"
+https://svelte.dev/e/css_unused_selector
+7:34:28 PM [vite] (client) hmr update /src/components/VideoIdCard.svelte, /src/components/VideoIdCard.svelte?svelte&type=style&lang.css
+7:41:41 PM [vite-plugin-svelte] src/App.svelte:102:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+7:41:41 PM [vite-plugin-svelte] src/App.svelte:102:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+7:41:41 PM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+4:01:01 PM [vite-plugin-svelte] src/App.svelte:102:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:01:01 PM [vite-plugin-svelte] src/App.svelte:102:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:01:01 PM [vite] (client) Pre-transform error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:20:43
+  21 |  import { playlistsSearch } from "./stores/playlists-filters";
+  22 |  import { themeState, initTheme } from "./stores/theme.svelte";
+  23 |  import { audioState, soundProfile } from "./stores/audio.svelte";
+     |                                            ^
+  24 |  import { ParametricBackground } from "@yph/ui-kit";
+  25 |  import { enrichmentAgent } from "@yph/core";
+4:01:01 PM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+4:01:01 PM [vite-plugin-svelte] src/App.svelte:102:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:01:01 PM [vite-plugin-svelte] src/App.svelte:102:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:01:01 PM [vite] Internal server error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:20:43
+  21 |  import { playlistsSearch } from "./stores/playlists-filters";
+  22 |  import { themeState, initTheme } from "./stores/theme.svelte";
+  23 |  import { audioState, soundProfile } from "./stores/audio.svelte";
+     |                                            ^
+  24 |  import { ParametricBackground } from "@yph/ui-kit";
+  25 |  import { enrichmentAgent } from "@yph/core";
+      at TransformPluginContext._formatLog (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at async file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 19)
+      at async TransformPluginContext.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:24542:20)
+4:01:02 PM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+4:01:12 PM [vite-plugin-svelte] src/App.svelte:102:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:01:12 PM [vite-plugin-svelte] src/App.svelte:102:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:01:12 PM [vite] Internal server error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:20:43
+  21 |  import { playlistsSearch } from "./stores/playlists-filters";
+  22 |  import { themeState, initTheme } from "./stores/theme.svelte";
+  23 |  import { audioState, soundProfile } from "./stores/audio.svelte";
+     |                                            ^
+  24 |  import { ParametricBackground } from "@yph/ui-kit";
+  25 |  import { enrichmentAgent } from "@yph/core";
+      at TransformPluginContext._formatLog (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at async file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 19)
+      at async TransformPluginContext.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:24542:20)
+4:01:12 PM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+4:01:23 PM [vite-plugin-svelte] src/App.svelte:102:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+4:01:23 PM [vite-plugin-svelte] src/App.svelte:102:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+4:01:23 PM [vite] Internal server error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:20:43
+  21 |  import { playlistsSearch } from "./stores/playlists-filters";
+  22 |  import { themeState, initTheme } from "./stores/theme.svelte";
+  23 |  import { audioState, soundProfile } from "./stores/audio.svelte";
+     |                                            ^
+  24 |  import { ParametricBackground } from "@yph/ui-kit";
+  25 |  import { enrichmentAgent } from "@yph/core";
+      at TransformPluginContext._formatLog (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at async file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 19)
+      at async TransformPluginContext.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:24542:20)
+4:01:23 PM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+5:00:59 PM [vite] (client) hmr update /@fs/app/projects/ui-kit/components/SimpleButton.svelte, /@fs/app/projects/ui-kit/components/SimpleButton.svelte?svelte&type=style&lang.css
+5:06:27 PM [vite-plugin-svelte] /app/projects/ui-kit/components/SmartElement.svelte:24:2 Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated
+5:06:27 PM [vite] (client) hmr update /@fs/app/projects/ui-kit/components/SmartElement.svelte, /@fs/app/projects/ui-kit/components/SmartElement.svelte?svelte&type=style&lang.css
+5:19:58 PM [vite] (client) hmr update /@fs/app/projects/ui-kit/components/SuperInput.svelte
+5:22:42 PM [vite] (client) hmr update /@fs/app/projects/ui-kit/components/SuperToggle.svelte
+5:30:45 PM [vite-plugin-svelte] src/App.svelte:102:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+5:30:45 PM [vite-plugin-svelte] src/App.svelte:102:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+5:30:45 PM [vite] (client) Pre-transform error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:20:43
+  21 |  import { playlistsSearch } from "./stores/playlists-filters";
+  22 |  import { themeState, initTheme } from "./stores/theme.svelte";
+  23 |  import { audioState, soundProfile } from "./stores/audio.svelte";
+     |                                            ^
+  24 |  import { ParametricBackground } from "@yph/ui-kit";
+  25 |  import { enrichmentAgent } from "@yph/core";
+5:30:45 PM [vite] (client) Pre-transform error: src/components/Modal.svelte:19:11 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: src/components/Modal.svelte:19:11
+   17 |    let {
+   18 |      title = '',
+   19 |      show = $state(false),
+                                 ^
+   20 |      maxWidth = '500px',
+   21 |      children,
+5:30:45 PM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+5:30:45 PM [vite-plugin-svelte] /app/projects/ui-kit/components/SmartElement.svelte:24:2 Using `on:click` to listen to the click event is deprecated. Use the event attribute `onclick` instead
+https://svelte.dev/e/event_directive_deprecated
+5:30:45 PM [vite] (client) Pre-transform error: /app/projects/ui-kit/components/SuperToggle.svelte:10:14 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: /app/projects/ui-kit/components/SuperToggle.svelte:10:14
+    8 |
+    9 |    let {
+   10 |      checked = $state(false),
+                                    ^
+   11 |      label = '',
+   12 |      disabled = false,
+5:30:45 PM [vite] (client) Pre-transform error: /app/projects/ui-kit/components/SuperInput.svelte:16:12 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: /app/projects/ui-kit/components/SuperInput.svelte:16:12
+   14 |
+   15 |    let {
+   16 |      value = $state(''),
+                               ^
+   17 |      placeholder = '',
+   18 |      label = '',
+5:30:45 PM [vite-plugin-svelte] src/App.svelte:102:4 Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events
+5:30:45 PM [vite-plugin-svelte] src/App.svelte:102:4 `<div>` with a click handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+5:30:45 PM [vite] Internal server error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:20:43
+  21 |  import { playlistsSearch } from "./stores/playlists-filters";
+  22 |  import { themeState, initTheme } from "./stores/theme.svelte";
+  23 |  import { audioState, soundProfile } from "./stores/audio.svelte";
+     |                                            ^
+  24 |  import { ParametricBackground } from "@yph/ui-kit";
+  25 |  import { enrichmentAgent } from "@yph/core";
+      at TransformPluginContext._formatLog (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at async file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 19)
+      at async TransformPluginContext.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:24542:20)
+5:30:45 PM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+5:05:21 AM [vite] (client) hmr update /src/App.svelte, /src/components/PlaylistEditor.svelte, /src/views/Manage.svelte, /src/views/Saved.svelte, /src/views/Support.svelte, /src/components/PlaylistComparison.svelte, /src/components/ActionToast.svelte, /src/components/Sidebar.svelte, /src/components/CommandPalette.svelte, /src/views/Sync.svelte, /src/components/PlaylistVideo.svelte, /src/components/LibraryAuditor.svelte, /src/components/ImportWizard.svelte, /src/components/PlaylistsFilters.svelte, /src/components/PlaylistPreview.svelte, /src/components/VideoIdCard.svelte, /src/views/Gallery.svelte, /src/components/Modal.svelte, /src/components/PlaylistCardSkeleton.svelte, /src/components/ManageSkeleton.svelte, /src/components/SectorDna.svelte, /src/components/SmartRules.svelte, /src/components/BulkOpsOverlay.svelte, /src/components/TopologyGraph.svelte, /app/projects/dashboard/src/components/PortfolioExporter.svelte, /app/projects/dashboard/src/components/MetadataTimeMachine.svelte, /app/projects/dashboard/src/components/ShortcutHud.svelte
+5:16:32 AM [vite-plugin-svelte] src/App.svelte:60:8 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+5:16:32 AM [vite] (client) Pre-transform error: /app/projects/ui-kit/components/SuperToggle.svelte:10:14 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: /app/projects/ui-kit/components/SuperToggle.svelte:10:14
+    8 |
+    9 |    let {
+   10 |      checked = $state(false),
+                                    ^
+   11 |      label = '',
+   12 |      disabled = false,
+5:16:32 AM [vite] (client) Pre-transform error: /app/projects/ui-kit/components/SuperInput.svelte:16:12 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: /app/projects/ui-kit/components/SuperInput.svelte:16:12
+   14 |
+   15 |    let {
+   16 |      value = $state(''),
+                               ^
+   17 |      placeholder = '',
+   18 |      label = '',
+5:27:37 AM [vite] (client) hmr update /src/App.svelte, /src/components/PlaylistEditor.svelte, /src/views/Saved.svelte, /src/components/Sidebar.svelte, /src/components/CommandPalette.svelte, /src/components/PlaylistPreview.svelte
+5:35:29 AM [vite-plugin-svelte] src/App.svelte:60:8 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+5:35:29 AM [vite] (client) Pre-transform error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:19:9
+  8  |  import { playlistsSearch, initFilters } from './stores/playlists-filters';
+  9  |  import { themeState, initTheme } from './stores/theme.svelte';
+  10 |  import { audioState, soundProfile } from './stores/audio.svelte';
+     |                                            ^
+  11 |  import { enrichmentAgent } from '@yph/core';
+  12 |  import { actionLogger } from '@yph/core';
+5:35:30 AM [vite] (client) Pre-transform error: src/components/Modal.svelte:19:11 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: src/components/Modal.svelte:19:11
+   17 |    let {
+   18 |      title = '',
+   19 |      show = $state(false),
+                                 ^
+   20 |      maxWidth = '500px',
+   21 |      children,
+5:35:30 AM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+5:35:30 AM [vite-plugin-svelte] src/App.svelte:60:8 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+5:35:30 AM [vite] Internal server error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:19:9
+  8  |  import { playlistsSearch, initFilters } from './stores/playlists-filters';
+  9  |  import { themeState, initTheme } from './stores/theme.svelte';
+  10 |  import { audioState, soundProfile } from './stores/audio.svelte';
+     |                                            ^
+  11 |  import { enrichmentAgent } from '@yph/core';
+  12 |  import { actionLogger } from '@yph/core';
+      at TransformPluginContext._formatLog (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at async file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 6)
+      at async TransformPluginContext.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:24542:20)
+5:57:45 AM [vite-plugin-svelte] src/App.svelte:60:8 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+5:57:45 AM [vite] (client) Pre-transform error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:19:9
+  8  |  import { playlistsSearch, initFilters } from './stores/playlists-filters';
+  9  |  import { themeState, initTheme } from './stores/theme.svelte';
+  10 |  import { audioState, soundProfile } from './stores/audio.svelte';
+     |                                            ^
+  11 |  import { enrichmentAgent } from '@yph/core';
+  12 |  import { actionLogger } from '@yph/core';
+5:57:45 AM [vite] (client) Pre-transform error: Failed to resolve import "@yph/ui-kit/components/icons" from "src/components/ActionToast.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/components/ActionToast.svelte:5:49
+  7  |  import { fade, fly, scale } from 'svelte/transition';
+  8  |  import { backOut } from 'svelte/easing';
+  9  |  import { CheckIcon, InfoIcon, CloseIcon } from '@yph/ui-kit/components/icons';
+     |                                                  ^
+  10 |
+  11 |  var root_1 = $.add_locations($.from_html(`<div><div class="icon-glow s-kzxewNyQaLLs"><!></div> <div class="toast-cont...
+5:57:45 AM [vite-plugin-svelte] src/App.svelte:60:8 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+5:57:45 AM [vite] Internal server error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:19:9
+  8  |  import { playlistsSearch, initFilters } from './stores/playlists-filters';
+  9  |  import { themeState, initTheme } from './stores/theme.svelte';
+  10 |  import { audioState, soundProfile } from './stores/audio.svelte';
+     |                                            ^
+  11 |  import { enrichmentAgent } from '@yph/core';
+  12 |  import { actionLogger } from '@yph/core';
+      at TransformPluginContext._formatLog (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at async file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 6)
+      at async TransformPluginContext.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:24542:20)
+5:57:45 AM [vite] (client) Pre-transform error: Failed to resolve import "@yph/ui-kit/components/icons" from "src/components/ActionToast.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/components/ActionToast.svelte:5:49
+  7  |  import { fade, fly, scale } from 'svelte/transition';
+  8  |  import { backOut } from 'svelte/easing';
+  9  |  import { CheckIcon, InfoIcon, CloseIcon } from '@yph/ui-kit/components/icons';
+     |                                                  ^
+  10 |
+  11 |  var root_1 = $.add_locations($.from_html(`<div><div class="icon-glow s-kzxewNyQaLLs"><!></div> <div class="toast-cont...
+6:34:20 AM [vite] (client) hmr update /@fs/app/projects/ui-kit/components/SuperSkeleton.svelte, /@fs/app/projects/ui-kit/components/SuperSkeleton.svelte?svelte&type=style&lang.css
+6:36:52 AM [vite] (client) Pre-transform error: src/components/Modal.svelte:19:11 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: src/components/Modal.svelte:19:11
+   17 |    let {
+   18 |      title = '',
+   19 |      show = $state(false),
+                                 ^
+   20 |      maxWidth = '500px',
+   21 |      children,
+6:36:52 AM [vite] (client) Pre-transform error: Failed to resolve import "../components/SystemHealth.svelte" from "src/views/Manage.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/views/Manage.svelte:19:27
+  22 |  import ImportWizard from "../components/ImportWizard.svelte";
+  23 |  import ManageSkeleton from "../components/ManageSkeleton.svelte";
+  24 |  import SystemHealth from "../components/SystemHealth.svelte";
+     |                            ^
+  25 |  import TopologyGraph from "../components/TopologyGraph.svelte";
+  26 |
+6:36:52 AM [vite] (client) Pre-transform error: /app/projects/ui-kit/components/SuperInput.svelte:16:12 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: /app/projects/ui-kit/components/SuperInput.svelte:16:12
+   14 |
+   15 |    let {
+   16 |      value = $state(''),
+                               ^
+   17 |      placeholder = '',
+   18 |      label = '',
+6:36:52 AM [vite] (client) Pre-transform error: /app/projects/ui-kit/components/SuperToggle.svelte:10:14 `$state(...)` can only be used as a variable declaration initializer, a class field declaration, or the first assignment to a class field at the top level of the constructor.
+https://svelte.dev/e/state_invalid_placement
+  Plugin: vite-plugin-svelte:compile
+  File: /app/projects/ui-kit/components/SuperToggle.svelte:10:14
+    8 |
+    9 |    let {
+   10 |      checked = $state(false),
+                                    ^
+   11 |      label = '',
+   12 |      disabled = false,
+6:39:29 AM [vite-plugin-svelte] src/App.svelte:60:8 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+6:39:29 AM [vite] (client) Pre-transform error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:19:9
+  8  |  import { playlistsSearch, initFilters } from './stores/playlists-filters';
+  9  |  import { themeState, initTheme } from './stores/theme.svelte';
+  10 |  import { audioState, soundProfile } from './stores/audio.svelte';
+     |                                            ^
+  11 |  import { enrichmentAgent } from '@yph/core';
+  12 |  import { actionLogger } from '@yph/core';
+6:39:29 AM [vite] (client) Pre-transform error: Failed to resolve import "@yph/ui-kit/components/icons" from "src/components/Sidebar.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/components/Sidebar.svelte:11:9
+  15 |  	SupportIcon,
+  16 |  	DnaIcon
+  17 |  } from '@yph/ui-kit/components/icons';
+     |          ^
+  18 |
+  19 |  var root_2 = $.add_locations($.from_html(`<div class="active-indicator s-G1Ow7ZVQ9xTC"></div>`), Sidebar[$.FILENAME],...
+6:39:29 AM [vite] (client) Pre-transform error: Failed to resolve import "@yph/ui-kit/components/icons" from "src/components/ActionToast.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/components/ActionToast.svelte:5:49
+  7  |  import { fade, fly, scale } from 'svelte/transition';
+  8  |  import { backOut } from 'svelte/easing';
+  9  |  import { CheckIcon, InfoIcon, CloseIcon } from '@yph/ui-kit/components/icons';
+     |                                                  ^
+  10 |
+  11 |  var root_1 = $.add_locations($.from_html(`<div><div class="icon-glow s-kzxewNyQaLLs"><!></div> <div class="toast-cont...
+6:39:29 AM [vite-plugin-svelte] src/App.svelte:60:8 `<svelte:component>` is deprecated in runes mode — components are dynamic by default
+https://svelte.dev/e/svelte_component_deprecated
+6:39:29 AM [vite] Internal server error: Failed to resolve import "./stores/audio.svelte" from "src/App.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/App.svelte:19:9
+  8  |  import { playlistsSearch, initFilters } from './stores/playlists-filters';
+  9  |  import { themeState, initTheme } from './stores/theme.svelte';
+  10 |  import { audioState, soundProfile } from './stores/audio.svelte';
+     |                                            ^
+  11 |  import { enrichmentAgent } from '@yph/core';
+  12 |  import { actionLogger } from '@yph/core';
+      at TransformPluginContext._formatLog (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at async file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 6)
+      at async TransformPluginContext.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///app/projects/dashboard/node_modules/vite/dist/node/chunks/config.js:24542:20)
+6:39:29 AM [vite] (client) Pre-transform error: Failed to resolve import "@yph/ui-kit/components/icons" from "src/components/Sidebar.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/components/Sidebar.svelte:11:9
+  15 |  	SupportIcon,
+  16 |  	DnaIcon
+  17 |  } from '@yph/ui-kit/components/icons';
+     |          ^
+  18 |
+  19 |  var root_2 = $.add_locations($.from_html(`<div class="active-indicator s-G1Ow7ZVQ9xTC"></div>`), Sidebar[$.FILENAME],...
+6:39:29 AM [vite] (client) Pre-transform error: Failed to resolve import "@yph/ui-kit/components/icons" from "src/components/ActionToast.svelte". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /app/projects/dashboard/src/components/ActionToast.svelte:5:49
+  7  |  import { fade, fly, scale } from 'svelte/transition';
+  8  |  import { backOut } from 'svelte/easing';
+  9  |  import { CheckIcon, InfoIcon, CloseIcon } from '@yph/ui-kit/components/icons';
+     |                                                  ^
+  10 |
+  11 |  var root_1 = $.add_locations($.from_html(`<div><div class="icon-glow s-kzxewNyQaLLs"><!></div> <div class="toast-cont...
+6:46:47 AM [vite-plugin-svelte] src/components/PortfolioExporter.svelte:40:6 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+6:46:47 AM [vite-plugin-svelte] src/components/PortfolioExporter.svelte:54:6 A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control
+6:46:47 AM [vite-plugin-svelte] src/components/PortfolioExporter.svelte:172:2 Unused CSS selector ".export-btn"
+https://svelte.dev/e/css_unused_selector
