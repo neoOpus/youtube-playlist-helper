@@ -19,7 +19,6 @@
 
   function initMap() {
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
@@ -59,10 +58,6 @@
     });
   }
 
-  /**
-   * PERFORMANCE: Distance Squared Optimization.
-   * Avoiding Math.sqrt in high-frequency mouse handlers reduces CPU overhead.
-   */
   function handleMouseMove(e: MouseEvent) {
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -99,7 +94,6 @@
           node.vx += dx * 0.005;
           node.vy += dy * 0.005;
 
-          // Apply slight "float" to hovered node or nodes near cursor
           if (hoveredNodeIndex === i) {
               node.vx += (Math.random() - 0.5) * 0.5;
               node.vy += (Math.random() - 0.5) * 0.5;
@@ -157,13 +151,7 @@
   }
 </script>
 
-<div class="infrastructure-map pro-glass mt-8" in:fade>
-    <div class="map-overlay">
-        <div class="status-indicator">
-            <div class="dot pulse"></div>
-            <span class="badge">PROCORE LIVE MAPPING</span>
-        </div>
-    </div>
+<div class="infrastructure-map" in:fade>
     <canvas
         bind:this={canvas}
         width="1000"
@@ -174,12 +162,6 @@
 </div>
 
 <style>
-    .infrastructure-map { position: relative; width: 100%; height: 500px; border: 1px solid var(--border); overflow: hidden; background: rgba(0,0,0,0.2); border-radius: 24px; }
-    .map-overlay { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
-    .status-indicator { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
-    .dot.pulse { animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.6); opacity: 0.4; } 100% { transform: scale(1); opacity: 1; } }
+    .infrastructure-map { position: relative; width: 100%; height: 500px; overflow: hidden; }
     canvas { width: 100%; height: 100%; cursor: crosshair; }
-    .badge { color: white; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
 </style>
