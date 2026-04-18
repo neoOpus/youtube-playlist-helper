@@ -17,20 +17,12 @@
   import InfrastructureMap from "../components/InfrastructureMap.svelte";
   import ThemeArchitect from "../components/ThemeArchitect.svelte";
   import ImportWizard from "../components/ImportWizard.svelte";
+  import SystemHealth from "../components/SystemHealth.svelte";
+  import PortfolioExporter from "../components/PortfolioExporter.svelte";
+  import SmartRules from "../components/SmartRules.svelte";
 
   let showImport = $state(false);
   let advancedMode = $state(false);
-
-  async function exportData() {
-      const playlists = await storageService.getPlaylists();
-      const blob = new Blob([JSON.stringify(playlists, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `yph-infrastructure-export-${Date.now()}.json`;
-      a.click();
-      notificationService.success("Infrastructure snapshot exported.");
-  }
 
   async function clearAll() {
       if (confirm("DANGER: This will decommission the entire infrastructure. Proceed?")) {
@@ -61,17 +53,22 @@
             <div class="stat-card">
                 <LibraryAuditor />
             </div>
+
+            <SmartRules />
         </div>
 
         <aside class="actions-sidebar">
-            <div class="action-card pro-glass">
-                <h3 class="card-title"><SaveIcon size="18" /> Data Governance</h3>
+            <SystemHealth />
+
+            <div class="mt-8">
+                <PortfolioExporter />
+            </div>
+
+            <div class="action-card pro-glass mt-8">
+                <h3 class="card-title"><SaveIcon size="18" /> Core Protocols</h3>
                 <div class="btns-stack mt-6">
                     <SuperButton primary onclick={() => showImport = true}>
                         <PlusMultiple size="18" /> Import Logic Snapshot
-                    </SuperButton>
-                    <SuperButton outline onclick={exportData}>
-                        <SaveIcon size="18" /> Export Global Map (JSON)
                     </SuperButton>
                     <SuperButton danger onclick={clearAll} class="mt-4">
                         <DeleteIcon size="18" /> Decommission System

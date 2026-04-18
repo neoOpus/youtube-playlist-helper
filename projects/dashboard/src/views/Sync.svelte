@@ -11,42 +11,54 @@
     SuperButton,
     Breadcrumbs
   } from "@yph/ui-kit";
-  import { storageService, notificationService } from "@yph/core";
+  import { storageService, notificationService, syncService } from "@yph/core";
+  import type { SyncState } from "@yph/core";
 
   let syncEnabled = $state(false);
   let serverUrl = $state("");
   let apiKey = $state("");
-  let status = $state("disconnected");
+  let status = $state<SyncState>("disconnected");
   let testing = $state(false);
 
   onMount(async () => {
-      const settings = await storageService.getSettings();
-      syncEnabled = settings.syncEnabled || false;
-      serverUrl = settings.syncServerUrl || "";
-      apiKey = settings.syncApiKey || "";
+      const config = await syncService.getSyncConfig();
+      syncEnabled = config.enabled;
+      serverUrl = config.serverUrl;
+      apiKey = config.apiKey;
   });
 
   async function save() {
-      await storageService.updateSettings({
-          syncEnabled,
-          syncServerUrl: serverUrl,
-          syncApiKey: apiKey
+      await syncService.saveSyncConfig({
+          enabled: syncEnabled,
+          serverUrl,
+          apiKey
       });
       notificationService.success("Sync configuration locked.");
   }
 
   async function test() {
       testing = true;
-      try {
-          await new Promise(r => setTimeout(r, 1500));
-          status = "connected";
+      const success = await syncService.performSync("push", (s) => status = s);
+      if (success) {
           notificationService.success("Infrastructure link established.");
-      } catch (err) {
-          status = "error";
+      } else {
           notificationService.error("Sync probe failed.");
-      } finally {
-          testing = false;
       }
+      testing = false;
+  }
+
+  async function push() {
+      testing = true;
+      const success = await syncService.performSync("push", (s) => status = s);
+      if (success) notificationService.success("Cloud node updated.");
+      testing = false;
+  }
+
+  async function pull() {
+      testing = true;
+      const success = await syncService.performSync("pull", (s) => status = s);
+      if (success) notificationService.success("Local state integrated.");
+      testing = false;
   }
 </script>
 
@@ -84,7 +96,7 @@
                 <SuperButton onclick={save} >
                     <CheckIcon size="18" /> Lock Config
                 </SuperButton>
-                <SuperButton outline onclick={test} disabled={testing}>
+                <SuperButton outline onclick={test} disabled={testing || !syncEnabled}>
                     {testing ? 'Probing...' : 'Probe Connection'}
                 </SuperButton>
             </div>
@@ -98,7 +110,7 @@
                     <span class="bold">Force Cloud Overwrite</span>
                     <p class="small muted">Push local collection to the cloud node. Destructive.</p>
                 </div>
-                <SuperButton outline mini onclick={() => alert("Sync protocol initiated...")}>Push Now</SuperButton>
+                <SuperButton outline mini onclick={push} disabled={testing || !syncEnabled}>Push Now</SuperButton>
             </div>
 
             <div class="op-card mt-4">
@@ -106,17 +118,17 @@
                     <span class="bold">Pull & Merge</span>
                     <p class="small muted">Retrieve remote changes and integrate with local state.</p>
                 </div>
-                <SuperButton outline mini onclick={() => alert("Sync protocol initiated...")}>Pull Now</SuperButton>
+                <SuperButton outline mini onclick={pull} disabled={testing || !syncEnabled}>Pull Now</SuperButton>
             </div>
 
-            <div class="status-box mt-10" class:connected={status === 'connected'}>
-                <div class="pulse-indicator"></div>
+            <div class="status-box mt-10" class:connected={status === 'stable'}>
+                <div class="pulse-indicator" class:pulse={testing}></div>
                 <div class="status-text">
                     <span class="small bold uppercase">Current Status</span>
                     <span class="status-val">{status.toUpperCase()}</span>
                 </div>
 
-                {#if status === 'connected'}
+                {#if status === 'stable'}
                     <div class="diff-status mt-4" in:fade>
                         <InfoIcon size="14" color="var(--primary)" />
                         <span>Ready to merge collections.</span>
@@ -143,12 +155,14 @@
     .btns { display: flex; gap: var(--space-4); }
     .op-card { background: rgba(var(--primary-rgb), 0.02); padding: var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .op-info { display: flex; flex-direction: column; gap: var(--space-1); }
-    .status-box { background: var(--bg-secondary); padding: var(--space-8); border-radius: var(--radius-xl); border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .status-box { background: var(--bg-secondary); padding: var(--space-8); border-radius: var(--radius-xl); border: 1px solid var(--border); position: relative; overflow: hidden; min-height: 140px; }
     .status-text { display: flex; flex-direction: column; gap: 4px; }
-    .status-val { font-weight: 900; font-size: 2rem; letter-spacing: 0.05em; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+    .status-val { font-weight: 900; font-size: 2rem; letter-spacing: 0.05em; color: var(--text-muted); font-family: 'Inter', sans-serif; transition: color 0.3s; }
     .connected .status-val { color: var(--success); }
     .connected .pulse-indicator { background: var(--success); box-shadow: 0 0 20px var(--success); }
-    .pulse-indicator { position: absolute; top: var(--space-8); right: var(--space-8); width: 16px; height: 16px; border-radius: 50%; background: var(--text-muted); }
+    .pulse-indicator { position: absolute; top: var(--space-8); right: var(--space-8); width: 16px; height: 16px; border-radius: 50%; background: var(--text-muted); transition: all 0.3s; }
+    .pulse-indicator.pulse { background: var(--primary); animation: pulse-anim 1s infinite; }
+    @keyframes pulse-anim { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
     .diff-status { display: flex; align-items: center; gap: 10px; font-size: var(--font-sm); color: var(--text); font-weight: 700; }
     .mt-4 { margin-top: 1rem; }
     .mt-6 { margin-top: 1.5rem; }

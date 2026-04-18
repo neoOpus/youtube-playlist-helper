@@ -13,6 +13,7 @@
   import Sidebar from "./components/Sidebar.svelte";
   import Sync from "./views/Sync.svelte";
   import CommandPalette from "./components/CommandPalette.svelte";
+  import ShortcutHUD from "./components/ShortcutHUD.svelte";
   import ProErrorBoundary from "./components/ProErrorBoundary.svelte";
   import { playlistsSearch } from "./stores/playlists-filters";
   import { themeState, initTheme } from "./stores/theme.svelte";
@@ -32,10 +33,10 @@
   };
 
   let showPalette = $state(false);
+  let showHUD = $state(false);
   let CurrentView = $derived(routes[$router.path] || Saved);
   let errorBoundary: any = $state();
 
-  // Use $effect for theme attribute sync
   $effect(() => {
     if (typeof document !== 'undefined') {
         document.documentElement.setAttribute("data-theme", themeState.active);
@@ -106,6 +107,7 @@
       </main>
       <ActionToast />
       <CommandPalette bind:display={showPalette} />
+      <ShortcutHUD bind:display={showHUD} />
     </div>
 </ProErrorBoundary>
 
