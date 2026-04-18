@@ -59,6 +59,10 @@
     });
   }
 
+  /**
+   * PERFORMANCE: Distance Squared Optimization.
+   * Avoiding Math.sqrt in high-frequency mouse handlers reduces CPU overhead.
+   */
   function handleMouseMove(e: MouseEvent) {
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -68,8 +72,12 @@
       let foundIndex = null;
       for (let i = 0; i < nodes.length; i++) {
           const node = nodes[i];
-          const dist = Math.sqrt((node.x - mouseX) ** 2 + (node.y - mouseY) ** 2);
-          if (dist < node.r + 5) {
+          const dx = node.x - mouseX;
+          const dy = node.y - mouseY;
+          const distSq = dx * dx + dy * dy;
+          const radiusSq = (node.r + 5) * (node.r + 5);
+
+          if (distSq < radiusSq) {
               foundIndex = i;
               break;
           }
@@ -166,7 +174,7 @@
 </div>
 
 <style>
-    .infrastructure-map { position: relative; width: 100%; height: 500px; border: 1px solid var(--border); overflow: hidden; background: rgba(0,0,0,0.2); }
+    .infrastructure-map { position: relative; width: 100%; height: 500px; border: 1px solid var(--border); overflow: hidden; background: rgba(0,0,0,0.2); border-radius: 24px; }
     .map-overlay { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
     .status-indicator { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }

@@ -33,7 +33,7 @@
   });
 
   async function saveRule() {
-      const rule = { ...newRule, id: Math.random().toString(36).substr(2, 9) };
+      const rule = { ...newRule, id: crypto.randomUUID() };
       rules = [...rules, rule];
       await storageService.updateSettings({ smartRules: rules });
       showBuilder = false;

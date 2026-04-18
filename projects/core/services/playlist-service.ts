@@ -37,27 +37,32 @@ export const playlistService = {
   },
 
   /**
-   * Evaluates a smart rule against a video node.
+   * Evaluates a smart rule against a video node with strict typing.
    */
   evaluateRule(video: Video, rule: SmartRule): boolean {
       const { field, operator, value } = rule.condition;
       let actualValue: any;
 
       switch (field) {
-          case 'rating': actualValue = video.rating || 0; break;
-          case 'vibe': actualValue = video.energyVibe; break;
+          case 'rating': actualValue = Number(video.rating) || 0; break;
+          case 'vibe': actualValue = String(video.energyVibe || ""); break;
           case 'tag': actualValue = video.aiTags || []; break;
-          case 'duration': actualValue = video.duration || ""; break;
+          case 'duration': actualValue = String(video.duration || ""); break;
           default: return false;
       }
 
+      // Normalize comparison value based on field type
+      const normalizedValue = field === 'rating' ? Number(value) : value;
+
       switch (operator) {
-          case 'gt': return actualValue > value;
-          case 'lt': return actualValue < value;
-          case 'eq': return actualValue === value;
+          case 'gt': return actualValue > normalizedValue;
+          case 'lt': return actualValue < normalizedValue;
+          case 'eq': return actualValue === normalizedValue;
           case 'contains':
-            if (Array.isArray(actualValue)) return actualValue.includes(value);
-            return String(actualValue).includes(String(value));
+            if (Array.isArray(actualValue)) {
+                return actualValue.some(v => String(v).toLowerCase().includes(String(normalizedValue).toLowerCase()));
+            }
+            return String(actualValue).toLowerCase().includes(String(normalizedValue).toLowerCase());
           default: return false;
       }
   },
@@ -72,22 +77,25 @@ export const playlistService = {
       switch (type) {
           case 'tag':
               if (!video.aiTags) video.aiTags = [];
-              if (!video.aiTags.includes(params.tag)) {
-                  video.aiTags.push(params.tag);
+              const targetTag = String(params.tag);
+              if (!video.aiTags.includes(targetTag)) {
+                  video.aiTags.push(targetTag);
                   modified = true;
               }
               break;
           case 'rate':
-              if (video.rating !== params.rating) {
-                  video.rating = params.rating;
+              const targetRating = Number(params.rating);
+              if (video.rating !== targetRating) {
+                  video.rating = targetRating;
                   modified = true;
               }
               break;
           case 'decommission':
-              // This is usually handled at the playlist level by filtering out the video
-              // or marking it for removal.
-              video.selected = true; // Mark for decommissioning
-              modified = true;
+              // Marks for decommissioning using a dedicated boolean flag
+              if (!video.selected) {
+                video.selected = true;
+                modified = true;
+              }
               break;
       }
       return modified;

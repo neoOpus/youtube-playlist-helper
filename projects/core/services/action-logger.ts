@@ -32,7 +32,7 @@ export const actionLogger = {
    */
   log(name: string, undo: () => void | Promise<void>): void {
     const action: Action = {
-        id: Math.random().toString(36).substring(7),
+        id: crypto.randomUUID(),
         name,
         undo,
         timestamp: Date.now()
