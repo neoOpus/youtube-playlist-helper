@@ -20,9 +20,22 @@ export const aiService = {
     if (title.includes("music")) tags.push("Music");
     if (title.includes("rick")) tags.push("Meme", "Classic");
 
+    // Vibe/Energy heuristic analysis
+    let vibe: Video['energyVibe'] = 'Productive';
+    const vibes: Video['energyVibe'][] = ['Chill', 'Productive', 'Intense', 'Educational'];
+
+    if (title.includes("lofi") || title.includes("ambient")) vibe = 'Chill';
+    else if (title.includes("workout") || title.includes("metal")) vibe = 'Intense';
+    else if (title.includes("course") || title.includes("lesson")) vibe = 'Educational';
+    else {
+        // Pseudo-random but deterministic based on title length for variety
+        vibe = vibes[title.length % vibes.length];
+    }
+
     return {
       aiSummary: `Automated neural summary: This node ("${video.title}") has been indexed with pro precision. It appears to focus on ${tags.join(", ")} content.`,
       aiTags: tags,
+      energyVibe: vibe
     };
   },
 

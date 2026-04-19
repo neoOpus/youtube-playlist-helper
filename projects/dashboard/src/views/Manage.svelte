@@ -2,39 +2,39 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade, fly } from "svelte/transition";
-  import { storageService, notificationService, actionLogger } from "@yph/core";
+  import { storageService, notificationService } from "@yph/core";
   import {
     DeleteIcon,
     SaveIcon,
     TerminalIcon,
     PlusMultiple,
-    CheckIcon,
     InfoIcon,
     SuperButton,
-    CloudSyncIcon
+    MergeIcon
   } from "@yph/ui-kit";
   import LibraryAuditor from "../components/LibraryAuditor.svelte";
   import InfrastructureMap from "../components/InfrastructureMap.svelte";
+  import TopologyGraph from "../components/TopologyGraph.svelte";
   import ThemeArchitect from "../components/ThemeArchitect.svelte";
   import ImportWizard from "../components/ImportWizard.svelte";
+  import SystemHealth from "../components/SystemHealth.svelte";
+  import PortfolioExporter from "../components/PortfolioExporter.svelte";
+  import SmartRules from "../components/SmartRules.svelte";
+  import SectorDna from "../components/SectorDna.svelte";
+  import BulkOperations from "../components/BulkOperations.svelte";
+  import type { Playlist } from "@yph/core";
 
+  let playlists = $state<Playlist[]>([]);
   let showImport = $state(false);
   let advancedMode = $state(false);
+  let vizMode = $state<'map' | 'topology'>('map');
 
-  async function exportData() {
-      const playlists = await storageService.getPlaylists();
-      const blob = new Blob([JSON.stringify(playlists, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `yph-infrastructure-export-${Date.now()}.json`;
-      a.click();
-      notificationService.success("Infrastructure snapshot exported.");
-  }
+  onMount(async () => {
+    playlists = await storageService.getPlaylists();
+  });
 
   async function clearAll() {
       if (confirm("DANGER: This will decommission the entire infrastructure. Proceed?")) {
-          const playlists = await storageService.getPlaylists();
           for (const pl of playlists) await storageService.removePlaylist(pl);
           notificationService.success("Infrastructure purged.");
           window.location.reload();
@@ -55,23 +55,48 @@
 
     <div class="manage-grid">
         <div class="main-stats">
-            <div class="stat-card">
-                <InfrastructureMap />
+            <div class="visualization-container pro-glass">
+                <div class="viz-header">
+                    <div class="viz-meta">
+                        <MergeIcon size="16" color="var(--primary)" />
+                        <span>NEURAL_MAPPING_ENGINE</span>
+                    </div>
+                    <div class="viz-switcher">
+                        <button class:active={vizMode === 'map'} onclick={() => vizMode = 'map'}>Live Map</button>
+                        <button class:active={vizMode === 'topology'} onclick={() => vizMode = 'topology'}>D3 Topology</button>
+                    </div>
+                </div>
+
+                <div class="viz-content">
+                    {#if vizMode === 'map'}
+                        <div in:fade={{duration: 400}}><InfrastructureMap /></div>
+                    {:else}
+                        <div in:fade={{duration: 400}}><TopologyGraph /></div>
+                    {/if}
+                </div>
             </div>
-            <div class="stat-card">
+
+            <div class="grid-split mt-8">
+                <SectorDna {playlists} />
                 <LibraryAuditor />
             </div>
+
+            <SmartRules />
+            <BulkOperations />
         </div>
 
         <aside class="actions-sidebar">
-            <div class="action-card pro-glass">
-                <h3 class="card-title"><SaveIcon size="18" /> Data Governance</h3>
+            <SystemHealth />
+
+            <div class="mt-8">
+                <PortfolioExporter />
+            </div>
+
+            <div class="action-card pro-glass mt-8">
+                <h3 class="card-title"><SaveIcon size="18" /> Core Protocols</h3>
                 <div class="btns-stack mt-6">
                     <SuperButton primary onclick={() => showImport = true}>
                         <PlusMultiple size="18" /> Import Logic Snapshot
-                    </SuperButton>
-                    <SuperButton outline onclick={exportData}>
-                        <SaveIcon size="18" /> Export Global Map (JSON)
                     </SuperButton>
                     <SuperButton danger onclick={clearAll} class="mt-4">
                         <DeleteIcon size="18" /> Decommission System
@@ -84,7 +109,7 @@
             <div class="system-info pro-glass mt-8">
                 <h3 class="card-title"><InfoIcon size="18" /> Infrastructure Core</h3>
                 <div class="v-list mt-6">
-                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2 Pro</span></div>
+                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2.0 Pro</span></div>
                     <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
                     <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
 
@@ -109,16 +134,16 @@
 <style>
     .view-header { margin-bottom: var(--space-12); }
     .header-content { display: flex; flex-direction: column; gap: var(--space-3); }
-    .header-content h1 { font-size: 3rem; margin: 0; }
+    .header-content h1 { font-size: 3.5rem; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
 
     .title-row { display: flex; align-items: center; gap: var(--space-5); }
 
     .icon-blob {
         background: var(--primary);
         color: white;
-        padding: var(--space-3);
-        border-radius: var(--radius-lg);
-        box-shadow: 0 8px 32px rgba(var(--primary-rgb), 0.4);
+        padding: var(--space-4);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 12px 40px rgba(var(--primary-rgb), 0.5);
     }
 
     .manage-grid {
@@ -130,12 +155,48 @@
 
     .main-stats { display: flex; flex-direction: column; gap: var(--space-8); }
 
-    .stat-card {
-        transition: transform 0.3s var(--easing-standard);
+    .visualization-container {
+        border: 1px solid var(--border);
+        border-radius: 32px;
+        overflow: hidden;
+        background: rgba(0,0,0,0.2);
     }
-    .stat-card:hover {
-        transform: translateY(-4px);
+
+    .viz-header {
+        padding: 12px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255,255,255,0.03);
     }
+
+    .viz-meta { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 900; color: var(--text-dim); }
+
+    .viz-switcher {
+        display: flex;
+        gap: 6px;
+        background: var(--bg-secondary);
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    .viz-switcher button {
+        background: transparent;
+        border: none;
+        color: var(--text-dim);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .viz-switcher button.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3); }
+
+    .grid-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); }
 
     .pro-glass {
         padding: var(--space-8);
@@ -193,6 +254,10 @@
     :global(.mt-4) { margin-top: var(--space-4) !important; }
     .mt-6 { margin-top: var(--space-6); }
     .mt-8 { margin-top: var(--space-8); }
+
+    @media (max-width: 1500px) {
+        .grid-split { grid-template-columns: 1fr; }
+    }
 
     @media (max-width: 1200px) {
         .manage-grid { grid-template-columns: 1fr; }

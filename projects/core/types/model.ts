@@ -1,3 +1,17 @@
+export type Theme = "light" | "dark";
+export type ThemeChoice = "device" | Theme;
+export type ViewMode = "simple" | "advanced";
+
+export type PlaylistsSorting =
+  | "date-created-asc"
+  | "date-created-desc"
+  | "title-az"
+  | "title-za"
+  | "relevance"
+  | "video-count-desc"
+  | "video-count-asc"
+  | "last-modified-desc";
+
 export interface Video {
   id: string | number;
   videoId: string;
@@ -17,6 +31,7 @@ export interface Video {
   author?: string;
   views?: string;
   publishedDate?: string;
+  energyVibe?: 'Chill' | 'Productive' | 'Intense' | 'Educational';
 }
 
 export interface PlaylistExport {
@@ -53,17 +68,17 @@ export interface Settings {
   viewMode: ViewMode;
 }
 
-export type ViewMode = "simple" | "advanced";
-
-export type PlaylistsSorting =
-  | "date-created-asc"
-  | "date-created-desc"
-  | "title-az"
-  | "title-za"
-  | "relevance"
-  | "video-count-desc"
-  | "video-count-asc"
-  | "last-modified-desc";
-
-export type Theme = "light" | "dark";
-export type ThemeChoice = "device" | Theme;
+export interface SmartRule {
+    id: string;
+    name: string;
+    active: boolean;
+    condition: {
+        field: 'rating' | 'vibe' | 'tag' | 'duration';
+        operator: 'gt' | 'lt' | 'eq' | 'contains';
+        value: any;
+    };
+    action: {
+        type: 'tag' | 'rate' | 'decommission' | 'notify';
+        params: any;
+    };
+}

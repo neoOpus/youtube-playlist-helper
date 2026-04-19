@@ -4,7 +4,7 @@
   import type { Playlist, PlaylistsSorting } from "@yph/core";
   import { SearchIcon, Filter } from "@yph/ui-kit";
   import { playlistsSearch, playlistsSorting } from "../stores/playlists-filters";
-  import { fly } from "svelte/transition";
+  import { fly, fade } from "svelte/transition";
 
   let {
     playlists = [],
@@ -18,6 +18,7 @@
   let useRegex = $state(false);
   let searchInVideos = $state(true);
   let showPowerFeatures = $state(false);
+  let isAutoRelevance = $state(false);
 
   let groups = $derived(["All", ...new Set(playlists.flatMap((p) => p.groups || []))]);
 
@@ -28,7 +29,6 @@
   function filtersUpdated() {
     if (!playlists) return;
 
-    // ⚡ PERFORMANCE: Filter BEFORE sorting to minimize computational load on sort algorithms.
     let result = [...playlists];
 
     // 1. Group Filter
@@ -66,11 +66,20 @@
 
     // 3. Sorting (Applied to the filtered subset)
     const keywords = searchStr.split(/\s+/).filter((k) => k.length > 2);
+
+    // Auto-switch to relevance if searching and on default sort
+    if (searchStr.length > 3 && $playlistsSorting === 'date-created-desc' && !isAutoRelevance) {
+        isAutoRelevance = true;
+        playlistsSorting.set('relevance');
+    } else if (searchStr.length === 0 && isAutoRelevance) {
+        isAutoRelevance = false;
+        playlistsSorting.set('date-created-desc');
+    }
+
     result = playlistsSorter.sort(result, $playlistsSorting, keywords);
     filteredPlaylists = result;
   }
 
-  // Reactive dependencies for automatic filtering when state changes
   $effect(() => {
       playlists;
       $playlistsSorting;
@@ -80,7 +89,6 @@
       filtersUpdated();
   });
 
-  // Search is debounced to avoid expensive filtering on every keystroke
   $effect(() => {
       $playlistsSearch;
       debouncedFiltersUpdated();
@@ -113,6 +121,12 @@
                 bind:value={$playlistsSearch}
                 placeholder={useRegex ? "Regex Search..." : "Deep Search nodes... (Press /)"}
               />
+              {#if isAutoRelevance}
+                <div class="ai-badge" in:fade>
+                    <TerminalIcon size="12" />
+                    <span>SMART</span>
+                </div>
+              {/if}
           </div>
           <button class="power-toggle" class:active={showPowerFeatures} onclick={() => showPowerFeatures = !showPowerFeatures} title="Advanced Filters">
               <Filter size="16" />
@@ -213,6 +227,20 @@
       font-size: var(--font-sm);
       color: var(--text);
       font-weight: 500;
+  }
+
+  .ai-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--primary);
+      color: white;
+      border-radius: 4px;
+      font-size: 0.6rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      flex-shrink: 0;
   }
 
   .power-toggle {

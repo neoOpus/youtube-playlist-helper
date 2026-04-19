@@ -2,6 +2,7 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
   import { PayPalIcon, InfoIcon, SuperButton, Breadcrumbs } from "@yph/ui-kit";
+  import SectorComparison from "../components/SectorComparison.svelte";
 </script>
 
 <main class="view-container" in:fade>
@@ -14,60 +15,67 @@
     </header>
 
     <div class="support-grid">
-        <section class="support-content pro-glass" in:fly={{ y: 20 }}>
-            <div class="icon-blob">
-                <InfoIcon size="48" />
-            </div>
-
-            <div class="text-content">
-                <h3>Contribution Protocol</h3>
-                <p>YouTube Playlist Helper is an open-source infrastructure infrastructure. If you find this node helpful, consider fueling its development via a decentralized donation.</p>
-
-                <div class="support-actions mt-10">
-                    <SuperButton onclick={() => window.open('https://paypal.me/neoOpus', '_blank')}>
-                        <PayPalIcon size="20" />
-                        <span>Fuel Development via PayPal</span>
-                    </SuperButton>
+        <div class="main-column">
+            <section class="support-content pro-glass" in:fly={{ y: 20 }}>
+                <div class="icon-blob">
+                    <InfoIcon size="48" />
                 </div>
 
-                <div class="meta-info mt-12">
-                    <div class="meta-row">
-                        <span class="label">Architecture Version</span>
-                        <span class="val">1.2.4-Professional</span>
+                <div class="text-content">
+                    <h3>Contribution Protocol</h3>
+                    <p>YouTube Playlist Helper is an open-source infrastructure project. If you find this node helpful, consider fueling its development via a decentralized donation.</p>
+
+                    <div class="support-actions mt-10">
+                        <SuperButton onclick={() => window.open('https://paypal.me/neoOpus', '_blank')}>
+                            <PayPalIcon size="20" />
+                            <span>Fuel Development via PayPal</span>
+                        </SuperButton>
                     </div>
-                    <div class="meta-row">
-                        <span class="label">Lead Architect</span>
-                        <span class="val">Anoir Ben Tanfous (neoOpus)</span>
+
+                    <div class="meta-info mt-12">
+                        <div class="meta-row">
+                            <span class="label">Architecture Version</span>
+                            <span class="val">2.2.0-Professional</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="label">Lead Architect</span>
+                            <span class="val">Anoir Ben Tanfous (neoOpus)</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="info-pane pro-glass" in:fly={{ y: 20, delay: 100 }}>
-             <h3 class="card-title">Project Mission</h3>
-             <p class="small mt-4">Our mission is to provide the most resilient, privacy-focused, and intelligent YouTube playlist management system in the world. Every contribution goes directly into R&D for local AI heuristics and E2EE synchronization.</p>
+            <SectorComparison />
+        </div>
 
-             <div class="perks mt-8">
-                 <div class="perk-item">
-                     <div class="dot primary"></div>
-                     <span>Priority Feature Requests</span>
+        <aside class="info-pane-wrapper">
+            <section class="info-pane pro-glass" in:fly={{ y: 20, delay: 100 }}>
+                 <h3 class="card-title">Project Mission</h3>
+                 <p class="small mt-4">Our mission is to provide the most resilient, privacy-focused, and intelligent YouTube playlist management system in the world. Every contribution goes directly into R&D for local AI heuristics and E2EE synchronization.</p>
+
+                 <div class="perks mt-8">
+                     <div class="perk-item">
+                         <div class="dot primary"></div>
+                         <span>Priority Feature Requests</span>
+                     </div>
+                     <div class="perk-item">
+                         <div class="dot success"></div>
+                         <span>Direct Developer Access</span>
+                     </div>
+                     <div class="perk-item">
+                         <div class="dot info"></div>
+                         <span>Early Alpha Access</span>
+                     </div>
                  </div>
-                 <div class="perk-item">
-                     <div class="dot success"></div>
-                     <span>Direct Developer Access</span>
-                 </div>
-                 <div class="perk-item">
-                     <div class="dot info"></div>
-                     <span>Early Alpha Access</span>
-                 </div>
-             </div>
-        </section>
+            </section>
+        </aside>
     </div>
 </main>
 
 <style>
-    .view-container { padding: var(--space-8); max-width: 1200px; margin: 0 auto; }
-    .support-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-8); margin-top: var(--space-4); }
+    .view-container { padding: var(--space-8); max-width: 1400px; margin: 0 auto; }
+    .support-grid { display: grid; grid-template-columns: 1fr 380px; gap: var(--space-8); margin-top: var(--space-4); }
+    .main-column { display: flex; flex-direction: column; gap: var(--space-8); }
     .support-content { padding: var(--space-12); display: flex; gap: var(--space-10); align-items: flex-start; }
     .icon-blob { background: var(--primary); color: white; width: 96px; height: 96px; flex-shrink: 0; border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 48px rgba(var(--primary-rgb), 0.4); }
     .text-content { flex-grow: 1; }
@@ -90,5 +98,5 @@
     .mt-8 { margin-top: 2rem; }
     .mt-10 { margin-top: 2.5rem; }
     .mt-12 { margin-top: 3rem; }
-    @media (max-width: 1000px) { .support-grid { grid-template-columns: 1fr; } .support-content { flex-direction: column; align-items: center; text-align: center; } .support-actions { justify-content: center; } }
+    @media (max-width: 1200px) { .support-grid { grid-template-columns: 1fr; } .info-pane-wrapper { order: -1; } .support-content { flex-direction: column; align-items: center; text-align: center; } .support-actions { justify-content: center; } }
 </style>

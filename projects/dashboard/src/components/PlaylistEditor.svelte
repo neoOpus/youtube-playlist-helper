@@ -7,14 +7,15 @@
   import {
     storageService,
     videoService,
-    playlistService,
     aiService,
+    playlistService,
     actionLogger,
     notificationService
   } from "@yph/core";
   import type { Playlist, Video } from "@yph/core";
   import PlaylistVideo from "./PlaylistVideo.svelte";
   import SimplePagination from "./SimplePagination.svelte";
+  import SectorDna from "./SectorDna.svelte";
   import {
     SaveIcon,
     PlusMultiple,
@@ -153,48 +154,61 @@
             </div>
         </header>
 
-        {#if showBulkAdd}
-            <div class="bulk-add-pane pro-glass-high" transition:slide>
-                <h3 class="card-title mb-4"><PlusMultiple size="18" /> Bulk Node Intake</h3>
-                <textarea bind:value={bulkInput} placeholder="Paste YouTube URLs or IDs (one per line)..."></textarea>
-                <div class="row justify-end mt-4">
-                    <SuperButton onclick={addVideos}>Link Nodes</SuperButton>
+        <div class="editor-content-grid">
+            <div class="main-column">
+                {#if showBulkAdd}
+                    <div class="bulk-add-pane pro-glass-high" transition:slide>
+                        <h3 class="card-title mb-4"><PlusMultiple size="18" /> Bulk Node Intake</h3>
+                        <textarea bind:value={bulkInput} placeholder="Paste YouTube URLs or IDs (one per line)..."></textarea>
+                        <div class="row justify-end mt-4">
+                            <SuperButton onclick={addVideos}>Link Nodes</SuperButton>
+                        </div>
+                    </div>
+                {/if}
+
+                <div class="search-bar pro-glass luminous-hover" onmousemove={handleMouseMove} role="searchbox" tabindex="0">
+                    <SearchIcon size="18" color="var(--primary)" />
+                    <input type="text" bind:value={searchQuery} placeholder="Filter indexed nodes..." class="ghost-input" />
                 </div>
+
+                <div class="video-list mt-8" role="list">
+                    {#each paginatedVideos as _, index (paginatedVideos[index].videoId)}
+                        <div
+                            animate:flip={{ duration: 400 }}
+                            class:is-hovering={hovering === index}
+                            role="listitem"
+                            class="video-card-wrapper"
+                        >
+                            <PlaylistVideo bind:video={videos[index + (currentPage - 1) * pageSize]} ondelete={removeVideo} active={false} />
+                        </div>
+                    {/each}
+
+                    {#if videos.length === 0}
+                        <div class="empty-state pro-glass" in:fade>
+                            <TerminalIcon size="48" color="var(--primary)" />
+                            <h3>No Active Nodes</h3>
+                            <p class="muted">This infrastructure node is currently empty. Use "Bulk Link" to ingest data.</p>
+                        </div>
+                    {/if}
+                </div>
+
+                <SimplePagination
+                    totalItems={filteredVideos.length}
+                    {pageSize}
+                    bind:currentPage={currentPage}
+                    onchange={(p) => currentPage = p}
+                />
             </div>
-        {/if}
 
-        <div class="search-bar mt-8 pro-glass luminous-hover" onmousemove={handleMouseMove} role="searchbox" tabindex="0">
-            <SearchIcon size="18" color="var(--primary)" />
-            <input type="text" bind:value={searchQuery} placeholder="Filter indexed nodes..." class="ghost-input" />
-        </div>
+            <aside class="editor-sidebar">
+                <SectorDna playlist={{...playlist, loadedVideos: videos}} />
 
-        <div class="video-list mt-8" role="list">
-            {#each paginatedVideos as _, index (paginatedVideos[index].videoId)}
-                <div
-                    animate:flip={{ duration: 400 }}
-                    class:is-hovering={hovering === index}
-                    role="listitem"
-                    class="video-card-wrapper"
-                >
-                    <PlaylistVideo bind:video={videos[index + (currentPage - 1) * pageSize]} ondelete={removeVideo} active={false} />
+                <div class="sidebar-help pro-glass mt-6">
+                    <h4 class="small-title">Sequence Optimization</h4>
+                    <p class="small muted">The Sector DNA analysis updates in real-time as you modify the infrastructure sequence. Use "Optimize" to let the neural engine reorder nodes for maximum resonance.</p>
                 </div>
-            {/each}
-
-            {#if videos.length === 0}
-                <div class="empty-state pro-glass" in:fade>
-                    <TerminalIcon size="48" color="var(--primary)" />
-                    <h3>No Active Nodes</h3>
-                    <p class="muted">This infrastructure node is currently empty. Use "Bulk Link" to ingest data.</p>
-                </div>
-            {/if}
+            </aside>
         </div>
-
-        <SimplePagination
-            totalItems={filteredVideos.length}
-            {pageSize}
-            bind:currentPage={currentPage}
-            onchange={(p) => currentPage = p}
-        />
     {:else}
         <div class="error-state pro-glass">
             <h2>Critical Failure: Node Collection Not Found</h2>
@@ -204,13 +218,16 @@
 </div>
 
 <style>
-    .view-container { padding: var(--space-8); max-width: 1400px; margin: 0 auto; }
+    .view-container { padding: var(--space-8); max-width: 1600px; margin: 0 auto; }
     .editor-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--space-12); padding-bottom: var(--space-8); border-bottom: 1px solid var(--border); }
     .title-section { text-align: left; flex-grow: 1; }
     .pl-title-input { background: transparent; border: none; font-size: var(--font-4xl); font-weight: 900; color: var(--text); outline: none; letter-spacing: -0.07em; width: 100%; padding: 0; transition: all 0.3s; margin-top: var(--space-2); }
     .pl-title-input:focus { color: var(--primary); }
     .pl-meta { display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-top: var(--space-1); letter-spacing: 0.1em; opacity: 0.7; }
     .header-actions { display: flex; gap: var(--space-3); }
+
+    .editor-content-grid { display: grid; grid-template-columns: 1fr 340px; gap: var(--space-10); align-items: start; }
+
     .bulk-add-pane { padding: var(--space-8); margin-bottom: var(--space-8); border: 1px dashed var(--primary); background: rgba(var(--primary-rgb), 0.02); }
     .card-title { font-weight: 900; display: flex; align-items: center; gap: 8px; }
     textarea { width: 100%; height: 160px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); color: var(--text); font-family: 'JetBrains Mono', monospace; resize: none; outline: none; font-size: var(--font-sm); transition: border-color 0.3s; }
@@ -219,12 +236,23 @@
     .ghost-input { background: transparent !important; border: none !important; color: var(--text) !important; width: 100%; outline: none !important; font-weight: 800 !important; font-size: var(--font-lg) !important; box-shadow: none !important; padding: 0 !important; }
     .video-list { display: flex; flex-direction: column; gap: var(--space-3); min-height: 200px; }
     .video-card-wrapper { transition: transform 0.3s var(--easing-standard); }
+
+    .sidebar-help { padding: var(--space-6); border: 1px solid var(--border); }
+    .small-title { margin: 0 0 8px 0; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); }
+    .small { font-size: 0.7rem; line-height: 1.5; font-weight: 600; }
+
     .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-16); text-align: center; gap: var(--space-4); background: rgba(var(--primary-rgb), 0.02); border: 1px dashed var(--border); }
     .empty-state h3 { font-size: var(--font-xl); font-weight: 900; }
     .loader { padding: var(--space-16); text-align: center; font-size: var(--font-xl); font-weight: 900; color: var(--primary); }
     .error-state { text-align: center; padding: var(--space-16); }
     .mt-8 { margin-top: var(--space-8); }
+    .mt-6 { margin-top: 1.5rem; }
     .mb-4 { margin-bottom: var(--space-4); }
     .row { display: flex; }
     .justify-end { justify-content: flex-end; }
+
+    @media (max-width: 1200px) {
+        .editor-content-grid { grid-template-columns: 1fr; }
+        .editor-sidebar { order: -1; }
+    }
 </style>

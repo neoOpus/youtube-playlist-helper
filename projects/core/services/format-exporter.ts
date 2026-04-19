@@ -8,12 +8,14 @@ function escapeCSV(str: string): string {
       : escaped;
 }
 
+export type ExportTemplate = 'minimal' | 'academic' | 'showcase';
+
 export const formatExporter = {
   /**
-   * Converts a list of playlists to CSV format.
+   * Converts a list of playlists to CSV format with enhanced metadata.
    */
   toCSV(playlists: Playlist[]): string {
-    const headers = ["Playlist Title", "Video Title", "Video URL", "Author", "Duration", "Views", "Date Added"];
+    const headers = ["Playlist Title", "Video Title", "Video URL", "Author", "Duration", "Views", "Date Added", "Rating", "Energy Vibe", "Tags"];
     const rows = [headers.join(",")];
 
     for (const p of playlists) {
@@ -26,7 +28,10 @@ export const formatExporter = {
                 escapeCSV(v.author || v.channel || ""),
                 v.duration || "",
                 v.views || "",
-                v.dateAdded ? new Date(v.dateAdded).toLocaleDateString() : ""
+                v.dateAdded ? new Date(v.dateAdded).toLocaleDateString() : "",
+                v.rating || "",
+                v.energyVibe || "",
+                escapeCSV((v.aiTags || []).join("; "))
             ];
             rows.push(row.join(","));
         }
@@ -36,43 +41,65 @@ export const formatExporter = {
   },
 
   /**
-   * Converts a list of playlists to a plain text summary.
+   * Converts a list of playlists to a high-fidelity Markdown Portfolio.
    */
-  toTXT(playlists: Playlist[]): string {
-    let output = "YPH PLAYLIST EXPORT\n";
-    output += "===================\n\n";
+  toMarkdown(playlists: Playlist[], template: ExportTemplate = 'showcase'): string {
+    let output = `# Infrastructure Intelligence Portfolio\n`;
+    output += `Generated on: ${new Date().toLocaleString()}\n\n`;
+    output += `---\n\n`;
 
     for (const p of playlists) {
-        output += `Playlist: ${p.title}\n`;
-        output += `Videos: ${p.videos.length}\n`;
-        output += "-------------------\n";
+        output += `## ${p.title}\n\n`;
+
+        if (template === 'showcase') {
+            output += `> **Summary**: ${p.videos.length} infrastructure nodes curated in this sector.\n\n`;
+        }
+
+        if (template === 'academic' || template === 'showcase') {
+            output += `| Intelligence Node | Origin | Metrics | Assessment |\n`;
+            output += `| :--- | :--- | :--- | :--- |\n`;
+        } else {
+            output += `| Title | URL | Tags |\n`;
+            output += `| :--- | :--- | :--- |\n`;
+        }
 
         const videos = p.loadedVideos || [];
         for (const v of videos) {
-            output += `- ${v.title} (${v.url})\n`;
+            if (template === 'minimal') {
+                output += `| ${v.title} | [${v.url}](${v.url}) | ${(v.aiTags || []).join(", ")} |\n`;
+            } else {
+                const metrics = `⏱️ ${v.duration || 'N/A'} • 👁️ ${v.views || 'N/A'}`;
+                const assessment = `⭐ ${v.rating || 'Unrated'} • ⚡ ${v.energyVibe || 'Neutral'}`;
+                output += `| [${v.title}](${v.url}) | ${v.author || v.channel || 'Unknown'} | ${metrics} | ${assessment} |\n`;
+            }
         }
-        output += "\n";
+        output += `\n\n`;
     }
 
     return output;
   },
 
   /**
-   * Converts a list of playlists to Markdown format.
+   * Standard JSON export for system-to-system migration.
    */
-  toMarkdown(playlists: Playlist[]): string {
-    let output = "# YPH Playlist Export\n\n";
+  toJSON(playlists: Playlist[]): string {
+      return JSON.stringify(playlists, null, 2);
+  },
+
+  /**
+   * Simple text summary for quick reviews.
+   */
+  toTXT(playlists: Playlist[]): string {
+    let output = `Infrastructure Intelligence Summary\n`;
+    output += `Generated on: ${new Date().toLocaleString()}\n\n`;
 
     for (const p of playlists) {
-        output += `## ${p.title}\n\n`;
-        output += "| Title | Author | URL |\n";
-        output += "|-------|--------|-----|\n";
-
+        output += `Playlist: ${p.title}\n`;
         const videos = p.loadedVideos || [];
         for (const v of videos) {
-            output += `| ${v.title} | ${v.author || v.channel} | [Link](${v.url}) |\n`;
+            output += `- ${v.title} (${v.url})\n`;
         }
-        output += "\n";
+        output += `\n`;
     }
 
     return output;

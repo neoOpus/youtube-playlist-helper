@@ -37,7 +37,9 @@ describe('formatExporter - Data Serialization', () => {
     it('should format Markdown tables', () => {
         const md = formatExporter.toMarkdown(playlists);
         expect(md).toContain('## Test Playlist');
-        expect(md).toContain('| Video, with Comma | Author "One" | [Link](https://youtu.be/1) |');
+        // Match the high-fidelity format: | [Title](URL) | Author | metrics | assessment |
+        expect(md).toContain('| [Video, with Comma](https://youtu.be/1) | Author "One" |');
+        expect(md).toContain('⏱️ 10:00 • 👁️ 1M');
     });
 
     it('should format Plain Text summaries', () => {

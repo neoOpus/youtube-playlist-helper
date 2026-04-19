@@ -1,10 +1,17 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte";
-  import { fade, fly } from "svelte/transition";
-  import { CloseIcon, SaveIcon, TerminalIcon, SuperButton } from "@yph/ui-kit";
-  import type { Video } from "@yph/core";
-  import { aiService, notificationService } from "@yph/core";
+  import { fade, fly, slide } from "svelte/transition";
+  import {
+      CloseIcon,
+      SaveIcon,
+      TerminalIcon,
+      SuperButton,
+      ReverseIcon
+  } from "@yph/ui-kit";
+  import type { Video, VideoHistoryEntry } from "@yph/core";
+  import { aiService, notificationService, historyService } from "@yph/core";
+  import MetadataTimeMachine from "./MetadataTimeMachine.svelte";
 
   interface Props {
     video: Video;
@@ -14,10 +21,13 @@
   let { video = $bindable(), display = $bindable(false) }: Props = $props();
   const dispatch = createEventDispatcher();
   let loadingAi = $state(false);
+  let showTimeMachine = $state(false);
 
-  function close() { display = false; }
+  function close() { display = false; showTimeMachine = false; }
 
   async function save() {
+    // Log history before saving new state
+    await historyService.logHistory(video.videoId, video.title, video.channel);
     dispatch("save", video);
     close();
     notificationService.success("Intelligence updated.");
@@ -33,6 +43,12 @@
       } finally {
           loadingAi = false;
       }
+  }
+
+  function handleRestore(entry: VideoHistoryEntry) {
+      video.title = entry.title;
+      video.channel = entry.channel;
+      showTimeMachine = false;
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -75,9 +91,21 @@
 
         <div class="modal-body">
             <div class="meta-section">
-                <span class="label">TITLE</span>
+                <div class="section-header-row">
+                    <span class="label">TITLE</span>
+                    <button class="tm-toggle" onclick={() => showTimeMachine = !showTimeMachine} title="Toggle Time Machine">
+                        <ReverseIcon size="14" />
+                        {showTimeMachine ? 'Hide History' : 'View History'}
+                    </button>
+                </div>
                 <input bind:value={video.title} placeholder="Unknown Metadata..." aria-label="Video Title" />
             </div>
+
+            {#if showTimeMachine}
+                <div class="tm-container mt-4" transition:slide>
+                    <MetadataTimeMachine videoId={video.videoId} onRestore={handleRestore} />
+                </div>
+            {/if}
 
             <div class="grid-2 mt-6">
                 <div class="meta-section">
@@ -129,13 +157,16 @@
 
 <style>
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); border: none; cursor: default; }
-    .modal-content { width: 500px; max-width: 90vw; padding: 2.5rem; position: relative; outline: none; cursor: auto; }
+    .modal-content { width: 550px; max-width: 90vw; padding: 2.5rem; position: relative; outline: none; cursor: auto; overflow-y: auto; max-height: 90vh; }
     .modal-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
     h2 { margin: 0; font-weight: 900; flex-grow: 1; letter-spacing: -1px; font-size: var(--font-xl); }
     .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
     .close-btn:hover { color: var(--primary); }
     .meta-section { display: flex; flex-direction: column; gap: 8px; }
+    .section-header-row { display: flex; justify-content: space-between; align-items: center; }
     .label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+    .tm-toggle { background: transparent; border: none; color: var(--primary); font-size: 0.65rem; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; }
+    .tm-toggle:hover { opacity: 1; text-decoration: underline; }
     input, select, textarea { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: var(--text); font-weight: 600; font-size: 0.9rem; outline: none; }
     input:focus, select:focus, textarea:focus { border-color: var(--primary); }
     textarea { height: 100px; resize: none; }
@@ -144,4 +175,6 @@
     .check-label input { width: 18px; height: 18px; accent-color: var(--primary); }
     .summary-text { font-size: 0.85rem; line-height: 1.6; color: var(--text); background: var(--hover); padding: 1rem; border-radius: 8px; border: 1px dashed var(--border-strong); }
     .ai-cta { background: rgba(255, 82, 82, 0.05); border: 1px solid rgba(255, 82, 82, 0.2); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
 </style>

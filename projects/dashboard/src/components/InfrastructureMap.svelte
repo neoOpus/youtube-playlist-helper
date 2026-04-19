@@ -9,6 +9,7 @@
   let playlists = $state<Playlist[]>([]);
   let nodes: any[] = [];
   let links: any[] = [];
+  let hoveredNodeIndex = $state<number | null>(null);
 
   onMount(async () => {
     playlists = await storageService.getPlaylists();
@@ -18,7 +19,6 @@
 
   function initMap() {
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
@@ -51,10 +51,33 @@
             vx: (Math.random() - 0.5) * 2,
             vy: (Math.random() - 0.5) * 2,
             originX: x,
-            originY: y
+            originY: y,
+            id: pl.id
         });
         links.push({ from: 0, to: nodes.length - 1 });
     });
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+      let foundIndex = null;
+      for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+          const dx = node.x - mouseX;
+          const dy = node.y - mouseY;
+          const distSq = dx * dx + dy * dy;
+          const radiusSq = (node.r + 5) * (node.r + 5);
+
+          if (distSq < radiusSq) {
+              foundIndex = i;
+              break;
+          }
+      }
+      hoveredNodeIndex = foundIndex;
   }
 
   function animate() {
@@ -70,6 +93,12 @@
           const dy = node.originY - node.y;
           node.vx += dx * 0.005;
           node.vy += dy * 0.005;
+
+          if (hoveredNodeIndex === i) {
+              node.vx += (Math.random() - 0.5) * 0.5;
+              node.vy += (Math.random() - 0.5) * 0.5;
+          }
+
           node.vx *= 0.96;
           node.vy *= 0.96;
           node.x += node.vx;
@@ -81,6 +110,9 @@
       ctx.strokeStyle = "rgba(255, 82, 82, 0.1)";
       ctx.lineWidth = 1;
       links.forEach(link => {
+          const isHovered = hoveredNodeIndex === link.to || hoveredNodeIndex === 0;
+          ctx.strokeStyle = isHovered ? "rgba(255, 82, 82, 0.4)" : "rgba(255, 82, 82, 0.1)";
+          ctx.lineWidth = isHovered ? 2 : 1;
           ctx.beginPath();
           ctx.moveTo(nodes[link.from].x, nodes[link.from].y);
           ctx.lineTo(nodes[link.to].x, nodes[link.to].y);
@@ -89,46 +121,47 @@
 
       // Nodes
       nodes.forEach((node, i) => {
-          ctx.shadowBlur = i === 0 ? 30 : 10;
-          ctx.shadowColor = i === 0 ? "var(--primary)" : "rgba(255,255,255,0.1)";
+          const isHovered = hoveredNodeIndex === i;
+          ctx.shadowBlur = i === 0 ? 30 : (isHovered ? 20 : 10);
+          ctx.shadowColor = i === 0 ? "var(--primary)" : (isHovered ? "var(--primary)" : "rgba(255,255,255,0.1)");
 
           ctx.beginPath();
-          ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
-          ctx.fillStyle = i === 0 ? "var(--primary)" : "rgba(10, 15, 25, 0.95)";
+          ctx.arc(node.x, node.y, node.r + (isHovered ? 4 : 0), 0, Math.PI * 2);
+          ctx.fillStyle = i === 0 ? "var(--primary)" : (isHovered ? "rgba(255, 82, 82, 0.2)" : "rgba(10, 15, 25, 0.95)");
           ctx.fill();
 
-          ctx.strokeStyle = i === 0 ? "white" : "rgba(255,255,255,0.15)";
-          ctx.lineWidth = i === 0 ? 3 : 1;
+          ctx.strokeStyle = i === 0 ? "white" : (isHovered ? "var(--primary)" : "rgba(255,255,255,0.15)");
+          ctx.lineWidth = i === 0 ? 3 : (isHovered ? 2 : 1);
           ctx.stroke();
 
           ctx.shadowBlur = 0;
           ctx.fillStyle = "white";
-          ctx.font = i === 0 ? "900 11px 'Inter'" : "700 8px 'Inter'";
+          ctx.font = i === 0 ? "900 11px 'Inter'" : (isHovered ? "900 9px 'Inter'" : "700 8px 'Inter'");
           ctx.textAlign = "center";
           ctx.fillText(node.label.toUpperCase().substring(0, 15), node.x, node.y + 4);
+
+          if (isHovered && i !== 0) {
+              ctx.font = "800 7px 'JetBrains Mono'";
+              ctx.fillStyle = "rgba(255,255,255,0.6)";
+              ctx.fillText("NODE ACTIVE", node.x, node.y + 14);
+          }
       });
 
       requestAnimationFrame(animate);
   }
 </script>
 
-<div class="infrastructure-map pro-glass mt-8" in:fade>
-    <div class="map-overlay">
-        <div class="status-indicator">
-            <div class="dot pulse"></div>
-            <span class="badge">PROCORE LIVE MAPPING</span>
-        </div>
-    </div>
-    <canvas bind:this={canvas} width="1000" height="500"></canvas>
+<div class="infrastructure-map" in:fade>
+    <canvas
+        bind:this={canvas}
+        width="1000"
+        height="500"
+        onmousemove={handleMouseMove}
+        onmouseleave={() => hoveredNodeIndex = null}
+    ></canvas>
 </div>
 
 <style>
-    .infrastructure-map { position: relative; width: 100%; height: 500px; border: 1px solid var(--border); overflow: hidden; background: rgba(0,0,0,0.2); }
-    .map-overlay { position: absolute; top: 20px; left: 20px; z-index: 10; }
-    .status-indicator { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
-    .dot.pulse { animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.6); opacity: 0.4; } 100% { transform: scale(1); opacity: 1; } }
-    canvas { width: 100%; height: 100%; }
-    .badge { color: white; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+    .infrastructure-map { position: relative; width: 100%; height: 500px; overflow: hidden; }
+    canvas { width: 100%; height: 100%; cursor: crosshair; }
 </style>
