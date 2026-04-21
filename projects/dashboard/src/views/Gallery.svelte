@@ -117,7 +117,7 @@
         </div>
         <div class="group mt-6">
           <span class="label">Radio Group</span>
-          <RadioGroup bind:value={radioVal} options={radioOptions} />
+          <RadioGroup name="gallery-radio" bind:value={radioVal} options={radioOptions} />
         </div>
       </div>
     </section>

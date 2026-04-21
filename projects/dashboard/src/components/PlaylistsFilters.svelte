@@ -2,7 +2,7 @@
 <script lang="ts">
   import { debounce, playlistsSorter } from "@yph/core";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
-  import { SearchIcon, Filter } from "@yph/ui-kit";
+  import { SearchIcon, Filter, TerminalIcon } from "@yph/ui-kit";
   import { playlistsSearch, playlistsSorting } from "../stores/playlists-filters";
   import { fly, fade } from "svelte/transition";
 

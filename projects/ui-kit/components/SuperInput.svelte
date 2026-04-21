@@ -1,5 +1,6 @@
 <svelte:options runes={true} />
 <script lang="ts">
+  import { fade } from "svelte/transition";
   let {
     value = $bindable(""),
     placeholder = "",
