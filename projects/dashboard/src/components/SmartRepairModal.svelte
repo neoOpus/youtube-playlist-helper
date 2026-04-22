@@ -52,7 +52,7 @@
         aria-label="Close Repair Protocol Overlay"
     >
         <div
-            class="modal-content pro-glass-high"
+            class="modal-content surface-2"
             transition:fly={{ y: 20 }}
             onclick={e => e.stopPropagation()}
             onkeydown={e => e.stopPropagation()}

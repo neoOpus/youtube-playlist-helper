@@ -62,7 +62,7 @@
         aria-label="Close Wizard Overlay"
     >
         <div
-            class="wizard-content pro-glass-high"
+            class="wizard-content surface-2"
             transition:fly={{ y: 20 }}
             onclick={e => e.stopPropagation()}
             onkeydown={e => e.stopPropagation()}

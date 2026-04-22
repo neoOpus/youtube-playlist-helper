@@ -28,7 +28,7 @@
   });
 </script>
 
-<div class="time-machine pro-glass" in:fade>
+<div class="time-machine surface-1" in:fade>
     <div class="tm-header">
         <ReverseIcon size="20" color="var(--primary)" />
         <div class="tm-title">

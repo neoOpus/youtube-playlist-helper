@@ -17,7 +17,7 @@
 </script>
 
 <div
-  class="super-toggle-container"
+  class="toggle-container"
   class:disabled
   onclick={toggle}
   role="switch"
@@ -25,69 +25,62 @@
   tabindex={disabled ? -1 : 0}
   onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle())}
 >
-  <div class="toggle-track" class:checked={active}>
-    <div class="toggle-thumb" class:checked={active}></div>
+  <div class="track" class:checked={active}>
+    <div class="thumb" class:checked={active}></div>
   </div>
   {#if label}
-    <span class="toggle-label">{label}</span>
+    <span class="label">{label}</span>
   {/if}
 </div>
 
 <style>
-  .super-toggle-container {
+  .toggle-container {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: 12px;
     cursor: pointer;
     user-select: none;
     outline: none;
   }
 
-  .toggle-track {
-    width: 44px;
-    height: 22px;
-    background: var(--bg-secondary);
+  .track {
+    width: 36px;
+    height: 20px;
+    background: var(--bg-surface-3);
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-full);
+    border-radius: 10px;
     position: relative;
-    transition: all var(--duration-fast) var(--easing-standard);
+    transition: all 0.2s var(--ease-in-out);
   }
 
-  .toggle-track.checked {
+  .track.checked {
     background: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.3);
   }
 
-  .toggle-thumb {
-    width: 16px;
-    height: 16px;
+  .thumb {
+    width: 14px;
+    height: 14px;
     background: white;
     border-radius: 50%;
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: transform var(--duration-fast) var(--easing-standard);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s var(--ease-in-out);
   }
 
-  .toggle-thumb.checked {
-    transform: translateX(22px);
+  .thumb.checked {
+    transform: translateX(16px);
   }
 
-  .toggle-label {
+  .label {
     font-size: var(--font-sm);
-    font-weight: 700;
-    color: var(--text);
+    font-weight: 600;
+    color: var(--text-main);
   }
 
   .disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  .super-toggle-container:focus-visible .toggle-track {
-    box-shadow: 0 0 0 2px var(--primary);
-    outline-offset: 2px;
   }
 </style>

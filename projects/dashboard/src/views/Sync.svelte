@@ -13,6 +13,7 @@
   } from "@yph/ui-kit";
   import { storageService, notificationService, syncService } from "@yph/core";
   import type { SyncState } from "@yph/core";
+  import { Cloud, Shield, RefreshCw, AlertCircle, CheckCircle2, Lock } from "lucide-svelte";
 
   let syncEnabled = $state(false);
   let serverUrl = $state("");
@@ -28,22 +29,14 @@
   });
 
   async function save() {
-      await syncService.saveSyncConfig({
-          enabled: syncEnabled,
-          serverUrl,
-          apiKey
-      });
-      notificationService.success("Sync configuration locked.");
+      await syncService.saveSyncConfig({ enabled: syncEnabled, serverUrl, apiKey });
+      notificationService.success("Configuration saved.");
   }
 
   async function test() {
       testing = true;
       const success = await syncService.performSync("push", (s) => status = s);
-      if (success) {
-          notificationService.success("Infrastructure link established.");
-      } else {
-          notificationService.error("Sync probe failed.");
-      }
+      if (success) notificationService.success("Connection established.");
       testing = false;
   }
 
@@ -62,76 +55,81 @@
   }
 </script>
 
-<main class="view-container" in:fade>
+<main class="view-container">
     <header class="view-header">
-        <div class="header-content aura-glow">
-            <Breadcrumbs items={[{label: 'INFRASTRUCTURE'}, {label: 'CLOUD SYNC', active: true}]} />
-            <h1>Cloud Infrastructure</h1>
-            <p class="muted">Maintain a decentralized backup of your YouTube intelligence across all nodes.</p>
-        </div>
+        <h1>Cloud Node Synchronization</h1>
+        <p class="text-secondary">Maintain a resilient, decentralized backup of your YouTube intelligence.</p>
     </header>
 
     <div class="sync-grid">
-        <section class="config-pane pro-glass" in:fly={{ x: -20, delay: 100 }}>
-            <h3 class="card-title"><SaveIcon size="18" /> Connection Profile</h3>
-
-            <div class="form-group mt-8">
-                <label class="toggle-row">
-                    <span class="label-text">Enable Global Synchronization</span>
-                    <input type="checkbox" bind:checked={syncEnabled} class="pro-check" />
-                </label>
+        <section class="settings-card surface-1">
+            <div class="card-header">
+                <Lock size="20" class="icon-primary" />
+                <h2>Connection Profile</h2>
             </div>
 
-            <div class="field mt-8">
-                <label for="server-url">Sync Node URL</label>
-                <input id="server-url" type="text" bind:value={serverUrl} placeholder="https://sync.yph-pro.io" class="pro-input" />
-            </div>
+            <div class="form-stack">
+                <div class="field">
+                    <div class="label-row">
+                        <span class="label">Enable Synchronization</span>
+                        <input type="checkbox" bind:checked={syncEnabled} />
+                    </div>
+                </div>
 
-            <div class="field mt-6">
-                <label for="api-key">Security Key (API)</label>
-                <input id="api-key" type="password" bind:value={apiKey} placeholder="••••••••••••••••" class="pro-input" />
-            </div>
+                <div class="field">
+                    <label for="url">Sync Node URL</label>
+                    <input id="url" type="text" bind:value={serverUrl} placeholder="https://sync.yph-pro.io" />
+                </div>
 
-            <div class="btns mt-10">
-                <SuperButton primary onclick={save} >
-                    <CheckIcon size="18" /> Lock Config
-                </SuperButton>
-                <SuperButton outline onclick={test} disabled={testing || !syncEnabled}>
-                    {testing ? 'Probing...' : 'Probe Connection'}
-                </SuperButton>
+                <div class="field">
+                    <label for="key">Security Key (API)</label>
+                    <input id="key" type="password" bind:value={apiKey} placeholder="••••••••••••••••" />
+                </div>
+
+                <div class="actions mt-4">
+                    <SuperButton primary onclick={save}>Save Config</SuperButton>
+                    <button class="test-btn" onclick={test} disabled={testing || !syncEnabled}>
+                        <RefreshCw size="14" class={testing ? 'spin' : ''} />
+                        <span>{testing ? 'Probing...' : 'Test Link'}</span>
+                    </button>
+                </div>
             </div>
         </section>
 
-        <section class="operations-pane pro-glass" in:fly={{ x: 20, delay: 200 }}>
-            <h3 class="card-title"><SearchIcon size="18" /> System Operations</h3>
-
-            <div class="op-card mt-8">
-                <div class="op-info">
-                    <span class="bold">Force Cloud Overwrite</span>
-                    <p class="small muted">Push local collection to the cloud node. Destructive.</p>
-                </div>
-                <SuperButton outline mini onclick={push} disabled={testing || !syncEnabled}>Push Now</SuperButton>
+        <section class="settings-card surface-1">
+            <div class="card-header">
+                <Cloud size="20" class="icon-primary" />
+                <h2>System Operations</h2>
             </div>
 
-            <div class="op-card mt-4">
-                <div class="op-info">
-                    <span class="bold">Pull & Merge</span>
-                    <p class="small muted">Retrieve remote changes and integrate with local state.</p>
+            <div class="ops-grid">
+                <div class="op-card surface-2">
+                    <div class="op-info">
+                        <span class="op-title">Force Cloud Overwrite</span>
+                        <p class="desc">Push local collection to the remote node.</p>
+                    </div>
+                    <button class="op-btn" onclick={push} disabled={testing || !syncEnabled}>Push Now</button>
                 </div>
-                <SuperButton outline mini onclick={pull} disabled={testing || !syncEnabled}>Pull Now</SuperButton>
+
+                <div class="op-card surface-2">
+                    <div class="op-info">
+                        <span class="op-title">Pull & Merge</span>
+                        <p class="desc">Retrieve remote changes and integrate state.</p>
+                    </div>
+                    <button class="op-btn" onclick={pull} disabled={testing || !syncEnabled}>Pull Now</button>
+                </div>
             </div>
 
-            <div class="status-box mt-10" class:connected={status === 'stable'}>
-                <div class="pulse-indicator" class:pulse={testing}></div>
-                <div class="status-text">
-                    <span class="small bold uppercase">Current Status</span>
-                    <span class="status-val">{status.toUpperCase()}</span>
+            <div class="status-box surface-2" class:stable={status === 'stable'}>
+                <div class="status-header">
+                    <span class="status-label">Operational Status</span>
+                    <div class="pulse-dot" class:active={testing}></div>
                 </div>
-
+                <div class="status-val">{status.toUpperCase()}</div>
                 {#if status === 'stable'}
-                    <div class="diff-status mt-4" in:fade>
-                        <InfoIcon size="14" color="var(--primary)" />
-                        <span>Ready to merge collections.</span>
+                    <div class="status-msg" in:fade>
+                        <CheckCircle2 size="14" />
+                        <span>Nodes synchronized and stable.</span>
                     </div>
                 {/if}
             </div>
@@ -140,85 +138,69 @@
 </main>
 
 <style>
-    .view-container { padding: var(--space-8); max-width: 1400px; margin: 0 auto; }
-    .view-header { margin-bottom: var(--space-12); }
-    .header-content h1 { font-size: var(--font-2xl); margin-top: var(--space-2); font-weight: 900; }
+    .view-header { margin-bottom: var(--space-10); }
+    h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
 
-    .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-10); }
+    .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); }
 
-    .pro-glass {
-        padding: var(--space-10);
-        background: var(--card-bg-alpha);
-        backdrop-filter: blur(40px) saturate(180%);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-xl);
+    .settings-card { padding: var(--space-8); display: flex; flex-direction: column; gap: var(--space-8); }
+    .card-header { display: flex; align-items: center; gap: 12px; }
+    .card-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+    :global(.icon-primary) { color: var(--primary); }
+
+    .form-stack { display: flex; flex-direction: column; gap: var(--space-6); }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .label-row { display: flex; justify-content: space-between; align-items: center; }
+    .label { font-weight: 700; font-size: 0.95rem; }
+
+    label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    input[type="text"], input[type="password"] {
+        background: var(--bg-surface-2); border: 1px solid var(--border-strong);
+        color: var(--text-main); padding: 12px 16px; border-radius: 8px;
+        font-weight: 600; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
     }
+    input:focus { border-color: var(--primary); }
 
-    .card-title { margin: 0; font-weight: 900; display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-lg); color: var(--text); }
+    input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
 
-    .field { display: flex; flex-direction: column; gap: var(--space-2); }
-
-    label { font-size: var(--font-xs); font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
-
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-    .label-text { font-weight: 800; color: var(--text); font-size: var(--font-sm); }
-
-    .pro-check { width: 44px; height: 22px; accent-color: var(--primary); cursor: pointer; }
-
-    .pro-input {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
-        padding: var(--space-4);
-        border-radius: var(--radius-md);
-        color: var(--text);
-        font-weight: 600;
-        transition: border-color var(--duration-fast);
+    .actions { display: flex; gap: 12px; }
+    .test-btn {
+        background: transparent; border: 1px solid var(--border-strong);
+        color: var(--text-main); padding: 0 16px; border-radius: 8px;
+        font-weight: 700; font-size: 0.85rem; cursor: pointer;
+        display: flex; align-items: center; gap: 8px; transition: all 0.2s;
     }
-    .pro-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1); outline: none; }
+    .test-btn:hover:not(:disabled) { background: var(--border-subtle); border-color: var(--text-muted); }
+    .test-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .btns { display: flex; gap: var(--space-4); }
+    .ops-grid { display: grid; gap: 12px; }
+    .op-card { padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+    .op-title { display: block; font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
+    .desc { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
 
-    .op-card {
-        background: var(--hover);
-        padding: var(--space-5);
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .op-btn {
+        background: var(--bg-surface-3); color: var(--text-main); border: none;
+        padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.8rem;
+        cursor: pointer; transition: background 0.2s;
     }
+    .op-btn:hover:not(:disabled) { background: var(--primary); }
+    .op-btn:disabled { opacity: 0.5; }
 
-    .op-info { display: flex; flex-direction: column; gap: var(--space-1); }
+    .status-box { padding: 24px; margin-top: auto; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .status-header { display: flex; justify-content: space-between; align-items: center; }
+    .status-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }
+    .status-val { font-size: 1.75rem; font-weight: 900; color: var(--text-secondary); letter-spacing: -0.01em; }
 
-    .status-box {
-        background: var(--bg-secondary);
-        padding: var(--space-8);
-        border-radius: var(--radius-xl);
-        border: 1px solid var(--border);
-        position: relative;
-        overflow: hidden;
-        min-height: 140px;
-    }
+    .stable .status-val { color: var(--success); }
+    .status-msg { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--success); }
 
-    .status-text { display: flex; flex-direction: column; gap: 4px; }
-    .status-val { font-weight: 900; font-size: var(--font-xl); letter-spacing: 0.05em; color: var(--text-dim); transition: color var(--duration-standard); }
+    .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); }
+    .pulse-dot.active { background: var(--primary); animation: pulse 1.5s infinite; }
 
-    .connected .status-val { color: var(--secondary); }
-    .connected .pulse-indicator { background: var(--secondary); box-shadow: 0 0 20px var(--secondary); }
-
-    .pulse-indicator { position: absolute; top: var(--space-8); right: var(--space-8); width: 16px; height: 16px; border-radius: var(--radius-full); background: var(--text-muted); transition: all var(--duration-standard); }
-    .pulse-indicator.pulse { background: var(--primary); animation: pulse-anim 1s infinite; }
-
-    @keyframes pulse-anim { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
-
-    .diff-status { display: flex; align-items: center; gap: 10px; font-size: var(--font-sm); color: var(--text); font-weight: 700; }
-
-    .mt-4 { margin-top: var(--space-4); }
-    .mt-6 { margin-top: var(--space-6); }
-    .mt-8 { margin-top: var(--space-8); }
-    .mt-10 { margin-top: var(--space-10); }
-    .bold { font-weight: 900; }
-    .uppercase { text-transform: uppercase; }
+    :global(.spin) { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
 
     @media (max-width: 1000px) { .sync-grid { grid-template-columns: 1fr; } }
 </style>

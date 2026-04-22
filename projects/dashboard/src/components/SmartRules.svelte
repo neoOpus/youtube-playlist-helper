@@ -3,13 +3,14 @@
   import { onMount } from "svelte";
   import { fade, fly, slide } from "svelte/transition";
   import {
-      CheckIcon,
-      TerminalIcon,
-      PlusMultiple,
-      DeleteIcon,
-      SuperButton,
-      InfoIcon
-  } from "@yph/ui-kit";
+      Terminal,
+      Plus,
+      Trash2,
+      Info,
+      Play,
+      CheckCircle2
+  } from "lucide-svelte";
+  import { SuperButton } from "@yph/ui-kit";
   import { storageService, playlistService, notificationService } from "@yph/core";
   import type { SmartRule, Playlist } from "@yph/core";
 
@@ -37,7 +38,7 @@
       rules = [...rules, rule];
       await storageService.updateSettings({ smartRules: rules });
       showBuilder = false;
-      notificationService.success("Smart Rule Protocol established.");
+      notificationService.success("Smart Rule established.");
       resetNewRule();
   }
 
@@ -64,7 +65,7 @@
 
   async function executeRules() {
       executing = true;
-      notificationService.info("Executing global maintenance protocols...");
+      notificationService.info("Executing maintenance protocols...");
       let modifiedCount = 0;
 
       try {
@@ -81,77 +82,57 @@
                       }
                   }
               }
-              if (plModified) {
-                  await storageService.savePlaylist(pl);
-              }
+              if (plModified) await storageService.savePlaylist(pl);
           }
-          notificationService.success(`Maintenance complete. ${modifiedCount} nodes optimized.`);
+          notificationService.success(`Maintenance complete: ${modifiedCount} nodes.`);
       } finally {
           executing = false;
       }
   }
 </script>
 
-<div class="smart-rules pro-glass mt-8" in:fade>
+<div class="smart-rules surface-1 mt-8">
     <div class="rules-header">
         <div class="title-meta">
-            <h3><TerminalIcon size="18" /> Smart Rules v2</h3>
-            <p>Automate infrastructure maintenance using AI signals.</p>
+            <h3>Smart Rules</h3>
+            <p class="text-secondary">Automate infrastructure maintenance using AI signals.</p>
         </div>
-        <SuperButton outline mini onclick={() => showBuilder = !showBuilder}>
+        <button class="add-btn" onclick={() => showBuilder = !showBuilder}>
             {showBuilder ? 'Cancel' : 'New Rule'}
-        </SuperButton>
+        </button>
     </div>
 
     {#if showBuilder}
         <div class="rule-builder mt-6" transition:slide>
-            <div class="builder-row">
+            <div class="field">
                 <span class="label">Rule Designation</span>
-                <input bind:value={newRule.name} placeholder="Rule Name" class="pro-input" />
+                <input bind:value={newRule.name} placeholder="Rule Name" />
             </div>
 
             <div class="logic-grid mt-4">
                 <div class="logic-block">
-                    <span class="label">Condition Field</span>
-                    <select bind:value={newRule.condition.field} class="pro-select">
+                    <span class="label">Field</span>
+                    <select bind:value={newRule.condition.field}>
                         <option value="rating">Rating</option>
                         <option value="vibe">Vibe</option>
                         <option value="tag">Tag</option>
-                        <option value="duration">Duration</option>
                     </select>
                 </div>
                 <div class="logic-block">
-                    <span class="label">Operator</span>
-                    <select bind:value={newRule.condition.operator} class="pro-select">
-                        <option value="gt">Greater Than</option>
-                        <option value="lt">Less Than</option>
-                        <option value="eq">Equals</option>
-                        <option value="contains">Contains</option>
+                    <span class="label">Op</span>
+                    <select bind:value={newRule.condition.operator}>
+                        <option value="gt">></option>
+                        <option value="lt"><</option>
+                        <option value="eq">=</option>
                     </select>
                 </div>
                 <div class="logic-block">
-                    <span class="label">Threshold Value</span>
-                    <input bind:value={newRule.condition.value} class="pro-input" />
+                    <span class="label">Value</span>
+                    <input bind:value={newRule.condition.value} />
                 </div>
             </div>
 
-            <div class="action-block mt-4">
-                <span class="label">Automated Action</span>
-                <div class="action-row">
-                    <select bind:value={newRule.action.type} class="pro-select">
-                        <option value="tag">Add Tag</option>
-                        <option value="rate">Set Rating</option>
-                        <option value="decommission">Mark for Decommission</option>
-                    </select>
-                    {#if newRule.action.type === 'tag'}
-                        <input bind:value={newRule.action.params.tag} placeholder="Tag" class="pro-input" />
-                    {:else if newRule.action.type === 'rate'}
-                        <input type="number" bind:value={newRule.action.params.rating} min="1" max="5" class="pro-input" />
-                    {/if}
-                </div>
-            </div>
-
-            <div class="builder-actions mt-6">
+            <div class="action-block mt-6">
                 <SuperButton primary fullWidth onclick={saveRule}>Commit Rule</SuperButton>
             </div>
         </div>
@@ -159,64 +140,67 @@
 
     <div class="rules-list mt-6">
         {#each rules as rule (rule.id)}
-            <div class="rule-item luminous-hover" class:inactive={!rule.active}>
+            <div class="rule-item surface-2" class:inactive={!rule.active}>
                 <div class="rule-status">
-                    <button class="status-toggle" onclick={() => toggleRule(rule)} aria-label="Toggle rule status">
-                        <div class="status-indicator" class:active={rule.active}></div>
+                    <button class="toggle" onclick={() => toggleRule(rule)}>
+                        <div class="dot" class:active={rule.active}></div>
                     </button>
                     <span class="rule-name">{rule.name}</span>
                 </div>
-                <div class="rule-ops">
-                    <button class="op-btn" onclick={() => deleteRule(rule.id)} title="Delete Rule"><DeleteIcon size="14" /></button>
-                </div>
+                <button class="delete-btn" onclick={() => deleteRule(rule.id)}><Trash2 size="14" /></button>
             </div>
         {:else}
-            <div class="empty-rules">
-                <InfoIcon size="24" />
-                <p>No active maintenance rules found.</p>
+            <div class="empty">
+                <Info size="24" class="text-muted" />
+                <p>No active rules detected.</p>
             </div>
         {/each}
     </div>
 
     {#if rules.length > 0}
-        <div class="maintenance-trigger mt-6">
-            <SuperButton outline fullWidth onclick={executeRules} disabled={executing}>
-                {#if executing}
-                    <TerminalIcon size="16" class="spin" /> Executing Protocols...
-                {:else}
-                    <PlusMultiple size="16" /> Execute Maintenance
-                {/if}
-            </SuperButton>
+        <div class="mt-6">
+            <button class="exec-btn" onclick={executeRules} disabled={executing}>
+                <Play size="14" />
+                <span>{executing ? 'Executing...' : 'Run Maintenance'}</span>
+            </button>
         </div>
     {/if}
 </div>
 
 <style>
-    .smart-rules { padding: var(--space-8); border: 1px solid var(--border); }
+    .smart-rules { padding: 24px; border: 1px solid var(--border-base); }
     .rules-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .title-meta h3 { margin: 0; font-size: var(--font-lg); font-weight: 800; display: flex; align-items: center; gap: 8px; }
-    .title-meta p { margin: 0; font-size: var(--font-xs); color: var(--text-muted); font-weight: 600; }
-    .rule-builder { background: var(--hover); padding: var(--space-6); border-radius: var(--radius-lg); border: 1px solid var(--border-strong); }
-    .logic-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .logic-block, .action-block { display: flex; flex-direction: column; gap: 6px; }
-    .label { font-size: 0.6rem; font-weight: 900; text-transform: uppercase; color: var(--text-dim); }
-    .pro-input, .pro-select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; width: 100%; outline: none; }
-    .pro-input:focus, .pro-select:focus { border-color: var(--primary); }
-    .action-row { display: flex; gap: 12px; }
-    .rule-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-secondary); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); transition: opacity 0.3s; }
-    .rule-item.inactive { opacity: 0.5; }
+    h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+    p { font-size: 0.8rem; margin: 0; }
+
+    .add-btn { background: var(--bg-surface-2); border: 1px solid var(--border-strong); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer; }
+
+    .rule-builder { padding: 16px; background: var(--bg-surface-2); border-radius: 8px; border: 1px solid var(--border-strong); }
+    .logic-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .logic-block { display: flex; flex-direction: column; gap: 4px; }
+    .label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); }
+
+    input, select { background: var(--bg-app); border: 1px solid var(--border-base); color: var(--text-main); padding: 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; width: 100%; outline: none; }
+    input:focus, select:focus { border-color: var(--primary); }
+
+    .rule-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; border: 1px solid var(--border-base); margin-bottom: 8px; }
     .rule-status { display: flex; align-items: center; gap: 12px; }
-    .status-toggle { background: transparent; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; }
-    .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--text-dim); transition: all 0.3s; }
-    .status-indicator.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
-    .rule-name { font-weight: 800; font-size: 0.85rem; color: var(--text); }
-    .op-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; transition: color 0.2s; }
-    .op-btn:hover { color: var(--error); }
-    .empty-rules { padding: 2rem; text-align: center; color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    .empty-rules p { font-size: 0.75rem; font-weight: 700; margin: 0; }
-    :global(.spin) { animation: spin 1s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .mt-4 { margin-top: 1rem; }
-    .mt-6 { margin-top: 1.5rem; }
+    .toggle { background: transparent; border: none; padding: 0; cursor: pointer; display: flex; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-dim); transition: all 0.2s; }
+    .dot.active { background: var(--success); }
+    .rule-name { font-weight: 700; font-size: 0.85rem; }
+
+    .delete-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
+    .delete-btn:hover { color: var(--danger); }
+
+    .empty { padding: 32px; text-align: center; color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .empty p { font-size: 0.8rem; font-weight: 600; margin: 0; }
+
+    .exec-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--bg-surface-2); border: 1px solid var(--primary); color: var(--primary); padding: 10px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .exec-btn:hover:not(:disabled) { background: var(--primary); color: white; }
+    .exec-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
     .mt-8 { margin-top: 2rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-4 { margin-top: 1rem; }
 </style>

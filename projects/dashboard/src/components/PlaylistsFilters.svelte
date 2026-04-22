@@ -2,9 +2,9 @@
 <script lang="ts">
   import { debounce, playlistsSorter } from "@yph/core";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
-  import { SearchIcon, Filter, TerminalIcon } from "@yph/ui-kit";
-  import { playlistsSearch, playlistsSorting } from "../stores/playlists-filters";
-  import { fly, fade } from "svelte/transition";
+  import { filtersState } from "../stores/playlists-filters";
+  import { fade, fly } from "svelte/transition";
+  import { Search, SlidersHorizontal, Cpu, X } from "lucide-svelte";
 
   let {
     playlists = [],
@@ -14,283 +14,123 @@
     filteredPlaylists: Playlist[];
   } = $props();
 
-  let selectedGroup = $state("All");
   let useRegex = $state(false);
   let searchInVideos = $state(true);
-  let showPowerFeatures = $state(false);
-  let isAutoRelevance = $state(false);
+  let showAdvanced = $state(false);
 
   let groups = $derived(["All", ...new Set(playlists.flatMap((p) => p.groups || []))]);
 
-  const debouncedFiltersUpdated = debounce(() => {
-    filtersUpdated();
-  }, 250);
-
-  function filtersUpdated() {
+  function applyFilters() {
     if (!playlists) return;
-
     let result = [...playlists];
 
-    // 1. Group Filter
-    if (selectedGroup !== "All") {
-      result = result.filter((p) => p.groups?.includes(selectedGroup));
+    if (filtersState.group !== "All") {
+      result = result.filter((p) => p.groups?.includes(filtersState.group));
     }
 
-    // 2. Search Filter
-    const searchStr = $playlistsSearch.trim();
-    if (searchStr) {
+    const query = filtersState.search.trim().toLowerCase();
+    if (query) {
       if (useRegex) {
         try {
-          const regex = new RegExp(searchStr, "i");
-          result = result.filter(
-            (p) => regex.test(p.title || "") ||
-                   p.groups?.some((g) => regex.test(g)) ||
-                   (searchInVideos && p.loadedVideos?.some(v => regex.test(v.title) || (v.aiTags || []).some(t => regex.test(t))))
-          );
-        } catch (e) {}
+          const regex = new RegExp(query, "i");
+          result = result.filter(p => regex.test(p.title) || (searchInVideos && p.loadedVideos?.some(v => regex.test(v.title))));
+        } catch {}
       } else {
-        const keywords = searchStr.toLowerCase().split(/\s+/).filter(k => k);
-        result = result.filter((p) => {
-          const lowerTitle = (p.title || "").toLowerCase();
-          const matchesTitle = keywords.every((k) => lowerTitle.includes(k));
-          const matchesVideos = searchInVideos && p.loadedVideos?.some(v =>
-            keywords.every(k =>
-                v.title.toLowerCase().includes(k) ||
-                (v.aiTags || []).some(t => t.toLowerCase().includes(k))
-            )
-          );
-          return matchesTitle || matchesVideos;
-        });
+        result = result.filter(p => p.title.toLowerCase().includes(query) || (searchInVideos && p.loadedVideos?.some(v => v.title.toLowerCase().includes(query))));
       }
     }
 
-    // 3. Sorting (Applied to the filtered subset)
-    const keywords = searchStr.split(/\s+/).filter((k) => k.length > 2);
-
-    // Auto-switch to relevance if searching and on default sort
-    if (searchStr.length > 3 && $playlistsSorting === 'date-created-desc' && !isAutoRelevance) {
-        isAutoRelevance = true;
-        playlistsSorting.set('relevance');
-    } else if (searchStr.length === 0 && isAutoRelevance) {
-        isAutoRelevance = false;
-        playlistsSorting.set('date-created-desc');
-    }
-
-    result = playlistsSorter.sort(result, $playlistsSorting, keywords);
+    result = playlistsSorter.sort(result, filtersState.sorting, query.split(/\s+/).filter(k => k.length > 2));
     filteredPlaylists = result;
   }
 
   $effect(() => {
-      playlists;
-      $playlistsSorting;
-      selectedGroup;
-      useRegex;
-      searchInVideos;
-      filtersUpdated();
+      playlists; filtersState.sorting; filtersState.group; filtersState.search;
+      applyFilters();
   });
-
-  $effect(() => {
-      $playlistsSearch;
-      debouncedFiltersUpdated();
-  });
-
-  function handleMouseMove(e: MouseEvent) {
-      const target = e.currentTarget as HTMLElement;
-      const rect = target.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      target.style.setProperty("--x", `${x}px`);
-      target.style.setProperty("--y", `${y}px`);
-  }
 </script>
 
-<aside class="pro-glass filters-bar luminous-hover" onmousemove={handleMouseMove}>
-  <div class="header-row">
-      <div class="stats aura-glow">
-        <h2>
-          <span class="badge primary">{filteredPlaylists?.length || 0}</span>
-          Nodes
-        </h2>
+<div class="filters-container">
+  <div class="main-bar surface-1">
+      <div class="search-area">
+          <Search size="18" class="search-icon" />
+          <input
+            type="text"
+            bind:value={filtersState.search}
+            placeholder="Search collections..."
+          />
+          {#if filtersState.search}
+            <button class="clear-btn" onclick={() => filtersState.search = ""}><X size="14" /></button>
+          {/if}
       </div>
 
-      <div class="search-box">
-          <div class="input-wrapper">
-              <SearchIcon size="16" color="var(--primary)" />
-              <input
-                type="text"
-                bind:value={$playlistsSearch}
-                placeholder={useRegex ? "Regex Search..." : "Deep Search nodes... (Press /)"}
-              />
-              {#if isAutoRelevance}
-                <div class="ai-badge" in:fade>
-                    <TerminalIcon size="12" />
-                    <span>SMART</span>
-                </div>
-              {/if}
+      <div class="divider"></div>
+
+      <div class="selectors">
+          <div class="select-wrap">
+              <span class="label">GROUP</span>
+              <select bind:value={filtersState.group}>
+                  {#each groups as g}
+                    <option value={g}>{g.toUpperCase()}</option>
+                  {/each}
+              </select>
           </div>
-          <button class="power-toggle" class:active={showPowerFeatures} onclick={() => showPowerFeatures = !showPowerFeatures} title="Advanced Filters">
-              <Filter size="16" />
-          </button>
+
+          <div class="select-wrap">
+              <span class="label">SORT</span>
+              <select bind:value={filtersState.sorting}>
+                  <option value="date-created-desc">RECENT</option>
+                  <option value="last-modified-desc">MODIFIED</option>
+                  <option value="relevance">RELEVANCE</option>
+                  <option value="video-count-desc">DENSITY</option>
+              </select>
+          </div>
       </div>
 
-      <div class="filters">
-          <label>
-            <span>Group</span>
-            <select bind:value={selectedGroup}>
-              {#each groups as group}
-                <option value={group}>{group === 'All' ? 'All Groups' : group}</option>
-              {/each}
-            </select>
-          </label>
-
-          <label>
-            <span>Sort</span>
-            <select bind:value={$playlistsSorting}>
-              <optgroup label="Timeline">
-                  <option value="date-created-desc">Recently Created</option>
-                  <option value="last-modified-desc">Recently Modified</option>
-                  <option value="date-created-asc">Earliest First</option>
-              </optgroup>
-              <optgroup label="Alphanumeric">
-                  <option value="title-az">Name (A-Z)</option>
-                  <option value="title-za">Name (Z-A)</option>
-              </optgroup>
-              <optgroup label="Density">
-                  <option value="video-count-desc">Highest Density</option>
-                  <option value="video-count-asc">Lowest Density</option>
-              </optgroup>
-              <optgroup label="Intelligence">
-                  <option value="relevance">Smart Relevance</option>
-              </optgroup>
-            </select>
-          </label>
-      </div>
+      <button class="toggle-btn" class:active={showAdvanced} onclick={() => showAdvanced = !showAdvanced}>
+          <SlidersHorizontal size="18" />
+      </button>
   </div>
 
-  {#if showPowerFeatures}
-  <div class="power-row" in:fly={{ y: -10, duration: 300 }}>
-      <div class="power-options">
-          <div class="checks">
-              <label class="check-opt">
-                  <input type="checkbox" bind:checked={useRegex} />
-                  <span>Regex Mode</span>
-              </label>
-              <label class="check-opt">
-                  <input type="checkbox" bind:checked={searchInVideos} />
-                  <span>Deep Search</span>
-              </label>
-          </div>
-          <span class="power-hint">Powered by Pro Heuristics.</span>
-      </div>
-  </div>
+  {#if showAdvanced}
+    <div class="advanced-panel surface-1" in:fly={{ y: -10, duration: 200 }}>
+        <div class="options">
+            <label class="check-label">
+                <input type="checkbox" bind:checked={useRegex} />
+                <span>Regex Protocol</span>
+            </label>
+            <label class="check-label">
+                <input type="checkbox" bind:checked={searchInVideos} />
+                <span>Recursive Scan</span>
+            </label>
+        </div>
+        <div class="info">
+            <Cpu size="12" />
+            <span>HEURISTICS_V4_ACTIVE</span>
+        </div>
+    </div>
   {/if}
-</aside>
+</div>
 
 <style>
-  .filters-bar {
-    padding: var(--space-4) var(--space-6);
-    position: sticky;
-    top: 0;
-    width: 100%;
-    z-index: 50;
-    margin-bottom: var(--space-8);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    border: 1px solid var(--border-strong);
-    background: var(--card-bg-alpha);
-  }
-
-  .header-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); width: 100%; }
-  .search-box { flex-grow: 1; display: flex; align-items: center; gap: var(--space-2); max-width: 600px; }
-
-  .input-wrapper {
-      position: relative;
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 0 var(--space-4);
-      transition: all 0.3s;
-  }
-
-  .input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.12); }
-
-  .input-wrapper input {
-      border: none;
-      background: transparent;
-      padding: var(--space-3) var(--space-2);
-      width: 100%;
-      outline: none;
-      font-size: var(--font-sm);
-      color: var(--text);
-      font-weight: 500;
-  }
-
-  .ai-badge {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      background: var(--primary);
-      color: white;
-      border-radius: 4px;
-      font-size: 0.6rem;
-      font-weight: 900;
-      letter-spacing: 1px;
-      flex-shrink: 0;
-  }
-
-  .power-toggle {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: var(--space-3);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      transition: all 0.2s;
-      color: var(--text-muted);
-  }
-
-  .power-toggle.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-  .power-row { padding: var(--space-3) var(--space-5); background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); border: 1px dashed var(--border-strong); }
-  .power-options { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
-  .checks { display: flex; gap: var(--space-8); }
-  .check-opt { display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-xs); font-weight: 700; cursor: pointer; }
-  .check-opt input { width: 16px; height: 16px; accent-color: var(--primary); }
-  .power-hint { font-size: var(--font-xs); color: var(--text-muted); font-weight: 600; opacity: 0.7; font-style: italic; }
-
-  .filters { display: flex; gap: var(--space-4); }
-
-  label {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: var(--font-sm);
-      color: var(--text-muted);
-  }
-
-  select {
-      padding: var(--space-2) var(--space-4);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border);
-      background-color: var(--bg-secondary);
-      color: var(--text);
-      outline: none;
-      font-weight: 700;
-      font-size: var(--font-sm);
-      cursor: pointer;
-  }
-
-  h2 { font-weight: 900; letter-spacing: -0.04em; font-size: var(--font-lg); display: flex; align-items: center; gap: 10px; margin: 0; }
-
-  @media (max-width: 1100px) {
-      .header-row { flex-direction: column; align-items: stretch; gap: var(--space-4); }
-      .search-box { max-width: none; }
-      .filters { justify-content: flex-end; }
-  }
+  .filters-container { display: flex; flex-direction: column; gap: 8px; position: sticky; top: var(--ui-padding); z-index: 100; margin-bottom: 24px; }
+  .main-bar { display: flex; align-items: center; padding: 4px; gap: 4px; box-shadow: var(--shadow-md); border-radius: 12px; }
+  .search-area { flex: 1; display: flex; align-items: center; padding: 0 12px; gap: 12px; }
+  :global(.search-icon) { color: var(--text-muted); }
+  input { flex: 1; background: transparent; border: none; padding: 10px 0; color: var(--text-main); font-weight: 600; outline: none; font-size: 0.95rem; }
+  .clear-btn { background: var(--bg-surface-2); border: none; color: var(--text-muted); padding: 4px; border-radius: 50%; cursor: pointer; display: flex; }
+  .divider { width: 1px; height: 24px; background: var(--border-base); margin: 0 8px; }
+  .selectors { display: flex; gap: 16px; padding-right: 12px; }
+  .select-wrap { display: flex; flex-direction: column; gap: 2px; }
+  .label { font-size: 0.55rem; font-weight: 800; color: var(--text-dim); letter-spacing: 0.05em; }
+  select { background: transparent; border: none; color: var(--text-main); font-weight: 700; font-size: 0.75rem; outline: none; cursor: pointer; padding: 0; }
+  .toggle-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  .toggle-btn:hover { background: var(--bg-surface-2); color: var(--text-main); }
+  .toggle-btn.active { color: var(--primary); background: rgba(var(--primary-rgb), 0.1); }
+  .advanced-panel { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px; border-color: var(--border-subtle); }
+  .options { display: flex; gap: 24px; }
+  .check-label { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+  .check-label input { accent-color: var(--primary); }
+  .info { display: flex; align-items: center; gap: 6px; font-size: 0.6rem; font-weight: 800; color: var(--text-dim); letter-spacing: 0.05em; }
+  @media (max-width: 900px) { .main-bar { flex-wrap: wrap; padding: 12px; } .search-area { width: 100%; flex: none; border-bottom: 1px solid var(--border-base); margin-bottom: 8px; } .divider { display: none; } }
 </style>

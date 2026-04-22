@@ -1,258 +1,201 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, slide } from "svelte/transition";
+  import { fade, fly, slide } from "svelte/transition";
   import { flip } from "svelte/animate";
-  import { router } from "../stores/router";
   import {
     storageService,
     videoService,
-    aiService,
-    playlistService,
     actionLogger,
-    notificationService
+    notificationService,
+    playlistService,
+    aiService
   } from "@yph/core";
   import type { Playlist, Video } from "@yph/core";
   import PlaylistVideo from "./PlaylistVideo.svelte";
   import SimplePagination from "./SimplePagination.svelte";
   import SectorDna from "./SectorDna.svelte";
   import {
-    SaveIcon,
-    PlusMultiple,
-    RemoveDuplicates,
-    TerminalIcon,
-    SearchIcon,
-    SuperButton,
-    Breadcrumbs
-  } from "@yph/ui-kit";
+    Plus,
+    Trash2,
+    Dna,
+    Zap,
+    Save,
+    Search,
+    ChevronLeft,
+    Layers,
+    Terminal
+  } from "lucide-svelte";
+  import { router } from "../stores/router";
+  import { appState } from "../stores/theme.svelte";
+
+  let { onsave = () => {}, params = { id: "" } } = $props();
 
   let playlist = $state<Playlist | null>(null);
   let videos = $state<Video[]>([]);
   let loading = $state(true);
-  let searchQuery = $state("");
-  let showBulkAdd = $state(false);
   let bulkInput = $state("");
-  let hovering = $state<number | null>(null);
+  let showBulkAdd = $state(false);
+  let searchQuery = $state("");
 
   let currentPage = $state(1);
   let pageSize = 20;
 
   onMount(async () => {
-      const id = $router.params?.id;
-      if (id) {
-          playlist = await storageService.getPlaylist(id);
-          if (playlist) {
-              videos = playlist.loadedVideos || [];
-          }
-      } else {
-          playlist = {
-              id: crypto.randomUUID(),
-              title: "",
-              loadedVideos: [],
-              videos: [],
-              timestamp: Date.now()
-          };
-          videos = [];
-      }
-      loading = false;
+    if (params.id) {
+        const data = await storageService.getPlaylist(params.id);
+        if (data) {
+            playlist = data;
+            const loaded = [];
+            for (const vidId of data.videos) {
+                loaded.push(await videoService.fetchVideo(vidId));
+            }
+            videos = loaded.filter(v => v) as Video[];
+        }
+    } else {
+        playlist = { id: "", title: "New Intelligence Node", videos: [], timestamp: Date.now() };
+    }
+    loading = false;
   });
 
   async function save() {
       if (!playlist) return;
-      playlist.loadedVideos = videos;
+      playlist.videos = videos.map(v => v.videoId);
       playlist.lastModified = Date.now();
-      await storageService.savePlaylist(playlist);
+      const id = await storageService.savePlaylist(playlist);
+      playlist.id = id;
+      onsave();
       notificationService.success("Infrastructure synchronized.");
   }
 
-  async function addVideos() {
+  function addVideos() {
       const ids = videoService.parseYoutubeIds(bulkInput);
       const newVideos = ids.map(id => videoService.createVideo(id));
       videos = [...videos, ...newVideos];
       bulkInput = "";
       showBulkAdd = false;
-      notificationService.success(`Linked ${newVideos.length} new nodes.`);
   }
 
   function removeVideo(video: Video) {
-      const previous = [...videos];
-      actionLogger.log(`Remove ${video.title}`, async () => {
-          videos = previous;
-      });
       videos = videos.filter(v => v.videoId !== video.videoId);
-  }
-
-  function handleRemoveDuplicates() {
-      const result = playlistService.removeDuplicates(videos);
-      if (result.duplicatesCount > 0) {
-          const previous = [...videos];
-          actionLogger.log(`Remove ${result.duplicatesCount} duplicates`, async () => {
-              videos = previous;
-          });
-          videos = result.uniqueVideos;
-          notificationService.success(`Purged ${result.duplicatesCount} duplicate nodes.`);
-      } else {
-          notificationService.info("No duplicates found in this sequence.");
-      }
-  }
-
-  function optimizeSequence() {
-      const previous = [...videos];
-      actionLogger.log("Optimize sequence", async () => {
-          videos = previous;
-      });
-      videos = aiService.sequenceOptimizer.optimize(videos);
-      notificationService.success("Infrastructure sequence optimized.");
   }
 
   let filteredVideos = $derived(
     searchQuery
-      ? videos.filter(v =>
-          (v.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (v.videoId || "").toLowerCase().includes(searchQuery.toLowerCase())
-        )
+      ? videos.filter(v => (v.title || "").toLowerCase().includes(searchQuery.toLowerCase()))
       : videos
   );
 
-  let paginatedVideos = $derived(
-    filteredVideos.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  );
-
-  function handleMouseMove(e: MouseEvent) {
-      const target = e.currentTarget as HTMLElement;
-      const rect = target.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      target.style.setProperty("--x", `${x}px`);
-      target.style.setProperty("--y", `${y}px`);
-  }
+  let paginatedIndices = $derived.by(() => {
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      return filteredVideos.slice(start, end).map(v => videos.indexOf(v));
+  });
 </script>
 
-<div class="editor-view view-container" in:fade>
+<div class="editor-view">
     {#if loading}
-        <div class="loader aura-glow">Pro Alignment in Progress...</div>
+        <div class="loader">Aligning Neural Nodes...</div>
     {:else if playlist}
-        <header class="editor-header aura-glow">
-            <div class="title-section">
-                <Breadcrumbs items={[{label: 'INFRASTRUCTURE'}, {label: 'SEQUENCE EDITOR', active: true}]} />
-                <input class="pl-title-input" bind:value={playlist.title} placeholder="Untitled Infrastructure..." />
-                <span class="pl-meta">{videos.length} nodes currently indexed</span>
+        <header class="editor-header">
+            <div class="header-left">
+                <button class="back-btn" onclick={() => router.push('/')}><ChevronLeft size="18" /></button>
+                <div class="title-wrap">
+                    <input class="title-input" bind:value={playlist.title} />
+                    <span class="meta">{videos.length} NODES_INDEXED</span>
+                </div>
             </div>
             <div class="header-actions">
-                <SuperButton outline onclick={() => showBulkAdd = !showBulkAdd}>
-                    <PlusMultiple size="18" /> Bulk Link
-                </SuperButton>
-                <SuperButton outline onclick={handleRemoveDuplicates} title="Deduplicate Nodes">
-                    <RemoveDuplicates size="18" /> Deduplicate
-                </SuperButton>
-                <SuperButton outline onclick={optimizeSequence} title="AI Smart Reorder">
-                    <TerminalIcon size="18" /> Optimize
-                </SuperButton>
-                <SuperButton onclick={save}>
-                    <SaveIcon size="18" /> Sync Changes
-                </SuperButton>
+                <button class="outline-btn" onclick={() => showBulkAdd = !showBulkAdd}><Plus size="16" /> INTAKE</button>
+                <button class="primary-btn" onclick={save}><Save size="16" /> SYNC</button>
             </div>
         </header>
 
-        <div class="editor-content-grid">
-            <div class="main-column">
+        <div class="editor-grid">
+            <div class="main-col">
                 {#if showBulkAdd}
-                    <div class="bulk-add-pane pro-glass-high" transition:slide>
-                        <h3 class="card-title mb-4"><PlusMultiple size="18" /> Bulk Node Intake</h3>
-                        <textarea bind:value={bulkInput} placeholder="Paste YouTube URLs or IDs (one per line)..."></textarea>
-                        <div class="row justify-end mt-4">
-                            <SuperButton onclick={addVideos}>Link Nodes</SuperButton>
+                    <div class="bulk-pane surface-2" transition:slide>
+                        <textarea bind:value={bulkInput} placeholder="Paste identifiers..."></textarea>
+                        <div class="pane-footer">
+                            <button class="primary-btn" onclick={addVideos}>PROCESS_INTAKE</button>
                         </div>
                     </div>
                 {/if}
 
-                <div class="search-bar pro-glass luminous-hover" onmousemove={handleMouseMove} role="searchbox" tabindex="0">
-                    <SearchIcon size="18" color="var(--primary)" />
-                    <input type="text" bind:value={searchQuery} placeholder="Filter indexed nodes..." class="ghost-input" />
+                <div class="search-bar surface-1">
+                    <Search size="18" class="text-secondary" />
+                    <input type="text" bind:value={searchQuery} placeholder="Query nodes..." />
                 </div>
 
-                <div class="video-list mt-8" role="list">
-                    {#each paginatedVideos as _, index (paginatedVideos[index].videoId)}
-                        <div
-                            animate:flip={{ duration: 400 }}
-                            class:is-hovering={hovering === index}
-                            role="listitem"
-                            class="video-card-wrapper"
-                        >
-                            <PlaylistVideo bind:video={videos[index + (currentPage - 1) * pageSize]} ondelete={removeVideo} active={false} />
+                <div class="video-stack">
+                    {#each paginatedIndices as idx (videos[idx].videoId)}
+                        <div animate:flip={{ duration: 200 }}>
+                            <PlaylistVideo bind:video={videos[idx]} ondelete={removeVideo} />
                         </div>
                     {/each}
 
                     {#if videos.length === 0}
-                        <div class="empty-state pro-glass" in:fade>
-                            <TerminalIcon size="48" color="var(--primary)" />
-                            <h3>No Active Nodes</h3>
-                            <p class="muted">This infrastructure node is currently empty. Use "Bulk Link" to ingest data.</p>
+                        <div class="empty-state surface-1">
+                            <Terminal size="32" class="text-muted" />
+                            <p>No active nodes detected in this sector.</p>
                         </div>
                     {/if}
                 </div>
 
-                <SimplePagination
-                    totalItems={filteredVideos.length}
-                    {pageSize}
-                    bind:currentPage={currentPage}
-                    onchange={(p) => currentPage = p}
-                />
+                <SimplePagination totalItems={filteredVideos.length} {pageSize} bind:currentPage />
             </div>
 
-            <aside class="editor-sidebar">
-                <SectorDna playlist={{...playlist, loadedVideos: videos}} />
+            <aside class="side-col">
+                <section class="dna-card surface-1">
+                    <div class="card-header"><Dna size="18" /> <span>SECTOR_DNA</span></div>
+                    <SectorDna playlist={{...playlist, loadedVideos: videos}} />
+                </section>
 
-                <div class="sidebar-help pro-glass mt-6">
-                    <h4 class="small-title">Sequence Optimization</h4>
-                    <p class="small muted">The Sector DNA analysis updates in real-time as you modify the infrastructure sequence. Use "Optimize" to let the neural engine reorder nodes for maximum resonance.</p>
-                </div>
+                <section class="help-card surface-1 mt-6">
+                    <h3>Optimization Agent</h3>
+                    <p>Real-time heuristic analysis is active. Node sequence is being monitored for resonance stability.</p>
+                </section>
             </aside>
-        </div>
-    {:else}
-        <div class="error-state pro-glass">
-            <h2>Critical Failure: Node Collection Not Found</h2>
-            <p>The requested playlist infrastructure is offline or inaccessible.</p>
         </div>
     {/if}
 </div>
 
 <style>
-    .view-container { padding: var(--space-8); max-width: 1600px; margin: 0 auto; }
-    .editor-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--space-12); padding-bottom: var(--space-8); border-bottom: 1px solid var(--border); }
-    .title-section { text-align: left; flex-grow: 1; }
-    .pl-title-input { background: transparent; border: none; font-size: var(--font-4xl); font-weight: 900; color: var(--text); outline: none; letter-spacing: -0.07em; width: 100%; padding: 0; transition: all 0.3s; margin-top: var(--space-2); }
-    .pl-title-input:focus { color: var(--primary); }
-    .pl-meta { display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-top: var(--space-1); letter-spacing: 0.1em; opacity: 0.7; }
-    .header-actions { display: flex; gap: var(--space-3); }
+    .editor-view { display: flex; flex-direction: column; gap: 32px; }
+    .editor-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 24px; border-bottom: 1px solid var(--border-base); }
 
-    .editor-content-grid { display: grid; grid-template-columns: 1fr 340px; gap: var(--space-10); align-items: start; }
+    .header-left { display: flex; align-items: center; gap: 20px; }
+    .back-btn { background: var(--bg-surface-1); border: 1px solid var(--border-base); color: var(--text-main); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-    .bulk-add-pane { padding: var(--space-8); margin-bottom: var(--space-8); border: 1px dashed var(--primary); background: rgba(var(--primary-rgb), 0.02); }
-    .card-title { font-weight: 900; display: flex; align-items: center; gap: 8px; }
-    textarea { width: 100%; height: 160px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); color: var(--text); font-family: 'JetBrains Mono', monospace; resize: none; outline: none; font-size: var(--font-sm); transition: border-color 0.3s; }
-    textarea:focus { border-color: var(--primary); }
-    .search-bar { padding: var(--space-4) var(--space-6); display: flex; align-items: center; gap: var(--space-4); border-radius: var(--radius-xl); background: var(--bg-secondary); border: 1px solid var(--border); }
-    .ghost-input { background: transparent !important; border: none !important; color: var(--text) !important; width: 100%; outline: none !important; font-weight: 800 !important; font-size: var(--font-lg) !important; box-shadow: none !important; padding: 0 !important; }
-    .video-list { display: flex; flex-direction: column; gap: var(--space-3); min-height: 200px; }
-    .video-card-wrapper { transition: transform 0.3s var(--easing-standard); }
+    .title-wrap { display: flex; flex-direction: column; }
+    .title-input { background: transparent; border: none; font-size: 1.75rem; font-weight: 800; color: var(--text-main); outline: none; letter-spacing: -0.02em; }
+    .meta { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); letter-spacing: 0.1em; }
 
-    .sidebar-help { padding: var(--space-6); border: 1px solid var(--border); }
-    .small-title { margin: 0 0 8px 0; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); }
-    .small { font-size: 0.7rem; line-height: 1.5; font-weight: 600; }
+    .header-actions { display: flex; gap: 12px; }
+    .primary-btn { background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .outline-btn { background: transparent; border: 1px solid var(--border-strong); color: var(--text-main); padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
-    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-16); text-align: center; gap: var(--space-4); background: rgba(var(--primary-rgb), 0.02); border: 1px dashed var(--border); }
-    .empty-state h3 { font-size: var(--font-xl); font-weight: 900; }
-    .loader { padding: var(--space-16); text-align: center; font-size: var(--font-xl); font-weight: 900; color: var(--primary); }
-    .error-state { text-align: center; padding: var(--space-16); }
-    .mt-8 { margin-top: var(--space-8); }
+    .editor-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; }
+
+    .bulk-pane { padding: 16px; margin-bottom: 24px; border: 1px dashed var(--primary); }
+    textarea { width: 100%; height: 120px; background: var(--bg-app); border: 1px solid var(--border-base); padding: 12px; color: var(--text-main); font-family: monospace; resize: none; outline: none; border-radius: 6px; }
+    .pane-footer { display: flex; justify-content: flex-end; margin-top: 12px; }
+
+    .search-bar { display: flex; align-items: center; padding: 0 16px; gap: 12px; margin-bottom: 24px; }
+    .search-bar input { flex: 1; background: transparent; border: none; padding: 12px 0; color: var(--text-main); font-weight: 600; outline: none; }
+
+    .video-stack { display: flex; flex-direction: column; gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-base); border-radius: 8px; overflow: hidden; }
+
+    .side-col { display: flex; flex-direction: column; }
+    .dna-card, .help-card { padding: 24px; }
+    .card-header { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 16px; border-bottom: 1px solid var(--border-base); padding-bottom: 12px; }
+
+    .help-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+    .help-card p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; font-weight: 500; }
+
+    .loader { padding: 100px; text-align: center; font-weight: 800; color: var(--primary); }
+    .empty-state { padding: 60px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .mt-6 { margin-top: 1.5rem; }
-    .mb-4 { margin-bottom: var(--space-4); }
-    .row { display: flex; }
-    .justify-end { justify-content: flex-end; }
 
-    @media (max-width: 1200px) {
-        .editor-content-grid { grid-template-columns: 1fr; }
-        .editor-sidebar { order: -1; }
-    }
+    @media (max-width: 1100px) { .editor-grid { grid-template-columns: 1fr; } }
 </style>
