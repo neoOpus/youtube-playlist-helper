@@ -17,6 +17,7 @@
     children?: Snippet;
     ariaLabel?: string;
     style?: string;
+    fullWidth?: boolean;
   }
 
   let {
@@ -33,7 +34,8 @@
     class: className = "",
     children,
     ariaLabel,
-    style = ""
+    style = "",
+    fullWidth = false
   }: Props = $props();
 
   let ripples = $state<{id: number, x: number, y: number}[]>([]);
@@ -71,7 +73,7 @@
 </script>
 
 <button
-  class="super-button luminous-hover {className}"
+  class="super-button luminous-hover {className}" class:full-width={fullWidth}
   class:is-primary={primary}
   class:is-secondary={secondary}
   class:is-danger={danger}
@@ -99,6 +101,7 @@
 </button>
 
 <style>
+  .super-button.full-width { width: 100%; }
   .super-button {
     position: relative;
     padding: var(--space-3) var(--space-6);

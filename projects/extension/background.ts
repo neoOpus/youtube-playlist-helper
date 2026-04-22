@@ -1,4 +1,5 @@
-import { storageService, videoService } from '@yph/core';
+import { storageService } from '../core/services/storage-service.js';
+import { videoService } from '../core/services/video-service.js';
 
 const playlistBuilderId = "yphPlaylistBuilder";
 const playlistBuilderPageId = "yphPlaylistBuilderPage";
@@ -139,11 +140,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function createPlaylist(videoIds: string[], title?: string) {
   if (videoIds.length === 0) return;
-  const playlist = await videoService.generatePlaylist(videoIds, title);
+  const playlist = {
+      id: Date.now().toString(),
+      title: title || "New Playlist",
+      videos: videoIds,
+      timestamp: Date.now(),
+      saved: true
+  };
   const settings = await storageService.getSettings();
-  let playlistId;
+  let playlistId = playlist.id;
   if (settings.saveCreatedPlaylists) {
-    playlistId = await storageService.savePlaylist(playlist);
+    playlistId = await storageService.savePlaylist(playlist as any);
   }
 
   if (settings.openPlaylistEditorAfterCreation) {
@@ -151,8 +158,6 @@ async function createPlaylist(videoIds: string[], title?: string) {
       ? chrome.runtime.getURL(`/editor/index.html?id=${playlistId}#/editor`)
       : chrome.runtime.getURL(`/editor/index.html?videoIds=${videoIds.join(",")}#/editor`);
     await chrome.tabs.create({ url });
-  } else {
-    await videoService.openPlaylist(videoIds);
   }
 }
 
@@ -236,9 +241,6 @@ function notify(message: string, isInfo = false) {
   });
 }
 
-// Initial badge update
 fetchBuilder().then(builder => {
-  if (builder.length > 0) {
-    chrome.action.setBadgeText({ text: "" + builder.length });
-  }
+  if (builder.length > 0) chrome.action.setBadgeText({ text: "" + builder.length });
 });

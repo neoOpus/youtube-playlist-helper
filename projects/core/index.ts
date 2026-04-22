@@ -11,6 +11,7 @@ export * from "./services/history-service.js";
 export * from "./services/prediction-engine.js";
 export * from "./services/enrichment-agent.js";
 export * from "./services/utils.js";
+export * from "./services/notification-service.js";
 export * from "./services/playlist-service.js";
 export * from "./services/sync-service.js";
 export * from "./services/webdav-service.js";

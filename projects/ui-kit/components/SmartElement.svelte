@@ -1,6 +1,18 @@
 <svelte:options runes={true} />
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, type Snippet } from "svelte";
+
+  interface Props {
+    active?: boolean;
+    selected?: boolean;
+    disabled?: boolean;
+    className?: string;
+    ariaLabel?: string;
+    style?: string;
+    children?: Snippet;
+    onclick?: (e: MouseEvent) => void;
+    title?: string;
+  }
 
   let {
     active = false,
@@ -9,14 +21,20 @@
     className = "",
     ariaLabel = "",
     style = "",
-    children
-  } = $props();
+    children,
+    onclick,
+    title
+  }: Props = $props();
 
   const dispatch = createEventDispatcher();
 
   function handleClick(e: MouseEvent) {
       if (disabled) return;
-      dispatch("click", e);
+      if (onclick) {
+          onclick(e);
+      } else {
+          dispatch("click", e);
+      }
   }
 </script>
 
@@ -29,6 +47,7 @@
   role="presentation"
   aria-label={ariaLabel}
   onclick={handleClick}
+  {title}
 >
   {@render children?.()}
 </div>
