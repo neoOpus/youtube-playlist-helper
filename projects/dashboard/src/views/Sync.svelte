@@ -93,7 +93,7 @@
             </div>
 
             <div class="btns mt-10">
-                <SuperButton onclick={save} >
+                <SuperButton primary onclick={save} >
                     <CheckIcon size="18" /> Lock Config
                 </SuperButton>
                 <SuperButton outline onclick={test} disabled={testing || !syncEnabled}>
@@ -142,33 +142,83 @@
 <style>
     .view-container { padding: var(--space-8); max-width: 1400px; margin: 0 auto; }
     .view-header { margin-bottom: var(--space-12); }
+    .header-content h1 { font-size: var(--font-2xl); margin-top: var(--space-2); font-weight: 900; }
+
     .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-10); }
-    .pro-glass { padding: var(--space-10); border: 1px solid var(--border); }
+
+    .pro-glass {
+        padding: var(--space-10);
+        background: var(--card-bg-alpha);
+        backdrop-filter: blur(40px) saturate(180%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+    }
+
     .card-title { margin: 0; font-weight: 900; display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-lg); color: var(--text); }
+
     .field { display: flex; flex-direction: column; gap: var(--space-2); }
-    label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    label { font-size: var(--font-xs); font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
     .toggle-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .label-text { font-weight: 800; color: var(--text); font-size: var(--font-sm); }
+
     .pro-check { width: 44px; height: 22px; accent-color: var(--primary); cursor: pointer; }
-    .pro-input { background: var(--bg-secondary); border: 1px solid var(--border); padding: var(--space-4); border-radius: var(--radius-md); color: var(--text); font-weight: 600; }
+
+    .pro-input {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        padding: var(--space-4);
+        border-radius: var(--radius-md);
+        color: var(--text);
+        font-weight: 600;
+        transition: border-color var(--duration-fast);
+    }
     .pro-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1); outline: none; }
+
     .btns { display: flex; gap: var(--space-4); }
-    .op-card { background: rgba(var(--primary-rgb), 0.02); padding: var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+
+    .op-card {
+        background: var(--hover);
+        padding: var(--space-5);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
     .op-info { display: flex; flex-direction: column; gap: var(--space-1); }
-    .status-box { background: var(--bg-secondary); padding: var(--space-8); border-radius: var(--radius-xl); border: 1px solid var(--border); position: relative; overflow: hidden; min-height: 140px; }
+
+    .status-box {
+        background: var(--bg-secondary);
+        padding: var(--space-8);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+        min-height: 140px;
+    }
+
     .status-text { display: flex; flex-direction: column; gap: 4px; }
-    .status-val { font-weight: 900; font-size: 2rem; letter-spacing: 0.05em; color: var(--text-muted); font-family: 'Inter', sans-serif; transition: color 0.3s; }
-    .connected .status-val { color: var(--success); }
-    .connected .pulse-indicator { background: var(--success); box-shadow: 0 0 20px var(--success); }
-    .pulse-indicator { position: absolute; top: var(--space-8); right: var(--space-8); width: 16px; height: 16px; border-radius: 50%; background: var(--text-muted); transition: all 0.3s; }
+    .status-val { font-weight: 900; font-size: var(--font-xl); letter-spacing: 0.05em; color: var(--text-dim); transition: color var(--duration-standard); }
+
+    .connected .status-val { color: var(--secondary); }
+    .connected .pulse-indicator { background: var(--secondary); box-shadow: 0 0 20px var(--secondary); }
+
+    .pulse-indicator { position: absolute; top: var(--space-8); right: var(--space-8); width: 16px; height: 16px; border-radius: var(--radius-full); background: var(--text-muted); transition: all var(--duration-standard); }
     .pulse-indicator.pulse { background: var(--primary); animation: pulse-anim 1s infinite; }
+
     @keyframes pulse-anim { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+
     .diff-status { display: flex; align-items: center; gap: 10px; font-size: var(--font-sm); color: var(--text); font-weight: 700; }
-    .mt-4 { margin-top: 1rem; }
-    .mt-6 { margin-top: 1.5rem; }
-    .mt-8 { margin-top: 2rem; }
-    .mt-10 { margin-top: 2.5rem; }
+
+    .mt-4 { margin-top: var(--space-4); }
+    .mt-6 { margin-top: var(--space-6); }
+    .mt-8 { margin-top: var(--space-8); }
+    .mt-10 { margin-top: var(--space-10); }
     .bold { font-weight: 900; }
     .uppercase { text-transform: uppercase; }
+
     @media (max-width: 1000px) { .sync-grid { grid-template-columns: 1fr; } }
 </style>

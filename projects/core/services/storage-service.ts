@@ -1,5 +1,3 @@
-/// <reference path="../types/services.ts" />
-
 import type { Playlist, Settings } from "../types/model";
 
 /**
@@ -37,8 +35,8 @@ function playlistToDto(playlist: Playlist) {
  * Notifies the extension that saved playlists have changed.
  */
 function notifySavedPlaylistsChanged() {
-  if (typeof browser !== "undefined" && browser.runtime?.sendMessage) {
-    browser.runtime.sendMessage({
+  if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+    chrome.runtime.sendMessage({
       cmd: "update-saved-playlists",
     }).catch(() => { /* Ignore errors if background script is not active */ });
   }
@@ -81,15 +79,16 @@ export const storageService = {
    * @returns The fetched object or default value.
    */
   async fetchObject(id: string, defaultValue: any): Promise<any> {
-    if (typeof browser !== "undefined" && browser.storage) {
-      const result = await browser.storage.local.get(id);
-      if (result && result[id] != null) {
-        if (typeof defaultValue === "number") {
-          return +result[id];
-        }
-        return result[id];
-      }
-      return defaultValue;
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      return new Promise((resolve) => {
+          chrome.storage.local.get(id, (result) => {
+              if (result && result[id] != null) {
+                  resolve(typeof defaultValue === "number" ? +result[id] : result[id]);
+              } else {
+                  resolve(defaultValue);
+              }
+          });
+      });
     } else {
       const value = localStorage.getItem(id);
       if (value) {
@@ -114,9 +113,8 @@ export const storageService = {
    */
   async storeObject(id: string, obj: any): Promise<void> {
     const value = obj ? (typeof obj === "string" ? obj : JSON.stringify(obj)) : null;
-    if (typeof browser !== "undefined" && browser.storage) {
-      const items = { [id]: value };
-      await browser.storage.local.set(items);
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      await chrome.storage.local.set({ [id]: value });
     } else {
       if (value === null) {
         localStorage.removeItem(id);
@@ -136,8 +134,10 @@ export const storageService = {
    * @returns A record of all objects.
    */
   async fetchAllObjects(): Promise<Record<string, any>> {
-    if (typeof browser !== "undefined" && browser.storage) {
-      return browser.storage.local.get(null);
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      return new Promise((resolve) => {
+          chrome.storage.local.get(null, (result) => resolve(result || {}));
+      });
     } else {
       const all: Record<string, any> = {};
       for (let i = 0; i < localStorage.length; i++) {
@@ -160,8 +160,8 @@ export const storageService = {
    * @param id The key of the object.
    */
   async removeObject(id: string): Promise<void> {
-    if (typeof browser !== "undefined" && browser.storage) {
-      await browser.storage.local.remove(id);
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      await chrome.storage.local.remove(id);
     } else {
       localStorage.removeItem(id);
     }
@@ -172,12 +172,11 @@ export const storageService = {
    * @returns A promise resolving to the new ID.
    */
   async generatePlaylistId(): Promise<string> {
-    if (typeof browser !== "undefined" && browser.storage) {
-      const obj = await browser.storage.local.get(ID_COUNTER_KEY);
-      let count = obj[ID_COUNTER_KEY] || 0;
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      const result: any = await this.fetchObject(ID_COUNTER_KEY, 0);
+      let count = result || 0;
       count++;
-      obj[ID_COUNTER_KEY] = count;
-      await browser.storage.local.set(obj);
+      await this.storeObject(ID_COUNTER_KEY, count);
       return count.toString();
     } else {
       return Date.now().toString();
@@ -190,13 +189,12 @@ export const storageService = {
    * @returns A promise resolving to an array of IDs.
    */
   async generatePlaylistIds(size: number): Promise<string[]> {
-    if (typeof browser !== "undefined" && browser.storage) {
-      const obj = await browser.storage.local.get(ID_COUNTER_KEY);
-      let count = obj[ID_COUNTER_KEY] || 0;
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      const result: any = await this.fetchObject(ID_COUNTER_KEY, 0);
+      let count = result || 0;
       count++;
       const ids = [...Array(size).keys()].map((i) => (i + count).toString());
-      obj[ID_COUNTER_KEY] = parseInt(ids[ids.length - 1]);
-      await browser.storage.local.set(obj);
+      await this.storeObject(ID_COUNTER_KEY, parseInt(ids[ids.length - 1]));
       return ids;
     } else {
       const count = Date.now();
@@ -292,8 +290,3 @@ export const storageService = {
       }
   }
 };
-
-// Global legacy support for background scripts
-if (typeof window !== 'undefined') {
-    (window as any).storageService = storageService;
-}

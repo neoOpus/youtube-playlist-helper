@@ -109,9 +109,9 @@
             <div class="system-info pro-glass mt-8">
                 <h3 class="card-title"><InfoIcon size="18" /> Infrastructure Core</h3>
                 <div class="v-list mt-6">
-                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2.0 Pro</span></div>
-                    <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
-                    <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
+                    <div class="v-row"><span>Pro Version</span> <span class="v-val">3.0.0 Pro</span></div>
+                    <div class="v-row"><span>Storage Mode</span> <span class="v-val">Chrome / Persistent</span></div>
+                    <div class="v-row"><span>AI Engine</span> <span class="v-val">Neural Heuristics v2</span></div>
 
                     {#if advancedMode}
                       <div in:fly={{ y: -10, duration: 300 }}>
@@ -134,7 +134,7 @@
 <style>
     .view-header { margin-bottom: var(--space-12); }
     .header-content { display: flex; flex-direction: column; gap: var(--space-3); }
-    .header-content h1 { font-size: 3.5rem; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
+    .header-content h1 { font-size: var(--font-4xl); margin: 0; font-weight: 900; letter-spacing: -0.05em; }
 
     .title-row { display: flex; align-items: center; gap: var(--space-5); }
 
@@ -157,13 +157,13 @@
 
     .visualization-container {
         border: 1px solid var(--border);
-        border-radius: 32px;
+        border-radius: var(--radius-xl);
         overflow: hidden;
-        background: rgba(0,0,0,0.2);
+        background: var(--bg-secondary);
     }
 
     .viz-header {
-        padding: 12px 24px;
+        padding: var(--space-3) var(--space-6);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -171,26 +171,26 @@
         background: rgba(255,255,255,0.03);
     }
 
-    .viz-meta { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 900; color: var(--text-dim); }
+    .viz-meta { display: flex; align-items: center; gap: var(--space-2); font-family: 'JetBrains Mono', monospace; font-size: var(--font-xs); font-weight: 900; color: var(--text-dim); }
 
     .viz-switcher {
         display: flex;
-        gap: 6px;
+        gap: var(--space-1);
         background: var(--bg-secondary);
-        padding: 4px;
-        border-radius: 12px;
+        padding: var(--space-1);
+        border-radius: var(--radius-md);
         border: 1px solid var(--border);
     }
     .viz-switcher button {
         background: transparent;
         border: none;
         color: var(--text-dim);
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 0.7rem;
+        padding: var(--space-2) var(--space-4);
+        border-radius: var(--radius-sm);
+        font-size: var(--font-xs);
         font-weight: 800;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all var(--duration-standard) var(--easing-standard);
         text-transform: uppercase;
         letter-spacing: 1px;
     }
@@ -201,6 +201,9 @@
     .pro-glass {
         padding: var(--space-8);
         border-radius: var(--radius-xl);
+        background: var(--card-bg-alpha);
+        backdrop-filter: blur(40px) saturate(180%);
+        border: 1px solid var(--border);
     }
 
     .card-title {
@@ -237,7 +240,7 @@
         letter-spacing: 0.1em;
         cursor: pointer;
         opacity: 0.8;
-        transition: opacity 0.2s;
+        transition: opacity var(--duration-fast);
         text-align: center;
         background: none;
         border: none;
@@ -249,7 +252,7 @@
         text-decoration: underline;
     }
 
-    .val.success { color: var(--success); }
+    .val.success { color: var(--secondary); }
 
     :global(.mt-4) { margin-top: var(--space-4) !important; }
     .mt-6 { margin-top: var(--space-6); }

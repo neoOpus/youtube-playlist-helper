@@ -1,14 +1,13 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import {
-    initTheme,
     themes,
     themeState,
     setTheme
   } from "../stores/theme.svelte";
 </script>
 
-<section class="pro-glass p-6">
+<section class="pro-glass">
     <div class="header mb-6">
         <h3 class="card-title">Professional Theme Engine</h3>
         <p class="muted small">Customize the visual architecture of your intelligence hub.</p>
@@ -40,45 +39,53 @@
 </section>
 
 <style>
+    .pro-glass {
+        padding: var(--space-6);
+        background: var(--card-bg-alpha);
+        backdrop-filter: blur(40px) saturate(180%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+    }
+
     .theme-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1.25rem;
+        gap: var(--space-5);
     }
 
     .theme-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 1rem;
+        background: var(--hover);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: var(--space-4);
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all var(--duration-standard) var(--easing-standard);
         text-align: left;
         position: relative;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: var(--space-3);
         overflow: hidden;
     }
 
     .theme-card:hover {
         background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.15);
+        border-color: var(--border-strong);
         transform: translateY(-2px);
     }
 
     .theme-card.active {
-        background: rgba(255, 82, 82, 0.05);
+        background: rgba(var(--primary-rgb), 0.05);
         border-color: var(--primary);
-        box-shadow: 0 0 20px rgba(255, 82, 82, 0.1);
+        box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.1);
     }
 
     .swatch-container {
         height: 60px;
-        border-radius: 6px;
+        border-radius: var(--radius-xs);
         overflow: hidden;
         display: flex;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
     }
 
     .swatch {
@@ -96,33 +103,38 @@
 
     .theme-name {
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: var(--font-sm);
         color: var(--text);
     }
 
     .badge {
-        font-size: 0.65rem;
+        font-size: var(--font-xs);
         font-weight: 700;
-        padding: 0.2rem 0.4rem;
+        padding: var(--space-1) var(--space-2);
         background: var(--primary);
         color: white;
-        border-radius: 4px;
+        border-radius: var(--radius-xs);
         letter-spacing: 0.02em;
     }
 
     .check-mark {
         position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
+        top: var(--space-2);
+        right: var(--space-2);
         width: 20px;
         height: 20px;
         background: var(--primary);
         color: white;
-        border-radius: 50%;
+        border-radius: var(--radius-full);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
         font-weight: 800;
     }
+
+    .mb-6 { margin-bottom: var(--space-6); }
+    .muted { color: var(--text-muted); }
+    .small { font-size: var(--font-xs); }
+    .card-title { margin: 0; font-weight: 800; font-size: var(--font-lg); color: var(--text); }
 </style>
