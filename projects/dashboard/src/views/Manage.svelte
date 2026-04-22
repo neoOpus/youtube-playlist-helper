@@ -1,266 +1,274 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, fly } from "svelte/transition";
   import { storageService, notificationService } from "@yph/core";
+  import { SuperButton } from "@yph/ui-kit";
   import {
-    DeleteIcon,
-    SaveIcon,
-    TerminalIcon,
-    PlusMultiple,
-    InfoIcon,
-    SuperButton,
-    MergeIcon
-  } from "@yph/ui-kit";
-  import LibraryAuditor from "../components/LibraryAuditor.svelte";
-  import InfrastructureMap from "../components/InfrastructureMap.svelte";
-  import TopologyGraph from "../components/TopologyGraph.svelte";
-  import ThemeArchitect from "../components/ThemeArchitect.svelte";
-  import ImportWizard from "../components/ImportWizard.svelte";
-  import SystemHealth from "../components/SystemHealth.svelte";
-  import PortfolioExporter from "../components/PortfolioExporter.svelte";
-  import SmartRules from "../components/SmartRules.svelte";
-  import SectorDna from "../components/SectorDna.svelte";
-  import BulkOperations from "../components/BulkOperations.svelte";
+    Trash2,
+    Monitor,
+    Activity,
+    ShieldCheck,
+    Zap,
+    Database,
+    Bell,
+    MousePointer2,
+    Palette,
+    Compass,
+    Settings as SettingsIcon,
+    Layers
+  } from "lucide-svelte";
+  import { appState, updatePreference } from "../stores/theme.svelte";
   import type { Playlist } from "@yph/core";
+  import ThemeArchitect from "../components/ThemeArchitect.svelte";
 
   let playlists = $state<Playlist[]>([]);
-  let showImport = $state(false);
-  let advancedMode = $state(false);
-  let vizMode = $state<'map' | 'topology'>('map');
 
   onMount(async () => {
     playlists = await storageService.getPlaylists();
   });
 
   async function clearAll() {
-      if (confirm("DANGER: This will decommission the entire infrastructure. Proceed?")) {
+      if (confirm("CRITICAL: This will irreversibly purge the entire environment. Proceed?")) {
           for (const pl of playlists) await storageService.removePlaylist(pl);
-          notificationService.success("Infrastructure purged.");
+          notificationService.success("Environment decommissioned.");
           window.location.reload();
       }
   }
 </script>
 
-<div class="manage-view view-container" in:fade>
+<div class="view-container">
     <header class="view-header">
-        <div class="header-content aura-glow">
-            <div class="title-row">
-                <div class="icon-blob"><TerminalIcon size="32" /></div>
-                <h1>System Management</h1>
-            </div>
-            <p class="muted">Oversee infrastructure connections, library quality, and global aesthetics.</p>
-        </div>
+        <h1>System Preferences</h1>
+        <p class="text-secondary">Orchestrate the interface foundation and behavioral logic.</p>
     </header>
 
-    <div class="manage-grid">
-        <div class="main-stats">
-            <div class="visualization-container pro-glass">
-                <div class="viz-header">
-                    <div class="viz-meta">
-                        <MergeIcon size="16" color="var(--primary)" />
-                        <span>NEURAL_MAPPING_ENGINE</span>
+    <div class="settings-grid">
+        <!-- Visual Architecture -->
+        <div class="main-column">
+            <section class="settings-card surface-1">
+                <div class="card-header">
+                    <Monitor size="20" class="icon-primary" />
+                    <h2>Interface & Appearance</h2>
+                </div>
+
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">UI Density</span>
+                            <p class="desc">Global scale for padding and component spacing.</p>
+                        </div>
+                        <select value={appState.density} onchange={e => updatePreference('uiDensity', e.currentTarget.value as any)}>
+                            <option value="compact">Compact (Tight)</option>
+                            <option value="normal">Normal (Standard)</option>
+                            <option value="spacious">Spacious (Relaxed)</option>
+                        </select>
                     </div>
-                    <div class="viz-switcher">
-                        <button class:active={vizMode === 'map'} onclick={() => vizMode = 'map'}>Live Map</button>
-                        <button class:active={vizMode === 'topology'} onclick={() => vizMode = 'topology'}>D3 Topology</button>
+
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Font Magnification</span>
+                            <p class="desc">Scaling factor for all textual elements.</p>
+                        </div>
+                        <div class="control-wrap">
+                            <input type="range" min="0.8" max="1.2" step="0.05" value={appState.fontScale}
+                                   oninput={e => updatePreference('fontScale', +e.currentTarget.value)} />
+                            <span class="val">{(appState.fontScale * 100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Sidebar Orientation</span>
+                        </div>
+                        <div class="toggle-group">
+                            <button class:active={appState.sidebar === 'left'} onclick={() => updatePreference('sidebarPosition', 'left')}>Left-Aligned</button>
+                            <button class:active={appState.sidebar === 'right'} onclick={() => updatePreference('sidebarPosition', 'right')}>Right-Aligned</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Default Landing Plane</span>
+                        </div>
+                        <select onchange={e => updatePreference('defaultEditorPage', e.currentTarget.value as any)}>
+                            <option value="/saved">Saved Collections</option>
+                            <option value="/new">New Intake</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="viz-content">
-                    {#if vizMode === 'map'}
-                        <div in:fade={{duration: 400}}><InfrastructureMap /></div>
-                    {:else}
-                        <div in:fade={{duration: 400}}><TopologyGraph /></div>
-                    {/if}
+                <div class="divider"></div>
+                <ThemeArchitect />
+            </section>
+
+            <section class="settings-card surface-1 mt-8">
+                <div class="card-header">
+                    <Compass size="20" class="icon-primary" />
+                    <h2>Workflow Automation</h2>
                 </div>
-            </div>
-
-            <div class="grid-split mt-8">
-                <SectorDna {playlists} />
-                <LibraryAuditor />
-            </div>
-
-            <SmartRules />
-            <BulkOperations />
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Creation Protocol</span>
+                            <p class="desc">Immediately open editor after generating a new node.</p>
+                        </div>
+                        <input type="checkbox" checked onchange={e => updatePreference('openPlaylistEditorAfterCreation', e.currentTarget.checked)} />
+                    </div>
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Persistent Auto-Save</span>
+                            <p class="desc">Commit changes to local storage every X minutes.</p>
+                        </div>
+                        <select onchange={e => updatePreference('autoSaveInterval', +e.currentTarget.value)}>
+                            <option value="1">1 Minute</option>
+                            <option value="5">5 Minutes</option>
+                            <option value="15">15 Minutes</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <aside class="actions-sidebar">
-            <SystemHealth />
-
-            <div class="mt-8">
-                <PortfolioExporter />
-            </div>
-
-            <div class="action-card pro-glass mt-8">
-                <h3 class="card-title"><SaveIcon size="18" /> Core Protocols</h3>
-                <div class="btns-stack mt-6">
-                    <SuperButton primary onclick={() => showImport = true}>
-                        <PlusMultiple size="18" /> Import Logic Snapshot
-                    </SuperButton>
-                    <SuperButton danger onclick={clearAll} class="mt-4">
-                        <DeleteIcon size="18" /> Decommission System
-                    </SuperButton>
+        <!-- System & Performance -->
+        <div class="side-column">
+            <section class="settings-card surface-1">
+                <div class="card-header">
+                    <Activity size="20" class="icon-primary" />
+                    <h2>Performance</h2>
                 </div>
-            </div>
 
-            <ThemeArchitect />
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Animation Dynamics</span>
+                        </div>
+                        <select value={appState.animation} onchange={e => updatePreference('animationIntensity', e.currentTarget.value as any)}>
+                            <option value="full">High-Fidelity Transitions</option>
+                            <option value="low">Optimized Performance</option>
+                            <option value="none">Disabled (Instant)</option>
+                        </select>
+                    </div>
 
-            <div class="system-info pro-glass mt-8">
-                <h3 class="card-title"><InfoIcon size="18" /> Infrastructure Core</h3>
-                <div class="v-list mt-6">
-                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2.0 Pro</span></div>
-                    <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
-                    <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Reduced Motion</span>
+                            <p class="desc">Minimize parallax and scale effects.</p>
+                        </div>
+                        <input type="checkbox" checked={appState.reducedMotion} onchange={e => updatePreference('reducedMotion', e.currentTarget.checked)} />
+                    </div>
 
-                    {#if advancedMode}
-                      <div in:fly={{ y: -10, duration: 300 }}>
-                        <div class="v-row"><span>Data Density</span> <span class="v-val">High (Optimized)</span></div>
-                        <div class="v-row"><span>E2EE Status</span> <span class="val success">Active (Pro-Resistant)</span></div>
-                      </div>
-                    {/if}
-
-                    <button class="toggle-advanced" onclick={() => advancedMode = !advancedMode}>
-                        {advancedMode ? 'Hide Detailed Params' : 'Show Advanced Params'}
-                    </button>
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Resource Efficiency</span>
+                            <p class="desc">Disable background canvas effects.</p>
+                        </div>
+                        <input type="checkbox" onchange={e => updatePreference('lowPowerMode', e.currentTarget.checked)} />
+                    </div>
                 </div>
-            </div>
-        </aside>
+            </section>
+
+            <section class="settings-card surface-1 mt-6">
+                <div class="card-header">
+                    <Bell size="20" class="icon-primary" />
+                    <h2>Communication</h2>
+                </div>
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Feedback Verbosity</span>
+                        </div>
+                        <select onchange={e => updatePreference('notificationVerbosity', e.currentTarget.value as any)}>
+                            <option value="all">Verbosity: Maximum</option>
+                            <option value="minimal">Action-Only</option>
+                            <option value="none">Silent Mode</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-card surface-1 danger-card mt-6">
+                <div class="card-header">
+                    <ShieldCheck size="20" />
+                    <h2>Security & Privacy</h2>
+                </div>
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="label-info">
+                            <span class="label">Environment Purge</span>
+                            <p class="desc">Wipe all local indices and configurations.</p>
+                        </div>
+                        <button class="danger-btn" onclick={clearAll}><Trash2 size="16" /> Decommission</button>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 </div>
 
-<ImportWizard bind:display={showImport} on:complete={() => window.location.reload()} />
-
 <style>
     .view-header { margin-bottom: var(--space-12); }
-    .header-content { display: flex; flex-direction: column; gap: var(--space-3); }
-    .header-content h1 { font-size: 3.5rem; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 4px; }
 
-    .title-row { display: flex; align-items: center; gap: var(--space-5); }
+    .settings-grid { display: grid; grid-template-columns: 1fr 380px; gap: var(--space-10); }
+    .main-column, .side-column { display: flex; flex-direction: column; }
 
-    .icon-blob {
-        background: var(--primary);
-        color: white;
-        padding: var(--space-4);
-        border-radius: var(--radius-xl);
-        box-shadow: 0 12px 40px rgba(var(--primary-rgb), 0.5);
+    .settings-card { padding: var(--space-10); }
+    .card-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; border-bottom: 1px solid var(--border-base); padding-bottom: 20px; }
+    .card-header h2 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+    :global(.icon-primary) { color: var(--primary); }
+
+    .settings-group { display: flex; flex-direction: column; gap: 32px; }
+    .setting-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; }
+
+    .label-info { flex: 1; }
+    .label { display: block; font-weight: 700; font-size: 1rem; margin-bottom: 6px; color: var(--text-main); }
+    .desc { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; line-height: 1.5; }
+
+    select {
+        background: var(--bg-surface-2); border: 1px solid var(--border-strong);
+        color: var(--text-main); padding: 10px 16px; border-radius: 8px;
+        font-weight: 600; font-size: 0.9rem; outline: none; cursor: pointer;
+        min-width: 180px; transition: border-color 0.2s;
+    }
+    select:hover { border-color: var(--text-muted); }
+
+    .control-wrap { display: flex; align-items: center; gap: 16px; }
+    .val { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--primary); width: 44px; text-align: right; }
+
+    .toggle-group { display: flex; background: var(--bg-surface-2); padding: 4px; border-radius: 10px; border: 1px solid var(--border-base); }
+    .toggle-group button {
+        background: transparent; border: none; color: var(--text-secondary);
+        padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .toggle-group button.active { background: var(--bg-surface-3); color: var(--text-main); box-shadow: var(--shadow-sm); }
+
+    .divider { height: 1px; background: var(--border-base); margin: 32px 0; }
+
+    .danger-card { border-color: rgba(239, 68, 68, 0.3); }
+    .danger-btn {
+        background: var(--danger); color: white; border: none; padding: 12px 24px;
+        border-radius: 8px; font-weight: 700; font-size: 0.9rem;
+        cursor: pointer; display: flex; align-items: center; gap: 10px; transition: opacity 0.2s;
+    }
+    .danger-btn:hover { opacity: 0.95; }
+
+    input[type="checkbox"] {
+        appearance: none; width: 22px; height: 22px; border: 2px solid var(--border-strong);
+        border-radius: 6px; cursor: pointer; position: relative; transition: all 0.2s;
+    }
+    input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+    input[type="checkbox"]:checked::after {
+        content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 900;
     }
 
-    .manage-grid {
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: var(--space-12);
-        margin-top: var(--space-8);
-    }
+    input[type="range"] { accent-color: var(--primary); }
 
-    .main-stats { display: flex; flex-direction: column; gap: var(--space-8); }
-
-    .visualization-container {
-        border: 1px solid var(--border);
-        border-radius: 32px;
-        overflow: hidden;
-        background: rgba(0,0,0,0.2);
-    }
-
-    .viz-header {
-        padding: 12px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid var(--border);
-        background: rgba(255,255,255,0.03);
-    }
-
-    .viz-meta { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 900; color: var(--text-dim); }
-
-    .viz-switcher {
-        display: flex;
-        gap: 6px;
-        background: var(--bg-secondary);
-        padding: 4px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-    }
-    .viz-switcher button {
-        background: transparent;
-        border: none;
-        color: var(--text-dim);
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 0.7rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    .viz-switcher button.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3); }
-
-    .grid-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); }
-
-    .pro-glass {
-        padding: var(--space-8);
-        border-radius: var(--radius-xl);
-    }
-
-    .card-title {
-        margin: 0;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: var(--space-3);
-        font-size: var(--font-lg);
-        color: var(--text);
-    }
-
-    .btns-stack { display: flex; flex-direction: column; gap: var(--space-3); }
-
-    .v-list { display: flex; flex-direction: column; gap: var(--space-3); }
-    .v-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: var(--font-sm);
-        font-weight: 700;
-        color: var(--text-muted);
-        padding: var(--space-2) 0;
-        border-bottom: 1px solid var(--border);
-    }
-    .v-row:last-child { border-bottom: none; }
-    .v-val { color: var(--text); font-family: 'JetBrains Mono', monospace; font-weight: 800; }
-
-    .toggle-advanced {
-        margin-top: var(--space-2);
-        font-size: var(--font-xs);
-        font-weight: 800;
-        color: var(--primary);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        cursor: pointer;
-        opacity: 0.8;
-        transition: opacity 0.2s;
-        text-align: center;
-        background: none;
-        border: none;
-        padding: var(--space-2);
-    }
-
-    .toggle-advanced:hover {
-        opacity: 1;
-        text-decoration: underline;
-    }
-
-    .val.success { color: var(--success); }
-
-    :global(.mt-4) { margin-top: var(--space-4) !important; }
-    .mt-6 { margin-top: var(--space-6); }
-    .mt-8 { margin-top: var(--space-8); }
-
-    @media (max-width: 1500px) {
-        .grid-split { grid-template-columns: 1fr; }
-    }
+    .mt-8 { margin-top: 2rem; }
+    .mt-6 { margin-top: 1.5rem; }
 
     @media (max-width: 1200px) {
-        .manage-grid { grid-template-columns: 1fr; }
-        .actions-sidebar { order: -1; }
+        .settings-grid { grid-template-columns: 1fr; }
+        .side-column { order: 2; }
     }
 </style>

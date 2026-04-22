@@ -1,0 +1,92 @@
+/* YouTube Playlist Helper: Professional Edition Design Tokens */
+/* "Clean & Sleek" v4 Grid System */
+
+:root {
+  /* --- Brand Colors --- */
+  --primary: #3b82f6;
+  --primary-rgb: 59, 130, 246;
+  --primary-hover: #2563eb;
+  --secondary: #10b981;
+  --secondary-rgb: 16, 185, 129;
+  --accent: #8b5cf6;
+  --danger: #ef4444;
+  --success: #10b981;
+  --info: #3b82f6;
+
+  /* --- Base Palette (Surface Levels) --- */
+  --bg-app: #0f172a;
+  --bg-surface-1: #1e293b;
+  --bg-surface-2: #334155;
+  --bg-surface-3: #475569;
+
+  /* --- Borders --- */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-base: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --border-active: var(--primary);
+
+  /* --- Typography --- */
+  --text-main: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #0f172a;
+
+  /* --- Spacing (4px Steps) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* --- UI Density (Default: Normal) --- */
+  --ui-padding: var(--space-4);
+  --ui-gap: var(--space-4);
+  --ui-radius: 12px;
+
+  /* --- Animation Timing --- */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- Shadows (Solid, Minimal) --- */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* Global Styles Reset for Clean UI */
+body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Clean Surface Utility Classes */
+.surface-1 {
+    background-color: var(--bg-surface-1);
+    border: 1px solid var(--border-base);
+    border-radius: var(--ui-radius);
+}
+
+.surface-2 {
+    background-color: var(--bg-surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--ui-radius);
+}
+
+.interactive {
+    transition: all var(--duration-base) var(--ease-in-out);
+}
+.interactive:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-strong);
+}

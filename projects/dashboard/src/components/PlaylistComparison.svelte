@@ -25,7 +25,7 @@
     </header>
 
     <div class="comparison-grid">
-        <div class="pl-select pro-glass">
+        <div class="pl-select surface-1">
             <h3>Left Node</h3>
             <select bind:value={leftPlaylist}>
                 <option value={null}>Select Infrastructure...</option>
@@ -40,7 +40,7 @@
             <SuperButton primary disabled={!leftPlaylist || !rightPlaylist}>Merge Protocols</SuperButton>
         </div>
 
-        <div class="pl-select pro-glass">
+        <div class="pl-select surface-1">
             <h3>Right Node</h3>
             <select bind:value={rightPlaylist}>
                 <option value={null}>Select Infrastructure...</option>

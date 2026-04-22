@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, fly } from "svelte/transition";
+  import { fade } from "svelte/transition";
   import PlaylistEditor from "./components/PlaylistEditor.svelte";
   import New from "./views/New.svelte";
   import Saved from "./views/Saved.svelte";
@@ -15,11 +15,11 @@
   import CommandPalette from "./components/CommandPalette.svelte";
   import ShortcutHUD from "./components/ShortcutHUD.svelte";
   import ProErrorBoundary from "./components/ProErrorBoundary.svelte";
-  import { playlistsSearch } from "./stores/playlists-filters";
-  import { themeState, initTheme } from "./stores/theme.svelte";
-  import { ParametricBackground } from "@yph/ui-kit";
+  import { filtersState } from "./stores/playlists-filters";
+  import { appState, initAppState } from "./stores/theme.svelte";
   import { enrichmentAgent } from "@yph/core";
   import { router } from "./stores/router";
+  import { ParametricBackground } from "@yph/ui-kit";
 
   const routes: Record<string, any> = {
     "/": Saved,
@@ -34,25 +34,27 @@
 
   let showPalette = $state(false);
   let showHUD = $state(false);
-  let CurrentView = $derived(routes[$router.path] || Saved);
+  let CurrentView = $derived(routes[router.path] || Saved);
   let errorBoundary: any = $state();
 
   $effect(() => {
     if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute("data-theme", themeState.active);
+        document.documentElement.setAttribute("data-theme", appState.theme);
+        document.documentElement.setAttribute("data-density", appState.density);
+        document.documentElement.setAttribute("data-animation", appState.animation);
+        document.documentElement.style.fontSize = `${appState.fontScale * 100}%`;
+        document.documentElement.classList.toggle('sidebar-right', appState.sidebar === 'right');
     }
   });
 
   onMount(() => {
-      initTheme()
+      initAppState()
           .then(() => enrichmentAgent.start())
           .catch((e) => errorBoundary?.catchError(e as Error));
 
       const handleKeyDown = (e: KeyboardEvent) => {
           if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
-              if (e.key === "Escape") {
-                  (e.target as HTMLElement).blur();
-              }
+              if (e.key === "Escape") (e.target as HTMLElement).blur();
               return;
           }
 
@@ -60,48 +62,37 @@
               e.preventDefault();
               const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
               if (searchInput) searchInput.focus();
-          } else if (e.key.toLowerCase() === "n") {
-              router.push("/new");
-          } else if (e.key.toLowerCase() === "s") {
-              router.push("/");
-          } else if (e.key.toLowerCase() === "m") {
-              router.push("/manage");
-          } else if (e.key.toLowerCase() === "g") {
-              router.push("/gallery");
-          } else if (e.key === "Escape") {
-              playlistsSearch.set("");
+          } else if (e.key.toLowerCase() === "n") router.push("/new");
+          else if (e.key.toLowerCase() === "s") router.push("/");
+          else if (e.key.toLowerCase() === "m") router.push("/manage");
+          else if (e.key.toLowerCase() === "g") router.push("/gallery");
+          else if (e.key === "Escape") filtersState.search = "";
+
+          if ((e.metaKey || e.ctrlKey) && e.key === "/") {
+              e.preventDefault();
+              showHUD = !showHUD;
           }
       };
 
-      const handleError = (e: ErrorEvent) => errorBoundary?.catchError(e.error);
-      const handleRejection = (e: PromiseRejectionEvent) => errorBoundary?.catchError(e.reason);
-
       window.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("error", handleError);
-      window.addEventListener("unhandledrejection", handleRejection);
-
-      return () => {
-          window.removeEventListener("keydown", handleKeyDown);
-          window.removeEventListener("error", handleError);
-          window.removeEventListener("unhandledrejection", handleRejection);
-      };
+      return () => window.removeEventListener("keydown", handleKeyDown);
   });
 </script>
 
 <ProErrorBoundary bind:this={errorBoundary}>
-    <div class="app-container">
-      <ParametricBackground theme={themeState.active} />
+    <ParametricBackground theme={appState.theme} intensity={appState.lowPowerMode ? 'none' : appState.animation} />
+
+    <div class="app-container" class:sidebar-right={appState.sidebar === 'right'}>
       <div class="sidebar-wrapper">
-        <Sidebar activeRoute={$router.fullPath} />
+        <Sidebar activeRoute={router.fullPath} />
       </div>
       <main class="main-content">
-          {#key $router.path}
+          {#key router.path}
             <div
                 class="view-transition-wrapper"
-                in:fly={{ y: 10, duration: 400, delay: 100 }}
-                out:fade={{ duration: 200 }}
+                in:fade={{ duration: appState.reducedMotion ? 0 : 200 }}
             >
-                <CurrentView params={$router.params} />
+                <CurrentView params={router.params} />
             </div>
           {/key}
       </main>
@@ -112,41 +103,11 @@
 </ProErrorBoundary>
 
 <style>
-    :global(:root) {
-        --sidebar-width: 260px;
-    }
-
     .app-container {
-        display: flex;
-        width: 100%;
-        height: 100vh;
-        overflow: hidden;
-        position: relative;
-        background: var(--bg);
+        display: flex; width: 100%; height: 100vh; overflow: hidden;
     }
-
-    .sidebar-wrapper {
-        width: var(--sidebar-width);
-        flex-shrink: 0;
-        height: 100%;
-        z-index: 10;
-    }
-
-    .main-content {
-        flex-grow: 1;
-        overflow-y: auto;
-        position: relative;
-        z-index: 1;
-        padding: 0;
-    }
-
-    .view-transition-wrapper {
-        min-height: 100%;
-    }
-
-    @media (max-width: 768px) {
-        :global(:root) {
-            --sidebar-width: 60px;
-        }
-    }
+    .app-container.sidebar-right { flex-direction: row-reverse; }
+    .sidebar-wrapper { width: var(--sidebar-width); flex-shrink: 0; height: 100%; z-index: 100; }
+    .main-content { flex: 1; overflow-y: auto; padding: var(--ui-padding); display: flex; flex-direction: column; gap: var(--ui-gap); }
+    @media (max-width: 768px) { .sidebar-wrapper { width: var(--sidebar-collapsed-width); } }
 </style>

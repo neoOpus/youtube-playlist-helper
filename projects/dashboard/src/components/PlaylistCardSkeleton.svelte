@@ -1,41 +1,35 @@
 <svelte:options runes={true} />
-<script lang="ts">
-  import Skeleton from "./Skeleton.svelte";
-</script>
-
-<div class="skeleton-card pro-glass p-6">
-    <div class="card-head">
-        <Skeleton width="48px" height="48px" borderRadius="12px" />
-        <div class="meta">
-            <Skeleton width="180px" height="1.2rem" />
-            <Skeleton width="100px" height="0.8rem" className="mt-2" />
-        </div>
-    </div>
-    <div class="card-body mt-6">
-        <div class="stats">
-            <Skeleton width="60px" height="1.5rem" borderRadius="20px" />
-            <Skeleton width="80px" height="1.5rem" borderRadius="20px" />
-        </div>
-        <div class="actions mt-6">
-            <Skeleton width="100%" height="40px" borderRadius="8px" />
-        </div>
-    </div>
+<div class="skeleton-card surface-1">
+  <div class="header">
+      <div class="icon-pulse"></div>
+      <div class="meta">
+          <div class="line short"></div>
+          <div class="line tiny"></div>
+      </div>
+  </div>
+  <div class="body">
+      <div class="line long"></div>
+      <div class="line med"></div>
+  </div>
+  <div class="footer">
+      <div class="circle"></div>
+      <div class="circle"></div>
+  </div>
 </div>
 
 <style>
-    .skeleton-card {
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .card-head {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-    .meta {
-        flex: 1;
-    }
-    .stats {
-        display: flex;
-        gap: 0.5rem;
-    }
+  .skeleton-card { padding: 20px; display: flex; flex-direction: column; gap: 20px; height: 180px; }
+  .header { display: flex; gap: 12px; align-items: center; }
+  .icon-pulse { width: 32px; height: 32px; border-radius: 6px; background: var(--bg-surface-2); animation: pulse 1.5s infinite; }
+  .meta { flex: 1; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .line { height: 10px; border-radius: 4px; background: var(--bg-surface-2); animation: pulse 1.5s infinite; }
+  .line.short { width: 40px; }
+  .line.tiny { width: 60px; }
+  .line.med { width: 60%; }
+  .line.long { width: 90%; }
+  .body { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .footer { display: flex; gap: 8px; }
+  .circle { width: 28px; height: 28px; border-radius: 6px; background: var(--bg-surface-2); animation: pulse 1.5s infinite; }
+
+  @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 0.8; } 100% { opacity: 0.5; } }
 </style>

@@ -84,7 +84,7 @@
   }
 </script>
 
-<div class="portfolio-architect pro-glass" in:fade>
+<div class="portfolio-architect surface-1" in:fade>
     <div class="architect-header">
         <div class="icon-orb"><PlaylistPlayIcon size="24" /></div>
         <div class="title-meta">

@@ -26,7 +26,6 @@
           class="pro-input"
           aria-invalid={!!error}
       />
-      <div class="focus-ring"></div>
   </div>
   {#if error}
     <span class="error-text" transition:fade>{error}</span>
@@ -35,32 +34,21 @@
 
 <style>
   .super-input-wrapper { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; }
-  .input-label { font-size: var(--font-xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
+  .input-label { font-size: var(--font-xs); font-weight: 800; text-transform: uppercase; color: var(--text-secondary); }
   .input-container { position: relative; }
   .pro-input {
       width: 100%;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: var(--space-4);
-      border-radius: var(--radius-md);
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-strong);
+      color: var(--text-main);
+      padding: 12px 16px;
+      border-radius: 8px;
       font-size: var(--font-sm);
-      font-weight: 700;
-      transition: all 0.3s;
+      font-weight: 600;
+      transition: all 0.2s var(--ease-in-out);
       outline: none;
   }
-  .pro-input:focus { border-color: var(--primary); }
-  .focus-ring {
-      position: absolute;
-      inset: -4px;
-      border: 2px solid var(--primary);
-      border-radius: calc(var(--radius-md) + 4px);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s;
-      transform: scale(0.98);
-  }
-  .pro-input:focus ~ .focus-ring { opacity: 0.2; transform: scale(1); }
+  .pro-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1); }
   .error-text { font-size: var(--font-xs); font-weight: 700; color: var(--danger); margin-top: 2px; }
   .has-error .pro-input { border-color: var(--danger); }
 </style>

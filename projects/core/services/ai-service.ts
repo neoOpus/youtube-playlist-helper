@@ -15,25 +15,43 @@ export const aiService = {
 
     const tags = ["AI-Enhanced"];
     const title = (video.title || "").toLowerCase();
-    if (title.includes("tutorial")) tags.push("Educational");
-    if (title.includes("review")) tags.push("Analysis");
-    if (title.includes("music")) tags.push("Music");
-    if (title.includes("rick")) tags.push("Meme", "Classic");
+    const channel = (video.channel || "").toLowerCase();
+
+    if (title.includes("tutorial") || title.includes("how to")) tags.push("Educational");
+    if (title.includes("review") || title.includes("unboxing")) tags.push("Analysis");
+    if (title.includes("music") || title.includes("official video")) tags.push("Music");
+    if (title.includes("rick") || title.includes("never gonna")) tags.push("Meme", "Classic");
+    if (title.includes("news") || title.includes("update")) tags.push("Information");
+    if (title.includes("podcast") || title.includes("talk")) tags.push("Discussion");
 
     // Vibe/Energy heuristic analysis
     let vibe: Video['energyVibe'] = 'Productive';
-    const vibes: Video['energyVibe'][] = ['Chill', 'Productive', 'Intense', 'Educational'];
+    const vibes: Video['energyVibe'][] = ['Chill', 'Productive', 'Intense', 'Educational', 'Inspirational', 'Deep Focus'];
 
-    if (title.includes("lofi") || title.includes("ambient")) vibe = 'Chill';
-    else if (title.includes("workout") || title.includes("metal")) vibe = 'Intense';
-    else if (title.includes("course") || title.includes("lesson")) vibe = 'Educational';
+    if (title.includes("lofi") || title.includes("ambient") || title.includes("relax")) vibe = 'Chill';
+    else if (title.includes("workout") || title.includes("metal") || title.includes("gaming")) vibe = 'Intense';
+    else if (title.includes("course") || title.includes("lesson") || title.includes("explained")) vibe = 'Educational';
+    else if (title.includes("motivation") || title.includes("speech") || title.includes("success")) vibe = 'Inspirational';
+    else if (title.includes("focus") || title.includes("study") || title.includes("coding")) vibe = 'Deep Focus';
     else {
         // Pseudo-random but deterministic based on title length for variety
         vibe = vibes[title.length % vibes.length];
     }
 
+    // Sentiment heuristic
+    const positiveWords = ["best", "great", "amazing", "love", "awesome", "good"];
+    const negativeWords = ["bad", "worst", "hate", "awful", "terrible", "problem"];
+
+    let sentiment = 0;
+    positiveWords.forEach(w => { if (title.includes(w)) sentiment++; });
+    negativeWords.forEach(w => { if (title.includes(w)) sentiment--; });
+
+    let sentimentLabel = "Neutral";
+    if (sentiment > 0) sentimentLabel = "Positive";
+    if (sentiment < 0) sentimentLabel = "Critical";
+
     return {
-      aiSummary: `Automated neural summary: This node ("${video.title}") has been indexed with pro precision. It appears to focus on ${tags.join(", ")} content.`,
+      aiSummary: `Automated neural summary: This node ("${video.title}") has been indexed with pro precision. Content type: ${tags.join(", ")}. Sentiment detected as ${sentimentLabel}. Estimated vibe: ${vibe}.`,
       aiTags: tags,
       energyVibe: vibe
     };
@@ -114,10 +132,11 @@ export const aiService = {
    */
   expandKeywords(keywords: string[]): string[] {
     const expansion: Record<string, string[]> = {
-      coding: ["programming", "developer", "software", "tutorial", "code", "github"],
-      music: ["song", "audio", "track", "concert", "live", "album"],
-      tech: ["technology", "gadget", "review", "hardware", "software", "innovation"],
-      gaming: ["gameplay", "walkthrough", "playthrough", "esports", "streaming"],
+      coding: ["programming", "developer", "software", "tutorial", "code", "github", "js", "ts", "rust"],
+      music: ["song", "audio", "track", "concert", "live", "album", "remix", "lofi"],
+      tech: ["technology", "gadget", "review", "hardware", "software", "innovation", "ai", "future"],
+      gaming: ["gameplay", "walkthrough", "playthrough", "esports", "streaming", "nintendo", "xbox", "ps5"],
+      education: ["learning", "tutorial", "course", "lesson", "explained", "science", "math"],
     };
 
     const expanded = new Set<string>();
@@ -152,7 +171,21 @@ export const aiService = {
   },
 
   async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
-    return `This is a collection of ${videos.length} videos focusing on "${playlist.title}". Neural density is high.`;
+    if (!videos.length) return "Empty infrastructure. No nodes to summarize.";
+
+    const topTags = new Map<string, number>();
+    videos.forEach(v => {
+        (v.aiTags || []).forEach(t => {
+            topTags.set(t, (topTags.get(t) || 0) + 1);
+        });
+    });
+
+    const sortedTags = Array.from(topTags.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(t => t[0]);
+
+    return `This collection of ${videos.length} videos is primarily focused on ${sortedTags.join(", ")}. Overall infrastructure health is nominal.`;
   },
 
   sequenceOptimizer: {

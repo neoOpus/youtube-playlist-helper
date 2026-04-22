@@ -1,164 +1,76 @@
 <svelte:options runes={true} />
 <script lang="ts">
-  import { fade, fly } from "svelte/transition";
-  import { InfoIcon, TerminalIcon } from "@yph/ui-kit";
   import type { Playlist, Video } from "@yph/core";
+  import { Activity } from "lucide-svelte";
 
-  interface Props {
-      playlist?: Playlist;
-      playlists?: Playlist[];
-  }
+  let { playlist }: { playlist: Playlist } = $props();
 
-  let { playlist, playlists = [] }: Props = $props();
-
-  const dna = $derived.by(() => {
-    const targetPlaylists = playlist ? [playlist] : playlists;
-    const stats = {
-      vibe: {} as Record<string, number>,
-      tags: {} as Record<string, number>,
-      ratings: [0, 0, 0, 0, 0, 0], // 0-5
-      totalNodes: 0
-    };
-
-    targetPlaylists.forEach(pl => {
-      (pl.loadedVideos || []).forEach(v => {
-        stats.totalNodes++;
-        if (v.energyVibe) stats.vibe[v.energyVibe] = (stats.vibe[v.energyVibe] || 0) + 1;
-        if (v.rating) stats.ratings[Math.round(v.rating)]++;
-        (v.aiTags || []).forEach(t => stats.tags[t] = (stats.tags[t] || 0) + 1);
-      });
-    });
-
-    return stats;
+  let tagStats = $derived.by(() => {
+    const videos = playlist.loadedVideos || [];
+    const counts = new Map<string, number>();
+    videos.forEach(v => (v.aiTags || []).forEach(t => counts.set(t, (counts.get(t) || 0) + 1)));
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
   });
 
-  const topTags = $derived(
-    Object.entries(dna.tags)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 8)
-  );
-
-  const vibeColors: Record<string, string> = {
-      'Chill': '#10b981',
-      'Productive': '#3b82f6',
-      'Intense': '#ef4444',
-      'Educational': '#8b5cf6'
-  };
+  let vibeStats = $derived.by(() => {
+    const videos = playlist.loadedVideos || [];
+    const counts = new Map<string, number>();
+    videos.forEach(v => { if (v.energyVibe) counts.set(v.energyVibe, (counts.get(v.energyVibe) || 0) + 1); });
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  });
 </script>
 
-<div class="sector-dna pro-glass" in:fade>
-    <div class="dna-header">
-        <div class="icon-pulse">
-            <TerminalIcon size="16" color="var(--primary)" />
-        </div>
-        <div class="title-row">
-            <h4>Sector DNA Analysis</h4>
-            <span class="badge">{dna.totalNodes} Nodes Analyzed</span>
-        </div>
-    </div>
-
-    <div class="dna-body mt-6">
+<div class="dna-container">
+    {#if (playlist.loadedVideos?.length || 0) > 0}
         <div class="dna-section">
-            <div class="section-header">
-                <span class="section-label">Energy Resonance</span>
-                <div class="header-line"></div>
-            </div>
-            <div class="vibe-grid mt-4">
-                {#each Object.entries(dna.vibe) as [vibe, count]}
-                    <div class="vibe-item" in:fly={{ y: 10 }}>
-                        <div class="vibe-meta">
-                            <span class="v-label" style="color: {vibeColors[vibe] || 'var(--text)'}">{vibe}</span>
-                            <span class="v-count">{count}</span>
-                        </div>
-                        <div class="vibe-bar">
-                            <div class="fill" style="width: {(count / dna.totalNodes) * 100}%; background: {vibeColors[vibe] || 'var(--primary)'}"></div>
-                        </div>
+            <span class="label">Top Signals</span>
+            <div class="bar-stack">
+                {#each tagStats as [tag, count]}
+                    <div class="bar-row">
+                        <span class="tag-name">#{tag}</span>
+                        <div class="bar-bg"><div class="bar-fill" style="width: {(count / (playlist.loadedVideos?.length || 1) * 100)}%"></div></div>
+                        <span class="count">{count}</span>
                     </div>
-                {:else}
-                    <p class="muted small text-center p-4">No energy signals detected in this sector.</p>
                 {/each}
             </div>
         </div>
 
-        <div class="dna-section mt-8">
-            <div class="section-header">
-                <span class="section-label">Metadata Density (Tags)</span>
-                <div class="header-line"></div>
-            </div>
-            <div class="tag-cloud mt-4">
-                {#each topTags as [tag, count]}
-                    <div class="dna-tag luminous-hover">
-                        <span class="t-name">#{tag}</span>
-                        <div class="t-divider"></div>
-                        <span class="t-count">{count}</span>
+        <div class="dna-section mt-6">
+            <span class="label">Energy Vibe Distribution</span>
+            <div class="vibe-grid">
+                {#each vibeStats as [vibe, count]}
+                    <div class="vibe-chip surface-2">
+                        <span class="vibe-name">{vibe}</span>
+                        <span class="vibe-val">{count}</span>
                     </div>
-                {:else}
-                    <p class="muted small text-center p-4">No metadata tags found in this node.</p>
                 {/each}
             </div>
         </div>
-    </div>
-
-    <div class="dna-footer mt-8">
-        <div class="status-indicator">
-            <div class="dot pulse"></div>
-            <span>LOCAL HEURISTICS ACTIVE</span>
+    {:else}
+        <div class="dna-empty">
+            <Activity size="20" />
+            <span>Awaiting telemetry data...</span>
         </div>
-    </div>
+    {/if}
 </div>
 
 <style>
-    .sector-dna { padding: var(--space-8); border: 1px solid var(--border); border-radius: 20px; position: relative; overflow: hidden; }
-    .dna-header { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .dna-container { display: flex; flex-direction: column; gap: 20px; }
+    .dna-section { display: flex; flex-direction: column; gap: 12px; }
+    .label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }
 
-    .icon-pulse {
-        width: 32px; height: 32px; border-radius: 8px; background: rgba(var(--primary-rgb), 0.1);
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.2);
-    }
+    .bar-stack { display: flex; flex-direction: column; gap: 8px; }
+    .bar-row { display: flex; align-items: center; gap: 12px; }
+    .tag-name { font-size: 0.75rem; font-weight: 700; width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+    .bar-bg { flex: 1; height: 6px; background: var(--bg-surface-2); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--primary); border-radius: 3px; }
+    .count { font-size: 0.7rem; font-weight: 800; color: var(--primary); font-family: monospace; width: 20px; }
 
-    .title-row { display: flex; flex-direction: column; }
-    h4 { margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--text); letter-spacing: -0.01em; }
-    .badge { font-size: 0.6rem; color: var(--primary); font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; }
+    .vibe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .vibe-chip { padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; border: 1px solid var(--border-base); }
+    .vibe-name { font-size: 0.75rem; font-weight: 700; }
+    .vibe-val { font-size: 0.7rem; font-weight: 800; color: var(--secondary); font-family: monospace; }
 
-    .dna-section { display: flex; flex-direction: column; }
-    .section-header { display: flex; align-items: center; gap: 12px; }
-    .section-label { font-size: 0.65rem; font-weight: 900; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; flex-shrink: 0; }
-    .header-line { height: 1px; background: var(--border); flex-grow: 1; opacity: 0.5; }
-
-    .vibe-grid { display: flex; flex-direction: column; gap: 14px; }
-    .vibe-item { display: flex; flex-direction: column; gap: 6px; }
-    .vibe-meta { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; }
-    .v-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    .v-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; }
-    .vibe-bar { height: 6px; background: var(--hover); border-radius: 3px; overflow: hidden; }
-    .fill { height: 100%; transition: width 1.5s cubic-bezier(0.23, 1, 0.32, 1); box-shadow: 0 0 8px currentColor; }
-
-    .tag-cloud { display: flex; flex-wrap: wrap; gap: 10px; }
-    .dna-tag {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
-        padding: 5px 12px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s;
-    }
-    .dna-tag:hover { border-color: var(--primary); transform: translateY(-2px); }
-    .t-name { font-size: 0.75rem; font-weight: 800; color: var(--text); }
-    .t-divider { width: 1px; height: 10px; background: var(--border); }
-    .t-count { font-size: 0.65rem; font-weight: 900; color: var(--primary); font-family: 'JetBrains Mono', monospace; }
-
-    .dna-footer { border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: center; }
-    .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.6rem; color: var(--text-dim); font-weight: 800; letter-spacing: 1px; }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
-    .dot.pulse { animation: dotPulse 2s infinite; }
-    @keyframes dotPulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
-
-    .mt-4 { margin-top: 1rem; }
+    .dna-empty { padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; }
     .mt-6 { margin-top: 1.5rem; }
-    .mt-8 { margin-top: 2rem; }
-    .text-center { text-align: center; }
-    .p-4 { padding: 1rem; }
 </style>
