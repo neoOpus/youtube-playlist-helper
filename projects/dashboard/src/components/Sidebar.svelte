@@ -1,5 +1,6 @@
 <svelte:options runes={true} />
 <script lang="ts">
+  import { onMount } from "svelte";
   import {
     Home,
     PlusCircle,
@@ -9,13 +10,31 @@
     Zap,
     LayoutDashboard,
     HelpCircle,
-    Activity
+    Activity,
+    GraduationCap,
+    BookOpen
   } from "lucide-svelte";
   import { router } from "../stores/router";
   import { appState } from "../stores/theme.svelte";
+  import { storageService } from "@yph/core";
+  import type { Playlist } from "@yph/core";
   import SystemHealth from "./SystemHealth.svelte";
 
   let { activeRoute = "/" } = $props();
+  let curriculumPaths = $state<Playlist[]>([]);
+
+  onMount(async () => {
+    const playlists = await storageService.getPlaylists();
+    curriculumPaths = playlists.filter(p => p.curriculum?.enabled);
+
+    // Listen for storage changes to update paths dynamically
+    storageService.onSave(async (id) => {
+        if (id.startsWith("playlist_")) {
+            const updated = await storageService.getPlaylists();
+            curriculumPaths = updated.filter(p => p.curriculum?.enabled);
+        }
+    });
+  });
 
   function isActive(path: string) {
     if (path === "/" && activeRoute === "/") return true;
@@ -44,6 +63,22 @@
         <span class="link-text">New Intake</span>
       </button>
     </div>
+
+    {#if curriculumPaths.length > 0}
+        <div class="nav-group">
+            <span class="group-label">Learning Paths</span>
+            {#each curriculumPaths as path}
+                <button
+                    class="nav-link curriculum-link"
+                    class:active={router.fullPath === `/path/${path.id}`}
+                    onclick={() => router.push(`/path/${path.id}`)}
+                >
+                    <BookOpen size="16" />
+                    <span class="link-text">{path.title}</span>
+                </button>
+            {/each}
+        </div>
+    {/if}
 
     <div class="nav-group">
       <span class="group-label">System</span>
@@ -98,6 +133,10 @@
   }
   .nav-link:hover { background: var(--border-subtle); color: var(--text-main); }
   .nav-link.active { background: rgba(var(--primary-rgb), 0.1); color: var(--primary); }
+
+  .curriculum-link { color: var(--secondary); opacity: 0.9; }
+  .curriculum-link.active { background: rgba(var(--secondary-rgb), 0.1); color: var(--secondary); }
+  .curriculum-link .link-text { font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .sidebar-health { padding: var(--space-4) var(--space-3); }
 

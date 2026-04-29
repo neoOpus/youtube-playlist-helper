@@ -20,6 +20,9 @@ function createRouter() {
         if (path.startsWith("/edit/")) {
             params.id = parts[2];
             activePath = "/edit/:id";
+        } else if (path.startsWith("/path/")) {
+            params.id = parts[2];
+            activePath = "/path/:id";
         }
 
         return { path: activePath, fullPath: path, params };

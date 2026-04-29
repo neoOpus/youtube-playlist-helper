@@ -11,7 +11,7 @@
     playlistService,
     aiService
   } from "@yph/core";
-  import type { Playlist, Video } from "@yph/core";
+  import type { Playlist, Video, CurriculumStep } from "@yph/core";
   import PlaylistVideo from "./PlaylistVideo.svelte";
   import SimplePagination from "./SimplePagination.svelte";
   import SectorDna from "./SectorDna.svelte";
@@ -24,7 +24,9 @@
     Search,
     ChevronLeft,
     Layers,
-    Terminal
+    Terminal,
+    GraduationCap,
+    ArrowRight
   } from "lucide-svelte";
   import { router } from "../stores/router";
   import { appState } from "../stores/theme.svelte";
@@ -62,6 +64,16 @@
       if (!playlist) return;
       playlist.videos = videos.map(v => v.videoId);
       playlist.lastModified = Date.now();
+
+      // Update curriculum steps if enabled
+      if (playlist.curriculum?.enabled) {
+          playlist.curriculum.steps = videos.map(v => ({
+              videoId: v.videoId,
+              title: v.title,
+              completed: (playlist?.curriculum?.steps.find(s => s.videoId === v.videoId)?.completed) || false
+          }));
+      }
+
       const id = await storageService.savePlaylist(playlist);
       playlist.id = id;
       onsave();
@@ -78,6 +90,21 @@
 
   function removeVideo(video: Video) {
       videos = videos.filter(v => v.videoId !== video.videoId);
+  }
+
+  function toggleCurriculum() {
+      if (!playlist) return;
+      if (!playlist.curriculum) {
+          playlist.curriculum = {
+              enabled: true,
+              currentStepIndex: 0,
+              steps: videos.map(v => ({ videoId: v.videoId, title: v.title, completed: false }))
+          };
+          notificationService.success("Curriculum Protocol initiated.");
+      } else {
+          playlist.curriculum.enabled = !playlist.curriculum.enabled;
+          notificationService.info(playlist.curriculum.enabled ? "Path resumed." : "Path suspended.");
+      }
   }
 
   let filteredVideos = $derived(
@@ -102,10 +129,20 @@
                 <button class="back-btn" onclick={() => router.push('/')}><ChevronLeft size="18" /></button>
                 <div class="title-wrap">
                     <input class="title-input" bind:value={playlist.title} />
-                    <span class="meta">{videos.length} NODES_INDEXED</span>
+                    <div class="meta-row">
+                        <span class="meta">{videos.length} NODES_INDEXED</span>
+                        {#if playlist.curriculum?.enabled}
+                            <span class="path-badge">LEARNING_PATH_ACTIVE</span>
+                        {/if}
+                    </div>
                 </div>
             </div>
             <div class="header-actions">
+                {#if playlist.curriculum?.enabled}
+                    <button class="path-btn" onclick={() => router.push(`/path/${playlist?.id}`)}>
+                        <span>ENTER_PATH</span> <ArrowRight size="16" />
+                    </button>
+                {/if}
                 <button class="outline-btn" onclick={() => showBulkAdd = !showBulkAdd}><Plus size="16" /> INTAKE</button>
                 <button class="primary-btn" onclick={save}><Save size="16" /> SYNC</button>
             </div>
@@ -146,8 +183,20 @@
             </div>
 
             <aside class="side-col">
-                <section class="dna-card surface-1">
-                    <div class="card-header"><Dna size="18" /> <span>SECTOR_DNA</span></div>
+                <section class="action-card surface-1">
+                    <div class="card-header"><GraduationCap size="16" /> <span>PATH_CONFIGURATION</span></div>
+                    <p class="desc">Promote this collection to a sequential Learning Path with progress tracking.</p>
+                    <button
+                        class="curriculum-toggle mt-4"
+                        class:active={playlist.curriculum?.enabled}
+                        onclick={toggleCurriculum}
+                    >
+                        {playlist.curriculum?.enabled ? 'DEACTIVATE_PATH' : 'INITIALIZE_LEARNING_PATH'}
+                    </button>
+                </section>
+
+                <section class="dna-card surface-1 mt-6">
+                    <div class="card-header"><Dna size="16" /> <span>SECTOR_DNA</span></div>
                     <SectorDna playlist={{...playlist, loadedVideos: videos}} />
                 </section>
 
@@ -168,12 +217,19 @@
     .back-btn { background: var(--bg-surface-1); border: 1px solid var(--border-base); color: var(--text-main); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
     .title-wrap { display: flex; flex-direction: column; }
-    .title-input { background: transparent; border: none; font-size: 1.75rem; font-weight: 800; color: var(--text-main); outline: none; letter-spacing: -0.02em; }
+    .title-input { background: transparent; border: none; font-size: 1.75rem; font-weight: 800; color: var(--text-main); outline: none; letter-spacing: -0.02em; width: 100%; }
+
+    .meta-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
     .meta { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); letter-spacing: 0.1em; }
+    .path-badge { font-size: 0.6rem; font-weight: 900; color: var(--secondary); border: 1px solid var(--secondary); padding: 1px 6px; border-radius: 4px; }
 
     .header-actions { display: flex; gap: 12px; }
-    .primary-btn { background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .primary-btn { background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+    .primary-btn:hover { background: var(--primary-hover); }
     .outline-btn { background: transparent; border: 1px solid var(--border-strong); color: var(--text-main); padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+    .path-btn { background: rgba(16, 185, 129, 0.1); color: var(--secondary); border: 1px solid var(--secondary); padding: 8px 16px; border-radius: 6px; font-weight: 900; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    .path-btn:hover { background: var(--secondary); color: var(--bg-app); }
 
     .editor-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; }
 
@@ -187,8 +243,18 @@
     .video-stack { display: flex; flex-direction: column; gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-base); border-radius: 8px; overflow: hidden; }
 
     .side-col { display: flex; flex-direction: column; }
-    .dna-card, .help-card { padding: 24px; }
-    .card-header { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 16px; border-bottom: 1px solid var(--border-base); padding-bottom: 12px; }
+    .action-card, .dna-card, .help-card { padding: 24px; }
+    .card-header { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.65rem; color: var(--text-dim); margin-bottom: 16px; border-bottom: 1px solid var(--border-base); padding-bottom: 12px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; font-weight: 500; }
+
+    .curriculum-toggle {
+        width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-strong);
+        background: var(--bg-surface-2); color: var(--text-main); font-weight: 700; font-size: 0.75rem;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .curriculum-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    .curriculum-toggle.active { background: var(--primary); color: white; border-color: var(--primary); }
 
     .help-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
     .help-card p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; font-weight: 500; }
@@ -196,6 +262,7 @@
     .loader { padding: 100px; text-align: center; font-weight: 800; color: var(--primary); }
     .empty-state { padding: 60px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .mt-6 { margin-top: 1.5rem; }
+    .mt-4 { margin-top: 1rem; }
 
     @media (max-width: 1100px) { .editor-grid { grid-template-columns: 1fr; } }
 </style>

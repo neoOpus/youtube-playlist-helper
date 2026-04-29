@@ -28,11 +28,26 @@ export interface Video {
   dateAdded?: number;
   aiSummary?: string;
   aiTags?: string[];
-  duration?: string;
+  duration?: string; // e.g. "12:45"
+  durationSeconds?: number;
   author?: string;
   views?: string;
   publishedDate?: string;
   energyVibe?: 'Chill' | 'Productive' | 'Intense' | 'Educational' | 'Inspirational' | 'Deep Focus';
+}
+
+export interface CurriculumStep {
+    videoId: string;
+    title: string;
+    completed: boolean;
+    milestone?: string;
+}
+
+export interface CurriculumSettings {
+    enabled: boolean;
+    currentStepIndex: number;
+    steps: CurriculumStep[];
+    targetCompletionDate?: number;
 }
 
 export interface Playlist {
@@ -44,37 +59,31 @@ export interface Playlist {
   saved?: boolean;
   groups?: string[];
   lastModified?: number;
+  curriculum?: CurriculumSettings;
 }
 
 export interface Settings {
   [id: string]: any;
-  // --- UI & Appearance ---
   themeChoice: ThemeChoice;
   viewMode: ViewMode;
   uiDensity: UiDensity;
   animationIntensity: AnimationIntensity;
   sidebarPosition: "left" | "right";
   accentColorOverride?: string;
-  fontScale: number; // 0.8 to 1.2
-
-  // --- Navigation & Workflow ---
+  fontScale: number;
   openPlaylistEditorAfterCreation: boolean;
   openPlaylistPage: boolean;
   closeAfterCombine: boolean;
   openPlaylistBuilderAfterAdd: boolean;
   openSavedPlaylistAfterAdd: boolean;
-  defaultEditorPage: "/new" | "/saved";
+  defaultEditorPage: string;
   saveCreatedPlaylists: boolean;
-
-  // --- Logic & Data ---
   disableThumbnails: boolean;
   disableContextBuilder: boolean;
   disableContextSaved: boolean;
-  autoSaveInterval: number; // minutes
+  autoSaveInterval: number;
   enableDeepScanByDefault: boolean;
   notificationVerbosity: "none" | "minimal" | "all";
-
-  // --- Performance ---
   reducedMotion: boolean;
   lowPowerMode: boolean;
 }

@@ -8,6 +8,7 @@
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
   import Gallery from "./views/Gallery.svelte";
+  import Curriculum from "./views/Curriculum.svelte";
   import PlaylistComparison from "./components/PlaylistComparison.svelte";
   import ActionToast from "./components/ActionToast.svelte";
   import Sidebar from "./components/Sidebar.svelte";
@@ -30,6 +31,7 @@
     "/support": Support,
     "/gallery": Gallery,
     "/edit/:id": PlaylistEditor,
+    "/path/:id": Curriculum,
   };
 
   let showPalette = $state(false);
