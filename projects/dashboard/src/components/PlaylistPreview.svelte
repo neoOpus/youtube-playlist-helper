@@ -9,8 +9,9 @@
   } from "@yph/ui-kit";
   import type { Playlist } from "@yph/core";
   import { storageService, actionLogger } from "@yph/core";
-  import { fade } from "svelte/transition";
-  import { Layers, Clock, MoreVertical, Trash2, Edit3 } from "lucide-svelte";
+  import { fade, scale } from "svelte/transition";
+  import { backOut } from "svelte/easing";
+  import { Layers, Clock, MoreVertical, Trash2, Edit3, ChevronRight } from "lucide-svelte";
   import { appState } from "../stores/theme.svelte";
 
   interface Props {
@@ -77,24 +78,36 @@
     onclick={handleCardClick}
     oncontextmenu={handleContextMenu}
     onkeydown={e => e.key === 'Enter' && handleCardClick(e as any)}
+    in:scale={{ start: 0.98, duration: 400, easing: backOut }}
 >
   <div class="card-header">
       <div class="selection" onclick={e => e.stopPropagation()} role="presentation">
           <SuperCheckbox checked={selected} onchange={handleSelect} />
       </div>
-      <div class="node-icon"><Layers size="16" /></div>
+      <div class="node-icon-group">
+          <div class="node-icon"><Layers size="16" /></div>
+          {#if videoCount > 0}
+            <div class="indicator-ring"></div>
+          {/if}
+      </div>
       <div class="meta">
-          <span class="count-badge">{videoCount}</span>
-          <span class="date">{lastModified}</span>
+          <div class="count-pill">
+              <span class="count">{videoCount}</span>
+              <span class="unit">NODES</span>
+          </div>
       </div>
   </div>
 
   <div class="card-body">
-    <h3>{playlist.title}</h3>
+    <h3>{playlist.title || "Untitled Infrastructure"}</h3>
+    <div class="modified-row">
+        <Clock size="10" />
+        <span>SYNCED: {lastModified}</span>
+    </div>
     {#if playlist.groups && playlist.groups.length > 0}
       <div class="tag-row">
         {#each playlist.groups as tag}
-          <span class="tag">#{tag}</span>
+          <span class="tag">{tag}</span>
         {/each}
       </div>
     {/if}
@@ -102,14 +115,16 @@
 
   <div class="card-footer">
     <div class="card-actions">
-        <button class="icon-btn" onclick={() => router.push(`/edit/${playlist.id}`)} title="Edit">
+        <button class="action-item" onclick={() => router.push(`/edit/${playlist.id}`)}>
             <Edit3 size="14" />
         </button>
-        <button class="icon-btn danger" onclick={deletePlaylist} title="Delete">
+        <button class="action-item danger" onclick={deletePlaylist}>
             <Trash2 size="14" />
         </button>
     </div>
-    <span class="node-id">{playlist.id.slice(0,6)}</span>
+    <div class="enter-hint">
+        <ChevronRight size="14" />
+    </div>
   </div>
 
   <ContextMenu
@@ -122,58 +137,77 @@
 
 <style>
   .playlist-card {
-    padding: var(--space-5);
+    padding: var(--space-6);
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-    transition: transform var(--duration-base) var(--ease-out), border-color var(--duration-base), box-shadow var(--duration-base);
+    gap: var(--space-5);
+    transition: all var(--duration-base) var(--ease-out);
     cursor: pointer;
     height: 100%;
-    min-height: 180px;
+    min-height: 200px;
     text-align: left;
     outline: none;
+    position: relative;
+    overflow: hidden;
   }
 
   .playlist-card:hover {
-      border-color: var(--border-strong);
+      border-color: var(--primary);
       transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--shadow-lg);
   }
 
   .playlist-card.is-selected {
       border-color: var(--primary);
-      background: rgba(var(--primary-rgb), 0.03);
+      background: rgba(var(--primary-rgb), 0.05);
   }
 
-  .card-header { display: flex; align-items: center; gap: 12px; }
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; }
 
+  .node-icon-group { position: relative; }
   .node-icon {
-      width: 32px; height: 32px;
+      width: 40px; height: 40px;
       background: var(--bg-surface-2);
-      border-radius: 6px;
+      border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      color: var(--text-secondary);
+      color: var(--primary);
+      border: 1px solid var(--border-base);
   }
 
-  .meta { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; }
-  .count-badge { font-size: 0.7rem; font-weight: 800; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 6px; border-radius: 4px; }
-  .date { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; font-weight: 600; }
+  .indicator-ring {
+      position: absolute; inset: -2px; border: 2px solid var(--primary);
+      border-radius: 12px; opacity: 0; transition: opacity 0.3s;
+  }
+  .playlist-card:hover .indicator-ring { opacity: 0.15; }
 
-  .card-body h3 { font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 4px 0 8px; line-height: 1.3; }
+  .count-pill {
+      display: flex; align-items: baseline; gap: 4px;
+      background: var(--bg-surface-2); padding: 4px 10px; border-radius: 20px;
+      border: 1px solid var(--border-base);
+  }
+  .count { font-size: 0.9rem; font-weight: 900; color: var(--text-main); line-height: 1; }
+  .unit { font-size: 0.55rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
+
+  .card-body h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 4px 0 6px; line-height: 1.2; letter-spacing: -0.01em; }
+
+  .modified-row { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; font-weight: 700; color: var(--text-dim); margin-bottom: 12px; }
 
   .tag-row { display: flex; flex-wrap: wrap; gap: 4px; }
-  .tag { font-size: 0.6rem; font-weight: 700; color: var(--text-secondary); background: var(--border-subtle); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+  .tag { font-size: 0.6rem; font-weight: 800; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
 
-  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
-  .card-actions { display: flex; gap: 8px; }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+  .card-actions { display: flex; gap: 6px; }
 
-  .icon-btn {
-      background: transparent; border: 1px solid var(--border-base);
-      color: var(--text-muted); padding: 6px; border-radius: 6px;
-      cursor: pointer; transition: all 0.2s;
+  .action-item {
+      background: var(--bg-surface-2); border: 1px solid var(--border-base);
+      color: var(--text-secondary); width: 32px; height: 32px; border-radius: 8px;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
   }
-  .icon-btn:hover { background: var(--border-subtle); color: var(--text-main); border-color: var(--border-strong); }
-  .icon-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+  .action-item:hover { border-color: var(--primary); color: var(--primary); transform: scale(1.05); }
+  .action-item.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
 
-  .node-id { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-muted); opacity: 0.5; }
+  .enter-hint { color: var(--text-muted); opacity: 0.3; transition: all 0.3s; }
+  .playlist-card:hover .enter-hint { opacity: 0.8; transform: translateX(4px); color: var(--primary); }
+
+  @media (max-width: 600px) { .playlist-card { padding: var(--space-4); } }
 </style>

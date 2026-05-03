@@ -1,7 +1,8 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
+  import { backOut } from "svelte/easing";
   import PlaylistEditor from "./components/PlaylistEditor.svelte";
   import New from "./views/New.svelte";
   import Saved from "./views/Saved.svelte";
@@ -39,13 +40,27 @@
   let CurrentView = $derived(routes[router.path] || Saved);
   let errorBoundary: any = $state();
 
+  let prevPath = "";
+  let direction = $state(1);
+
+  $effect(() => {
+      const current = router.path;
+      if (current !== prevPath) {
+          // Heuristic for directional transitions
+          const order = ["/", "/new", "/manage", "/sync", "/support"];
+          const prevIdx = order.indexOf(prevPath);
+          const currIdx = order.indexOf(current);
+          direction = currIdx >= prevIdx ? 1 : -1;
+          prevPath = current;
+      }
+  });
+
   $effect(() => {
     if (typeof document !== 'undefined') {
         document.documentElement.setAttribute("data-theme", appState.theme);
         document.documentElement.setAttribute("data-density", appState.density);
         document.documentElement.setAttribute("data-animation", appState.animation);
         document.documentElement.style.fontSize = `${appState.fontScale * 100}%`;
-        document.documentElement.classList.toggle('sidebar-right', appState.sidebar === 'right');
     }
   });
 
@@ -92,7 +107,8 @@
           {#key router.path}
             <div
                 class="view-transition-wrapper"
-                in:fade={{ duration: appState.reducedMotion ? 0 : 200 }}
+                in:fly={{ x: appState.reducedMotion ? 0 : 20 * direction, duration: 400, easing: backOut }}
+                out:fade={{ duration: 200 }}
             >
                 <CurrentView params={router.params} />
             </div>
@@ -110,6 +126,12 @@
     }
     .app-container.sidebar-right { flex-direction: row-reverse; }
     .sidebar-wrapper { width: var(--sidebar-width); flex-shrink: 0; height: 100%; z-index: 100; }
-    .main-content { flex: 1; overflow-y: auto; padding: var(--ui-padding); display: flex; flex-direction: column; gap: var(--ui-gap); }
+    .main-content { flex: 1; overflow-y: auto; padding: var(--ui-padding); position: relative; }
+
+    .view-transition-wrapper {
+        width: 100%; height: 100%;
+        display: flex; flex-direction: column; gap: var(--ui-gap);
+    }
+
     @media (max-width: 768px) { .sidebar-wrapper { width: var(--sidebar-collapsed-width); } }
 </style>

@@ -12,7 +12,8 @@
     HelpCircle,
     Activity,
     GraduationCap,
-    BookOpen
+    BookOpen,
+    Search
   } from "lucide-svelte";
   import { router } from "../stores/router";
   import { appState } from "../stores/theme.svelte";
@@ -27,7 +28,6 @@
     const playlists = await storageService.getPlaylists();
     curriculumPaths = playlists.filter(p => p.curriculum?.enabled);
 
-    // Listen for storage changes to update paths dynamically
     storageService.onSave(async (id) => {
         if (id.startsWith("playlist_")) {
             const updated = await storageService.getPlaylists();
@@ -57,10 +57,12 @@
       <button class="nav-link" class:active={isActive("/")} onclick={() => router.push("/")}>
         <Home size="18" />
         <span class="link-text">Collections</span>
+        {#if isActive("/")}<div class="active-indicator"></div>{/if}
       </button>
       <button class="nav-link" class:active={isActive("/new")} onclick={() => router.push("/new")}>
         <PlusCircle size="18" />
         <span class="link-text">New Intake</span>
+        {#if isActive("/new")}<div class="active-indicator"></div>{/if}
       </button>
     </div>
 
@@ -75,6 +77,7 @@
                 >
                     <BookOpen size="16" />
                     <span class="link-text">{path.title}</span>
+                    {#if router.fullPath === `/path/${path.id}`}<div class="active-indicator"></div>{/if}
                 </button>
             {/each}
         </div>
@@ -85,14 +88,12 @@
       <button class="nav-link" class:active={isActive("/manage")} onclick={() => router.push("/manage")}>
         <SettingsIcon size="18" />
         <span class="link-text">Preferences</span>
+        {#if isActive("/manage")}<div class="active-indicator"></div>{/if}
       </button>
       <button class="nav-link" class:active={isActive("/sync")} onclick={() => router.push("/sync")}>
         <Cloud size="18" />
         <span class="link-text">Sync Node</span>
-      </button>
-      <button class="nav-link" class:active={isActive("/merge")} onclick={() => router.push("/merge")}>
-        <Shield size="18" />
-        <span class="link-text">Resolver</span>
+        {#if isActive("/sync")}<div class="active-indicator"></div>{/if}
       </button>
     </div>
   </nav>
@@ -105,6 +106,7 @@
     <button class="nav-link" class:active={isActive("/support")} onclick={() => router.push("/support")}>
       <HelpCircle size="18" />
       <span class="link-text">Support</span>
+      {#if isActive("/support")}<div class="active-indicator"></div>{/if}
     </button>
   </div>
 </aside>
@@ -115,35 +117,35 @@
     display: flex;
     flex-direction: column;
     border-radius: 0;
-    border-top: none;
-    border-bottom: none;
+    border-right: 1px solid var(--border-base);
   }
 
-  .sidebar-header { padding: var(--space-8) var(--space-6); }
-  .logo { display: flex; align-items: center; gap: var(--space-3); cursor: pointer; }
-  .logo-mark { background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .sidebar-header { padding: 32px 24px; }
+  .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .logo-mark { background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3); }
   .logo-text { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em; color: var(--text-main); }
 
-  .sidebar-nav { flex: 1; padding: 0 var(--space-3); display: flex; flex-direction: column; gap: var(--space-8); overflow-y: auto; }
-  .nav-group { display: flex; flex-direction: column; gap: var(--space-1); }
-  .group-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 0 var(--space-4) var(--space-2); }
+  .sidebar-nav { flex: 1; padding: 0 12px; display: flex; flex-direction: column; gap: 32px; overflow-y: auto; }
+  .nav-group { display: flex; flex-direction: column; gap: 4px; }
+  .group-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; padding: 0 16px 8px; }
 
   .nav-link {
-    display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all var(--duration-fast) var(--ease-in-out); text-align: left; width: 100%; font-weight: 600; font-size: 0.9rem;
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all var(--duration-fast) var(--ease-in-out); text-align: left; width: 100%; font-weight: 600; font-size: 0.9rem; position: relative;
   }
   .nav-link:hover { background: var(--border-subtle); color: var(--text-main); }
   .nav-link.active { background: rgba(var(--primary-rgb), 0.1); color: var(--primary); }
 
-  .curriculum-link { color: var(--secondary); opacity: 0.9; }
+  .active-indicator { position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; background: var(--primary); border-radius: 0 4px 4px 0; box-shadow: 0 0 10px var(--primary); }
+
+  .curriculum-link { color: var(--secondary); }
   .curriculum-link.active { background: rgba(var(--secondary-rgb), 0.1); color: var(--secondary); }
-  .curriculum-link .link-text { font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .curriculum-link.active .active-indicator { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
 
-  .sidebar-health { padding: var(--space-4) var(--space-3); }
-
-  .sidebar-footer { padding: var(--space-4) var(--space-3); border-top: 1px solid var(--border-base); }
+  .sidebar-health { padding: 16px 12px; }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border-base); }
 
   @media (max-width: 1000px) {
-    .link-text, .group-label, .logo-text, .sidebar-health { display: none; }
-    .nav-link, .logo { justify-content: center; padding: var(--space-4); }
+    .link-text, .group-label, .logo-text, .sidebar-health, .active-indicator { display: none; }
+    .nav-link, .logo { justify-content: center; padding: 12px; }
   }
 </style>
