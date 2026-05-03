@@ -45,7 +45,7 @@
   import { onMount } from "svelte";
 </script>
 
-<div class="sector-comparison pro-glass mt-8" in:fade>
+<div class="sector-comparison surface-1 mt-8" in:fade>
     <div class="comp-header">
         <MergeIcon size="20" color="var(--primary)" />
         <div class="title-meta">
@@ -133,7 +133,6 @@
     .empty-state { padding: 2rem; text-align: center; color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 12px; border: 1px dashed var(--border); border-radius: 12px; }
     .empty-state p { font-size: 0.75rem; font-weight: 700; margin: 0; }
 
-    .mt-4 { margin-top: 1rem; }
     .mt-6 { margin-top: 1.5rem; }
     .mt-8 { margin-top: 2rem; }
 </style>

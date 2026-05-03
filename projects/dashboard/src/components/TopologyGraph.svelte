@@ -108,7 +108,7 @@
   }
 </script>
 
-<div class="topology-graph pro-glass mt-8" bind:this={container} in:fade>
+<div class="topology-graph surface-1 mt-8" bind:this={container} in:fade>
     <div class="graph-overlay">
         <span class="badge">D3 TOPOLOGY ENGINE</span>
     </div>

@@ -57,7 +57,7 @@
   }
 </script>
 
-<div class="auditor pro-glass p-8 mt-8" in:fade>
+<div class="auditor surface-1 p-8 mt-8" in:fade>
     <div class="audit-header mb-8">
         <div class="title-group">
             <TerminalIcon size="20" color="var(--primary)" />

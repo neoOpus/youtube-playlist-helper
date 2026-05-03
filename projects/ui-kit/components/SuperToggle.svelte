@@ -17,7 +17,7 @@
 </script>
 
 <div
-  class="super-toggle-container"
+  class="toggle-container"
   class:disabled
   onclick={toggle}
   role="switch"
@@ -25,60 +25,76 @@
   tabindex={disabled ? -1 : 0}
   onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle())}
 >
-  <div class="toggle-track" class:checked={active}>
-    <div class="toggle-thumb" class:checked={active}></div>
+  <div class="track" class:checked={active}>
+    <div class="thumb" class:checked={active}>
+        {#if active}
+            <div class="glow"></div>
+        {/if}
+    </div>
   </div>
   {#if label}
-    <span class="toggle-label">{label}</span>
+    <span class="label">{label}</span>
   {/if}
 </div>
 
 <style>
-  .super-toggle-container {
+  .toggle-container {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: 12px;
     cursor: pointer;
     user-select: none;
     outline: none;
+    padding: 2px;
   }
 
-  .toggle-track {
+  .track {
     width: 44px;
-    height: 22px;
-    background: var(--bg-secondary);
+    height: 24px;
+    background: var(--bg-surface-3);
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-full);
+    border-radius: 12px;
     position: relative;
-    transition: all var(--duration-fast) var(--easing-standard);
+    transition: all 0.3s var(--ease-spring);
   }
 
-  .toggle-track.checked {
+  .track.checked {
     background: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.3);
+    box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.2);
   }
 
-  .toggle-thumb {
-    width: 16px;
-    height: 16px;
+  .thumb {
+    width: 18px;
+    height: 18px;
     background: white;
     border-radius: 50%;
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: transform var(--duration-fast) var(--easing-standard);
+    transition: all 0.3s var(--ease-spring);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
 
-  .toggle-thumb.checked {
-    transform: translateX(22px);
+  .thumb.checked {
+    transform: translateX(20px);
   }
 
-  .toggle-label {
+  .glow {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+      opacity: 0.1;
+  }
+
+  .label {
     font-size: var(--font-sm);
     font-weight: 700;
-    color: var(--text);
+    color: var(--text-main);
   }
 
   .disabled {
@@ -86,8 +102,7 @@
     cursor: not-allowed;
   }
 
-  .super-toggle-container:focus-visible .toggle-track {
-    box-shadow: 0 0 0 2px var(--primary);
-    outline-offset: 2px;
+  .toggle-container:hover .track:not(.checked) {
+      border-color: var(--primary);
   }
 </style>

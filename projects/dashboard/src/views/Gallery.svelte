@@ -11,15 +11,19 @@
     LoadingSpinner,
     Tooltip,
     ContextMenu,
-    Breadcrumbs,
-    TerminalIcon,
-    SaveIcon,
-    DeleteIcon,
-    PencilIcon,
-    PlusMultiple,
-    SearchIcon,
-    CheckIcon
+    Breadcrumbs
   } from "@yph/ui-kit";
+  import {
+    Terminal,
+    Save,
+    Trash2,
+    Edit3,
+    Plus,
+    Search,
+    Check,
+    Layers,
+    Monitor
+  } from "lucide-svelte";
   import Modal from "../components/Modal.svelte";
 
   let showModal = $state(false);
@@ -31,25 +35,21 @@
   let toggleVal = $state(true);
   let radioVal = $state("opt1");
   let inputVal = $state("");
-  let selectVal = $state("red");
+  let selectVal = $state("blue");
 
   const radioOptions = [
-    { value: "opt1", label: "Option One" },
-    { value: "opt2", label: "Option Two" },
-    { value: "opt3", label: "Option Three" }
+    { value: "opt1", label: "Protocol Alpha" },
+    { value: "opt2", label: "Protocol Beta" }
   ];
 
   const selectOptions = [
-    { value: "red", label: "Pro Red" },
-    { value: "blue", label: "Sync Blue" },
-    { value: "green", label: "Success Green" }
+    { value: "blue", label: "Modern Blue" },
+    { value: "emerald", label: "Emerald Green" }
   ];
 
   const menuItems = [
-      { label: "Edit Protocol", icon: PencilIcon, onclick: () => alert("Edit") },
-      { label: "Sync Node", icon: TerminalIcon, onclick: () => alert("Sync") },
-      { label: "Export Data", icon: SaveIcon, onclick: () => alert("Export") },
-      { label: "Decommission", icon: DeleteIcon, onclick: () => alert("Delete"), danger: true }
+      { label: "Edit Protocol", icon: Edit3, onclick: () => {} },
+      { label: "Purge Node", icon: Trash2, onclick: () => {}, danger: true }
   ];
 
   function handleContextMenu(e: MouseEvent) {
@@ -60,155 +60,107 @@
   }
 </script>
 
-<main class="view-container" in:fade>
-  <header class="view-header aura-glow">
-    <Breadcrumbs items={[{label: 'INFRASTRUCTURE'}, {label: 'COMPONENT GALLERY', active: true}]} />
-    <h1>System Component Gallery</h1>
-    <p class="muted">A live showcase of the Professional Edition design system and interaction patterns.</p>
+<main class="view-container">
+  <header class="view-header">
+    <h1>Interface Architecture</h1>
+    <p class="text-secondary">Component showcase for the "Clean & Sleek" v4 design system.</p>
   </header>
 
   <div class="gallery-grid">
-    <!-- Buttons Section -->
-    <section class="gallery-section pro-glass">
-      <h2 class="section-title"><TerminalIcon size="18" /> Action Protocols (Buttons)</h2>
-      <div class="component-showcase buttons-row">
-        <div class="group">
-          <span class="label">States</span>
-          <div class="flex gap-4">
-            <SuperButton primary>Primary Action</SuperButton>
-            <SuperButton secondary>Secondary</SuperButton>
-            <SuperButton danger>Danger Protocol</SuperButton>
-            <SuperButton outline>Outline</SuperButton>
-            <SuperButton link>Link Action</SuperButton>
-          </div>
-        </div>
-        <div class="group mt-6">
-          <span class="label">Variants</span>
-          <div class="flex gap-4 items-center">
-            <SuperButton mini primary>Mini Button</SuperButton>
-            <SuperButton circle primary><PlusMultiple size="18" /></SuperButton>
-            <SuperButton disabled primary>Disabled Node</SuperButton>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Form Elements -->
-    <section class="gallery-section pro-glass">
-      <h2 class="section-title"><CheckIcon size="18" /> Input Interfacing</h2>
-      <div class="component-showcase form-grid">
-        <div class="group">
-          <span class="label">Text Field</span>
-          <SuperInput label="Node Identifier" bind:value={inputVal} placeholder="Enter ID..." />
-        </div>
-        <div class="group mt-6">
-          <span class="label">Select Menu</span>
-          <SuperSelect label="System Theme" bind:value={selectVal} options={selectOptions} />
-        </div>
-        <div class="group mt-6 flex gap-10">
-          <div class="sub-group">
-            <span class="label">Check State</span>
-            <SuperCheckbox label="Neural Link Active" bind:checked={checkboxVal} />
-          </div>
-          <div class="sub-group">
-            <span class="label">Toggle Switch</span>
-            <SuperToggle bind:active={toggleVal} />
-          </div>
-        </div>
-        <div class="group mt-6">
-          <span class="label">Radio Group</span>
-          <RadioGroup name="gallery-radio" bind:value={radioVal} options={radioOptions} />
-        </div>
-      </div>
-    </section>
-
-    <!-- Feedback & Overlays -->
-    <section class="gallery-section pro-glass">
-      <h2 class="section-title"><SearchIcon size="18" /> Intelligence Feedback</h2>
-      <div class="component-showcase feedback-grid">
-        <div class="group">
-          <span class="label">Loading Feedback (2Hz)</span>
-          <div class="flex items-center gap-4">
-            <LoadingSpinner size={32} />
-            <span class="small muted">Processing infrastructure...</span>
-          </div>
-        </div>
-        <div class="group mt-8">
-          <span class="label">Overlays</span>
-          <div class="flex gap-4">
-            <SuperButton outline onclick={() => showModal = true}>Launch Modal Wizard</SuperButton>
-            <div
-                class="context-trigger pro-glass-high" role="application" aria-label="Context Menu Demo"
-                oncontextmenu={handleContextMenu}
-            >
-                Right-Click for Context Menu
+    <section class="gallery-card surface-1">
+      <div class="card-header"><Terminal size="18" class="icon-primary" /> <h2>Action Foundations</h2></div>
+      <div class="showcase">
+          <div class="group">
+            <span class="g-label">State Variants</span>
+            <div class="row">
+                <SuperButton primary>Primary</SuperButton>
+                <SuperButton secondary>Secondary</SuperButton>
+                <SuperButton danger>Danger</SuperButton>
+                <SuperButton outline>Outline</SuperButton>
             </div>
           </div>
-        </div>
-        <div class="group mt-8">
-          <span class="label">Help Systems (Tooltips)</span>
-          <div class="flex gap-10">
-            <Tooltip text="Infrastructure node healthy" position="top">
-                <span class="tooltip-target">Hover for Top</span>
-            </Tooltip>
-            <Tooltip text="Security protocol enabled" position="right">
-                <span class="tooltip-target">Hover for Right</span>
-            </Tooltip>
+          <div class="group mt-8">
+            <span class="g-label">Structural Variants</span>
+            <div class="row items-center">
+                <SuperButton mini primary>Mini Action</SuperButton>
+                <SuperButton circle primary><Plus size="18" /></SuperButton>
+                <SuperButton disabled primary>Locked Node</SuperButton>
+            </div>
           </div>
-        </div>
       </div>
+    </section>
+
+    <section class="gallery-card surface-1">
+      <div class="card-header"><Monitor size="18" class="icon-primary" /> <h2>Input Interfacing</h2></div>
+      <div class="showcase form-grid">
+          <div class="row gap-8">
+              <SuperInput label="Node Identifier" bind:value={inputVal} placeholder="Enter ID..." />
+              <SuperSelect label="System Foundation" bind:value={selectVal} options={selectOptions} />
+          </div>
+          <div class="row mt-8 gap-12">
+              <SuperCheckbox label="Neural Link Active" bind:checked={checkboxVal} />
+              <SuperToggle label="Activity Stream" bind:active={toggleVal} />
+          </div>
+      </div>
+    </section>
+
+    <section class="gallery-card surface-1">
+        <div class="card-header"><Layers size="18" class="icon-primary" /> <h2>Overlays & Context</h2></div>
+        <div class="showcase row items-center gap-10">
+            <SuperButton outline onclick={() => showModal = true}>Initialize Modal</SuperButton>
+            <div class="context-trigger surface-2" oncontextmenu={handleContextMenu} role="button" tabindex="0">
+                Right-Click for Context Menu
+            </div>
+            <Tooltip text="Infrastructure status nominal" position="top">
+                <div class="tooltip-box">Hover for Insight</div>
+            </Tooltip>
+        </div>
     </section>
   </div>
 
-  <Modal bind:display={showModal} title="Neural Configuration Wizard">
-    <div class="modal-demo">
-      <p>This is a standard Professional Edition modal container with glassmorphism and A11y hardening.</p>
+  <Modal bind:display={showModal} title="System Configuration Protocol">
+    <div class="modal-content">
+      <p>This is the standardized modal interface. It utilizes high-contrast solid surfaces and refined typography for maximum clarity.</p>
       <div class="mt-8 flex justify-end">
-        <SuperButton primary onclick={() => showModal = false}>Complete Protocol</SuperButton>
+        <SuperButton primary onclick={() => showModal = false}>Finalize</SuperButton>
       </div>
     </div>
   </Modal>
 
-  <ContextMenu
-    items={menuItems}
-    bind:display={showContextMenu}
-    x={menuX}
-    y={menuY}
-  />
+  <ContextMenu items={menuItems} bind:display={showContextMenu} x={menuX} y={menuY} />
 </main>
 
 <style>
-  .gallery-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-8); margin-top: var(--space-8); }
-  .gallery-section { padding: var(--space-10); }
-  .section-title { margin-bottom: var(--space-8); display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-xl); }
-  .label { display: block; font-size: var(--font-xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: var(--space-3); }
+  .view-header { margin-bottom: 32px; }
+  h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
 
-  .flex { display: flex; }
-  .gap-4 { gap: 1rem; }
-  .gap-10 { gap: 2.5rem; }
+  .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  .gallery-card { padding: 32px; }
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border-base); padding-bottom: 16px; }
+  .card-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+  :global(.icon-primary) { color: var(--primary); }
+
+  .showcase { display: flex; flex-direction: column; gap: 16px; }
+  .g-label { display: block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 12px; }
+
+  .row { display: flex; gap: 16px; }
+  .gap-8 { gap: 32px; }
+  .gap-12 { gap: 48px; }
+  .gap-10 { gap: 40px; }
   .items-center { align-items: center; }
   .justify-end { justify-content: flex-end; }
-  .mt-6 { margin-top: 1.5rem; }
+  .flex { display: flex; }
   .mt-8 { margin-top: 2rem; }
 
   .context-trigger {
-      padding: var(--space-4) var(--space-8);
-      border-radius: var(--radius-md);
-      font-weight: 700;
-      font-size: var(--font-sm);
-      cursor: context-menu;
-      border: 1px dashed var(--border-strong);
-      color: var(--text-muted);
+      padding: 16px 32px; border-radius: 8px; border: 1px dashed var(--border-strong);
+      color: var(--text-secondary); font-weight: 700; cursor: context-menu;
   }
 
-  .tooltip-target {
-      padding: var(--space-2) var(--space-4);
-      background: var(--hover);
-      border-radius: var(--radius-sm);
-      font-weight: 800;
-      font-size: var(--font-xs);
-      cursor: help;
+  .tooltip-box {
+      padding: 8px 16px; background: var(--bg-surface-2); border: 1px solid var(--border-base);
+      border-radius: 6px; font-weight: 800; font-size: 0.75rem; cursor: help; color: var(--primary);
   }
 
-  .modal-demo { padding: var(--space-2); }
+  .modal-content p { color: var(--text-secondary); font-weight: 500; line-height: 1.6; }
 </style>

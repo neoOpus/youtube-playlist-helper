@@ -28,7 +28,7 @@
 
 {#if error}
     <div class="error-overlay" in:fade>
-        <div class="error-content pro-glass-high p-12" in:fly={{ y: 40, duration: 600 }}>
+        <div class="error-content surface-2 p-12" in:fly={{ y: 40, duration: 600 }}>
             <div class="error-header">
                 <div class="icon-ring">
                     <ShieldX size="48" color="#ff5252" />

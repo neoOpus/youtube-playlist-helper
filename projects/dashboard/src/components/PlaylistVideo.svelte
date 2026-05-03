@@ -5,24 +5,19 @@
     InfoIcon,
     SearchIcon,
     CheckIcon,
-    SmartElement,
-    SuperButton,
     SuperCheckbox
   } from "@yph/ui-kit";
   import type { Video } from "@yph/core";
   import VideoIdCard from "./VideoIdCard.svelte";
   import { metadataService, alternativesService, predictionEngine, notificationService } from "@yph/core";
+  import { ExternalLink, Info, Trash2, Search, Zap, Play } from "lucide-svelte";
 
   let {
     video = $bindable(),
-    active,
-    disableThumbnails = false,
     ondelete = (v: Video) => {},
     onsave = (v: Video) => {}
   }: {
     video: Video;
-    active: boolean;
-    disableThumbnails?: boolean;
     ondelete?: (v: Video) => void;
     onsave?: (v: Video) => void;
   } = $props();
@@ -32,24 +27,15 @@
       if (prediction) {
           video = { ...video, ...prediction };
           await handleSave();
-          notificationService.success("Intelligence recovered metadata.");
-      } else {
-          notificationService.info("No historical matches found for this node.");
+          notificationService.success("Metadata recovered.");
       }
   }
 
-  function videoClicked() {
-    window.open(video.url, "_blank");
-  }
-
-  function deleteVideo() {
-    ondelete(video);
-  }
+  function videoClicked() { window.open(video.url, "_blank"); }
+  function deleteVideo() { ondelete(video); }
 
   let showIdCard = $state(false);
-  function openIdCard() {
-    showIdCard = true;
-  }
+  function openIdCard() { showIdCard = true; }
 
   function trackDown() {
     const urls = alternativesService.getSearchUrls(video.title, video.videoId);
@@ -66,96 +52,84 @@
     });
     onsave(video);
   }
-
-  function handleKeydown(e: KeyboardEvent) {
-      if (e.key === "Enter" || e.key === " ") {
-          videoClicked();
-      }
-  }
 </script>
 
-<SmartElement
-  className="playlist-video-revamp {video.watched ? 'is-watched' : ''}"
-  {active}
-  selected={video.selected}
-  ariaLabel="Video node: {video.title}"
->
-  <div
-    class="video-selection"
-    onclick={(e) => e.stopPropagation()}
-    onkeydown={(e) => e.stopPropagation()}
-    role="presentation"
-  >
+<div class="video-row surface-1" class:watched={video.watched} class:selected={video.selected}>
+  <div class="selection">
     <SuperCheckbox bind:checked={video.selected} />
   </div>
 
-  {#if !disableThumbnails}
-    <div
-        class="thumbnail-container pro-glass"
-        onclick={(e) => { e.preventDefault(); videoClicked(); }}
-        onkeydown={handleKeydown}
-        role="button"
-        tabindex="0"
-        aria-label="Play: {video.title}"
-    >
-        <img
-          alt="Thumbnail for {video.title}"
-          src={video.thumbnailUrl}
-          loading="lazy"
-        />
-        {#if video.watched}
-            <div class="watched-overlay">
-                <CheckIcon size="24" color="white" />
-            </div>
-        {/if}
-    </div>
-  {/if}
-
-  <div class="video-details" onclick={videoClicked} onkeydown={handleKeydown} role="button" tabindex="0" aria-label="View details for {video.title}">
-        {#if video.title === "Unknown Video" || !video.title}
-            <button class="predict-btn" onclick={(e) => { e.stopPropagation(); handlePredict(); }} title="Predict Metadata via AI" aria-label="Predict metadata">
-                <SearchIcon size="12" /> Predict
-            </button>
-        {/if}
-    <div class="title-row">
-        {#if video.watched}
-            <span class="badge primary">WATCHED</span>
-        {/if}
-        <span class="video-title">{video.title}</span>
-    </div>
-    <span class="video-channel">{video.channel}</span>
+  <div class="thumbnail" onclick={videoClicked} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && videoClicked()}>
+      <img src={video.thumbnailUrl} alt="" loading="lazy" />
+      <div class="thumb-overlay"><Play size="20" fill="currentColor" /></div>
   </div>
 
-  <div class="video-btns" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
-    <button onclick={trackDown} title="Track down alternatives" class="video-action-btn" aria-label="Search alternatives">
-        <SearchIcon size="16" />
-    </button>
-    <button onclick={openIdCard} title="Video ID Card" class="video-action-btn" aria-label="Open ID Card">
-        <InfoIcon size="16" />
-    </button>
-    <button onclick={deleteVideo} title="Delete video" class="video-action-btn danger-btn" aria-label="Delete node">
-        <DeleteIcon size="16" />
-    </button>
+  <div class="info" onclick={videoClicked} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && videoClicked()}>
+      <div class="title-row">
+          {#if video.title === "Unknown Video"}
+              <button class="fix-btn" onclick={e => { e.stopPropagation(); handlePredict(); }}>
+                  <Zap size="10" /> RECOVER
+              </button>
+          {/if}
+          <span class="title">{video.title}</span>
+      </div>
+      <div class="meta-row">
+          <span class="channel">{video.channel}</span>
+          {#if video.watched}<span class="watched-badge">WATCHED</span>{/if}
+      </div>
   </div>
-</SmartElement>
+
+  <div class="actions">
+      <button class="action-btn" onclick={trackDown} title="Search"><Search size="14" /></button>
+      <button class="action-btn" onclick={openIdCard} title="Details"><Info size="14" /></button>
+      <button class="action-btn danger" onclick={deleteVideo} title="Remove"><Trash2 size="14" /></button>
+  </div>
+</div>
 
 <VideoIdCard bind:display={showIdCard} bind:video on:save={handleSave} />
 
 <style>
-  :global(.playlist-video-revamp) { padding: var(--space-4) var(--space-6); align-items: center; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--border); transition: all 0.3s var(--easing-standard); }
-  :global(.playlist-video-revamp:hover) { background: var(--hover); border-color: rgba(var(--primary-rgb), 0.3); transform: translateX(8px); box-shadow: 0 4px 12px var(--shadow); }
-  .video-selection { margin-right: var(--space-4); display: flex; align-items: center; }
-  .thumbnail-container { position: relative; width: 140px; height: 78px; margin-right: var(--space-6); border-radius: var(--radius-md); overflow: hidden; cursor: pointer; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+  .video-row {
+    display: flex; align-items: center; padding: 12px 16px; gap: 16px;
+    transition: background-color var(--duration-fast);
+  }
+
+  .video-row:hover { background-color: var(--hover); }
+  .video-row.selected { border-color: var(--primary); background: rgba(var(--primary-rgb), 0.05); }
+
+  .selection { display: flex; align-items: center; }
+
+  .thumbnail {
+      width: 100px; height: 56px; border-radius: 4px; overflow: hidden;
+      position: relative; cursor: pointer; flex-shrink: 0; background: var(--bg-app);
+  }
   img { width: 100%; height: 100%; object-fit: cover; }
-  .watched-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(var(--bg), 0.6); display: flex; justify-content: center; align-items: center; pointer-events: none; }
-  .video-details { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; cursor: pointer; gap: var(--space-1); }
-  .title-row { display: flex; align-items: center; gap: var(--space-3); }
-  .video-title { font-weight: 800; font-size: var(--font-base); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--text); letter-spacing: -0.01em; }
-  .predict-btn { background: linear-gradient(135deg, var(--primary), #d500f9); color: white; border: none; padding: 2px 10px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 800; cursor: pointer; margin-bottom: var(--space-1); display: flex; align-items: center; gap: 4px; width: fit-content; text-transform: uppercase; letter-spacing: 0.05em; }
-  :global(.playlist-video-revamp.is-watched) .video-title { opacity: 0.5; text-decoration: line-through; }
-  .video-channel { font-size: var(--font-xs); font-weight: 700; color: var(--text-muted); opacity: 0.7; }
-  .video-btns { display: flex; justify-content: center; align-items: center; margin-left: var(--space-6); gap: var(--space-3); }
-  .video-action-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--hover); border: 1px solid var(--border); color: var(--text-muted); transition: all 0.2s; }
-  .video-action-btn:hover { color: white; background: var(--primary); border-color: var(--primary); transform: scale(1.1); }
-  .danger-btn:hover { background: var(--danger); border-color: var(--danger); }
+  .thumb-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;
+  }
+  .thumbnail:hover .thumb-overlay { opacity: 1; }
+
+  .info { flex: 1; min-width: 0; cursor: pointer; }
+  .title-row { display: flex; align-items: center; gap: 8px; }
+  .title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .fix-btn {
+      background: var(--primary); color: white; border: none; padding: 2px 6px; border-radius: 4px;
+      font-size: 0.6rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;
+  }
+
+  .meta-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+  .channel { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; }
+  .watched-badge { font-size: 0.6rem; font-weight: 800; color: var(--success); }
+  .watched .title { opacity: 0.5; text-decoration: line-through; }
+
+  .actions { display: flex; gap: 8px; }
+  .action-btn {
+      background: transparent; border: 1px solid var(--border-base); color: var(--text-muted);
+      width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+  }
+  .action-btn:hover { background: var(--border-subtle); color: var(--text-main); border-color: var(--border-strong); }
+  .action-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
 </style>
