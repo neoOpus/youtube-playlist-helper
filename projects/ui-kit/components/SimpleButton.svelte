@@ -1,76 +1,37 @@
 <svelte:options runes={true} />
 <script lang="ts">
-  import SmartElement from "./SmartElement.svelte";
-
-  interface Props {
-    bgcolor?: string;
-    className?: string;
-    disabled?: boolean;
-    onclick?: (e: MouseEvent) => void;
-    children?: import("svelte").Snippet;
-    title?: string;
-    ariaLabel?: string;
-  }
-
-  let {
-    bgcolor = "",
-    className = "",
-    disabled = false,
-    onclick,
-    children,
-    title,
-    ariaLabel
-  }: Props = $props();
+  let { children, onclick, primary, danger, outline, mini, disabled } = $props();
 </script>
 
-<SmartElement
-  className="simple-btn {className}"
-  style="background-color: {bgcolor}"
-  {disabled}
-  {onclick}
-  {title}
-  {ariaLabel}
+<button
+    class="simple-btn"
+    class:primary
+    class:danger
+    class:outline
+    class:mini
+    {disabled}
+    onclick={onclick}
 >
   {@render children?.()}
-</SmartElement>
+</button>
 
 <style>
-  :global(.simple-btn) {
-    border: 1px solid var(--border);
-    background: transparent;
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    color: var(--text);
-    font-size: var(--font-sm);
-    font-weight: 700;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    font-family: inherit;
-    text-decoration: none;
-    outline: none;
+  .simple-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px; border-radius: 8px; font-size: var(--font-sm); font-weight: 700;
+    border: 1px solid var(--border-base); background: var(--bg-surface-2); color: var(--text-main);
+    cursor: pointer; transition: all 0.2s; outline: none; user-select: none;
   }
 
-  :global(.simple-btn:hover:not(:disabled)) {
-    background: var(--hover);
-    border-color: var(--text-muted);
-    transform: translateY(-1px);
-  }
+  .simple-btn:hover:not(:disabled) { border-color: var(--border-strong); background: var(--bg-surface-3); }
+  .simple-btn:focus-visible { box-shadow: var(--shadow-focus); border-color: var(--primary); }
 
-  :global(.simple-btn:active:not(:disabled)) {
-      transform: translateY(0);
-  }
+  .primary { background: var(--primary); border-color: var(--primary); color: white; }
+  .primary:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); }
 
-  :global(.simple-btn:focus-visible) {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
+  .danger { background: var(--danger); border-color: var(--danger); color: white; }
+  .outline { background: transparent; border-color: var(--border-strong); }
+  .mini { padding: 4px 12px; font-size: 0.75rem; }
 
-  :global(.simple-btn:disabled) {
-      opacity: 0.5;
-      cursor: not-allowed;
-  }
+  .simple-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

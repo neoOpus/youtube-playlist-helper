@@ -13,7 +13,8 @@
     Activity,
     GraduationCap,
     BookOpen,
-    Search
+    Search,
+    ChevronRight
   } from "lucide-svelte";
   import { router } from "../stores/router";
   import { appState } from "../stores/theme.svelte";
@@ -46,7 +47,7 @@
 <aside class="sidebar surface-1">
   <div class="sidebar-header">
     <div class="logo" onclick={() => router.push("/")} aria-hidden="true">
-      <div class="logo-mark"><Zap size="18" fill="currentColor" /></div>
+      <div class="logo-mark"><Zap size={18} fill="currentColor" /></div>
       <span class="logo-text">YPH_PRO</span>
     </div>
   </div>
@@ -55,12 +56,12 @@
     <div class="nav-group">
       <span class="group-label">Library</span>
       <button class="nav-link" class:active={isActive("/")} onclick={() => router.push("/")}>
-        <Home size="18" />
+        <div class="link-icon"><Home size={18} /></div>
         <span class="link-text">Collections</span>
         {#if isActive("/")}<div class="active-indicator"></div>{/if}
       </button>
       <button class="nav-link" class:active={isActive("/new")} onclick={() => router.push("/new")}>
-        <PlusCircle size="18" />
+        <div class="link-icon"><PlusCircle size={18} /></div>
         <span class="link-text">New Intake</span>
         {#if isActive("/new")}<div class="active-indicator"></div>{/if}
       </button>
@@ -75,7 +76,7 @@
                     class:active={router.fullPath === `/path/${path.id}`}
                     onclick={() => router.push(`/path/${path.id}`)}
                 >
-                    <BookOpen size="16" />
+                    <div class="link-icon"><BookOpen size={16} /></div>
                     <span class="link-text">{path.title}</span>
                     {#if router.fullPath === `/path/${path.id}`}<div class="active-indicator"></div>{/if}
                 </button>
@@ -86,12 +87,12 @@
     <div class="nav-group">
       <span class="group-label">System</span>
       <button class="nav-link" class:active={isActive("/manage")} onclick={() => router.push("/manage")}>
-        <SettingsIcon size="18" />
+        <div class="link-icon"><SettingsIcon size={18} /></div>
         <span class="link-text">Preferences</span>
         {#if isActive("/manage")}<div class="active-indicator"></div>{/if}
       </button>
       <button class="nav-link" class:active={isActive("/sync")} onclick={() => router.push("/sync")}>
-        <Cloud size="18" />
+        <div class="link-icon"><Cloud size={18} /></div>
         <span class="link-text">Sync Node</span>
         {#if isActive("/sync")}<div class="active-indicator"></div>{/if}
       </button>
@@ -104,7 +105,7 @@
 
   <div class="sidebar-footer">
     <button class="nav-link" class:active={isActive("/support")} onclick={() => router.push("/support")}>
-      <HelpCircle size="18" />
+      <div class="link-icon"><HelpCircle size={18} /></div>
       <span class="link-text">Support</span>
       {#if isActive("/support")}<div class="active-indicator"></div>{/if}
     </button>
@@ -118,6 +119,7 @@
     flex-direction: column;
     border-radius: 0;
     border-right: 1px solid var(--border-base);
+    background-color: var(--bg-app);
   }
 
   .sidebar-header { padding: 32px 24px; }
@@ -132,10 +134,12 @@
   .nav-link {
     display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all var(--duration-fast) var(--ease-in-out); text-align: left; width: 100%; font-weight: 600; font-size: 0.9rem; position: relative;
   }
-  .nav-link:hover { background: var(--border-subtle); color: var(--text-main); }
+  .nav-link:hover { background: var(--surface-hover); color: var(--text-main); }
   .nav-link.active { background: rgba(var(--primary-rgb), 0.1); color: var(--primary); }
 
-  .active-indicator { position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; background: var(--primary); border-radius: 0 4px 4px 0; box-shadow: 0 0 10px var(--primary); }
+  .link-icon { display: flex; align-items: center; justify-content: center; width: 20px; }
+
+  .active-indicator { position: absolute; left: 4px; top: 12px; bottom: 12px; width: 3px; background: var(--primary); border-radius: 4px; box-shadow: 0 0 10px var(--primary); }
 
   .curriculum-link { color: var(--secondary); }
   .curriculum-link.active { background: rgba(var(--secondary-rgb), 0.1); color: var(--secondary); }

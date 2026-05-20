@@ -11,7 +11,7 @@
   import { storageService, actionLogger } from "@yph/core";
   import { fade, scale } from "svelte/transition";
   import { backOut } from "svelte/easing";
-  import { Layers, Clock, MoreVertical, Trash2, Edit3, ChevronRight } from "lucide-svelte";
+  import { Layers, Clock, MoreVertical, Trash2, Edit3, ChevronRight, Activity, BookOpen } from "lucide-svelte";
   import { appState } from "../stores/theme.svelte";
 
   interface Props {
@@ -47,9 +47,7 @@
     }
   }
 
-  function handleSelect(newVal: boolean) {
-      onselect(newVal);
-  }
+  function handleSelect(newVal: boolean) { onselect(newVal); }
 
   function handleCardClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
@@ -75,6 +73,7 @@
     tabindex="0"
     class="playlist-card surface-1"
     class:is-selected={selected}
+    class:is-curriculum={playlist.curriculum?.enabled}
     onclick={handleCardClick}
     oncontextmenu={handleContextMenu}
     onkeydown={e => e.key === 'Enter' && handleCardClick(e as any)}
@@ -84,28 +83,39 @@
       <div class="selection" onclick={e => e.stopPropagation()} role="presentation">
           <SuperCheckbox checked={selected} onchange={handleSelect} />
       </div>
-      <div class="node-icon-group">
-          <div class="node-icon"><Layers size="16" /></div>
-          {#if videoCount > 0}
-            <div class="indicator-ring"></div>
+
+      <div class="node-badge">
+          {#if playlist.curriculum?.enabled}
+              <div class="curr-icon" title="Learning Path Active"><BookOpen size="14" /></div>
+          {:else}
+              <div class="node-icon"><Layers size="14" /></div>
           {/if}
       </div>
+
       <div class="meta">
-          <div class="count-pill">
-              <span class="count">{videoCount}</span>
-              <span class="unit">NODES</span>
+          <div class="count-chip">
+              <span class="val">{videoCount}</span>
+              <span class="lab">NODES</span>
           </div>
       </div>
   </div>
 
   <div class="card-body">
     <h3>{playlist.title || "Untitled Infrastructure"}</h3>
-    <div class="modified-row">
-        <Clock size="10" />
-        <span>SYNCED: {lastModified}</span>
+    <div class="info-row">
+        <div class="timestamp">
+            <Clock size="10" />
+            <span>{lastModified}</span>
+        </div>
+        {#if playlist.curriculum?.enabled}
+            <div class="progress-mini">
+                <div class="prog-label">TRACKING</div>
+                <Activity size="10" class="text-secondary" />
+            </div>
+        {/if}
     </div>
     {#if playlist.groups && playlist.groups.length > 0}
-      <div class="tag-row">
+      <div class="tag-cloud">
         {#each playlist.groups as tag}
           <span class="tag">{tag}</span>
         {/each}
@@ -115,40 +125,39 @@
 
   <div class="card-footer">
     <div class="card-actions">
-        <button class="action-item" onclick={() => router.push(`/edit/${playlist.id}`)}>
+        <button class="action-btn" onclick={() => router.push(`/edit/${playlist.id}`)} title="Edit Configuration">
             <Edit3 size="14" />
         </button>
-        <button class="action-item danger" onclick={deletePlaylist}>
+        {#if playlist.curriculum?.enabled}
+            <button class="action-btn path-enter" onclick={() => router.push(`/path/${playlist.id}`)} title="Enter Learning Path">
+                <ChevronRight size="14" />
+            </button>
+        {/if}
+        <button class="action-btn danger" onclick={deletePlaylist} title="Purge Node">
             <Trash2 size="14" />
         </button>
     </div>
-    <div class="enter-hint">
-        <ChevronRight size="14" />
-    </div>
+    <div class="system-id">#{playlist.id.slice(0, 4)}</div>
   </div>
 
-  <ContextMenu
-    items={menuItems}
-    bind:display={showMenu}
-    x={menuX}
-    y={menuY}
-  />
+  <ContextMenu items={menuItems} bind:display={showMenu} x={menuX} y={menuY} />
 </div>
 
 <style>
   .playlist-card {
-    padding: var(--space-6);
+    padding: var(--space-5);
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-4);
     transition: all var(--duration-base) var(--ease-out);
     cursor: pointer;
     height: 100%;
-    min-height: 200px;
+    min-height: 180px;
     text-align: left;
     outline: none;
     position: relative;
-    overflow: hidden;
+    border: 1px solid var(--border-base);
+    border-radius: 12px;
   }
 
   .playlist-card:hover {
@@ -157,57 +166,50 @@
       box-shadow: var(--shadow-lg);
   }
 
-  .playlist-card.is-selected {
-      border-color: var(--primary);
-      background: rgba(var(--primary-rgb), 0.05);
-  }
+  .is-selected { border-color: var(--primary); background: rgba(var(--primary-rgb), 0.03); }
+  .is-curriculum { border-left: 3px solid var(--secondary); }
 
-  .card-header { display: flex; align-items: flex-start; justify-content: space-between; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; }
 
-  .node-icon-group { position: relative; }
-  .node-icon {
-      width: 40px; height: 40px;
-      background: var(--bg-surface-2);
-      border-radius: 10px;
+  .node-badge { display: flex; gap: 8px; }
+  .node-icon, .curr-icon {
+      width: 28px; height: 28px; border-radius: 6px;
       display: flex; align-items: center; justify-content: center;
-      color: var(--primary);
-      border: 1px solid var(--border-base);
+      background: var(--bg-surface-2); border: 1px solid var(--border-base);
   }
+  .node-icon { color: var(--text-muted); }
+  .curr-icon { color: var(--secondary); border-color: var(--secondary); }
 
-  .indicator-ring {
-      position: absolute; inset: -2px; border: 2px solid var(--primary);
-      border-radius: 12px; opacity: 0; transition: opacity 0.3s;
+  .count-chip {
+      background: var(--bg-surface-2); padding: 2px 8px; border-radius: 20px;
+      display: flex; align-items: baseline; gap: 4px; border: 1px solid var(--border-base);
   }
-  .playlist-card:hover .indicator-ring { opacity: 0.15; }
+  .count-chip .val { font-size: 0.8rem; font-weight: 900; color: var(--text-main); }
+  .count-chip .lab { font-size: 0.5rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
 
-  .count-pill {
-      display: flex; align-items: baseline; gap: 4px;
-      background: var(--bg-surface-2); padding: 4px 10px; border-radius: 20px;
-      border: 1px solid var(--border-base);
-  }
-  .count { font-size: 0.9rem; font-weight: 900; color: var(--text-main); line-height: 1; }
-  .unit { font-size: 0.55rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
+  .card-body h3 { font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 4px 0 4px; line-height: 1.2; letter-spacing: -0.01em; }
 
-  .card-body h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 4px 0 6px; line-height: 1.2; letter-spacing: -0.01em; }
+  .info-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .timestamp { display: flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 700; color: var(--text-dim); }
+  .progress-mini { display: flex; align-items: center; gap: 6px; }
+  .prog-label { font-size: 0.55rem; font-weight: 900; color: var(--secondary); letter-spacing: 0.05em; }
 
-  .modified-row { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; font-weight: 700; color: var(--text-dim); margin-bottom: 12px; }
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { font-size: 0.6rem; font-weight: 800; color: var(--text-muted); background: var(--bg-surface-2); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border-subtle); text-transform: uppercase; }
 
-  .tag-row { display: flex; flex-wrap: wrap; gap: 4px; }
-  .tag { font-size: 0.6rem; font-weight: 800; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-
-  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
   .card-actions { display: flex; gap: 6px; }
 
-  .action-item {
+  .action-btn {
       background: var(--bg-surface-2); border: 1px solid var(--border-base);
-      color: var(--text-secondary); width: 32px; height: 32px; border-radius: 8px;
+      color: var(--text-secondary); width: 28px; height: 28px; border-radius: 6px;
       cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
   }
-  .action-item:hover { border-color: var(--primary); color: var(--primary); transform: scale(1.05); }
-  .action-item.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
+  .action-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .action-btn.danger:hover { color: var(--danger); border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+  .path-enter { background: rgba(16, 185, 129, 0.05); color: var(--secondary); border-color: var(--secondary); }
+  .path-enter:hover { background: var(--secondary); color: white; }
 
-  .enter-hint { color: var(--text-muted); opacity: 0.3; transition: all 0.3s; }
-  .playlist-card:hover .enter-hint { opacity: 0.8; transform: translateX(4px); color: var(--primary); }
+  .system-id { font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; font-weight: 800; color: var(--text-dim); opacity: 0.4; }
 
-  @media (max-width: 600px) { .playlist-card { padding: var(--space-4); } }
 </style>

@@ -3,6 +3,8 @@ import { DEFAULT_SETTINGS } from "../types/model";
 
 const PLAYLIST_KEY_PREFIX = "playlist_";
 const ID_COUNTER_KEY = "PlaylistIdCounter";
+const SCHEMA_VERSION_KEY = "YPH_Schema_Version";
+const CURRENT_SCHEMA_VERSION = 4;
 
 type StorageChangeListener = (id: string, obj: any) => void | Promise<void>;
 const changeListeners: Set<StorageChangeListener> = new Set();
@@ -22,6 +24,21 @@ function notifySavedPlaylistsChanged() {
 export const storageService = {
   onSave(listener: StorageChangeListener) {
     changeListeners.add(listener);
+  },
+
+  async init() {
+      const version = await this.fetchObject(SCHEMA_VERSION_KEY, 0);
+      if (version < CURRENT_SCHEMA_VERSION) {
+          await this.runMigrations(version);
+      }
+  },
+
+  async runMigrations(fromVersion: number) {
+      console.log(`Storage: Migrating schema from v${fromVersion} to v${CURRENT_SCHEMA_VERSION}`);
+      if (fromVersion < 4) {
+          // Placeholder for future heavy migrations
+      }
+      await this.storeObject(SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION);
   },
 
   async fetchObject(id: string, defaultValue: any): Promise<any> {

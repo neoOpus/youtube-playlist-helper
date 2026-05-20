@@ -9,6 +9,7 @@ interface AppState {
     sidebar: "left" | "right";
     fontScale: number;
     reducedMotion: boolean;
+    lowPowerMode: boolean;
 }
 
 export const appState = $state<AppState>({
@@ -18,7 +19,8 @@ export const appState = $state<AppState>({
     animation: "full",
     sidebar: "left",
     fontScale: 1.0,
-    reducedMotion: false
+    reducedMotion: false,
+    lowPowerMode: false
 });
 
 export const themes = [
@@ -28,10 +30,10 @@ export const themes = [
 ];
 
 export async function initAppState() {
+    await storageService.init(); // Core service initialization
     const settings = await storageService.getSettings();
     updateFromSettings(settings);
 
-    // Watch for device theme changes
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const updateTheme = () => {
         if (appState.choice === "device") {
@@ -49,6 +51,7 @@ function updateFromSettings(settings: Settings) {
     appState.sidebar = settings.sidebarPosition;
     appState.fontScale = settings.fontScale;
     appState.reducedMotion = settings.reducedMotion;
+    appState.lowPowerMode = settings.lowPowerMode;
 
     if (settings.themeChoice !== "device") {
         appState.theme = settings.themeChoice as Theme;
