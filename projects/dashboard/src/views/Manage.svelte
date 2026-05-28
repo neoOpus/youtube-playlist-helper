@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade, fly } from "svelte/transition";
-  import { storageService, notificationService } from "@yph/core";
+  import { storageService, notificationService, audioService } from "@yph/core";
   import {
     DeleteIcon,
     SaveIcon,
@@ -23,6 +23,8 @@
   import SectorDna from "../components/SectorDna.svelte";
   import BulkOperations from "../components/BulkOperations.svelte";
   import AIArchitect from "../components/AIArchitect.svelte";
+  import NeoStressTest from "../components/NeoStressTest.svelte";
+  import SmartRepairHub from "../components/SmartRepairHub.svelte";
   import type { Playlist } from "@yph/core";
 
   let playlists = $state<Playlist[]>([]);
@@ -38,6 +40,7 @@
       if (confirm("DANGER: This will decommission the entire infrastructure. Proceed?")) {
           for (const pl of playlists) await storageService.removePlaylist(pl);
           notificationService.success("Infrastructure purged.");
+          audioService.playSignal('error');
           window.location.reload();
       }
   }
@@ -85,6 +88,11 @@
             <SmartRules />
             <BulkOperations />
             <AIArchitect />
+
+            {#if advancedMode}
+                <NeoStressTest />
+                <SmartRepairHub />
+            {/if}
         </div>
 
         <aside class="actions-sidebar">

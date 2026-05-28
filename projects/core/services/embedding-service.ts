@@ -5,6 +5,7 @@ env.allowLocalModels = false;
 env.useBrowserCache = true;
 
 let extractor: any = null;
+const vectorCache = new Map<string, number[]>();
 
 export const embeddingService = {
   /**
@@ -22,13 +23,18 @@ export const embeddingService = {
 
   /**
    * Generates embeddings for a given text.
+   * Utilizes an in-memory cache for instant responses on repeated queries.
    */
   async getEmbeddings(text: string): Promise<number[]> {
+    if (vectorCache.has(text)) return vectorCache.get(text)!;
+
     await this.init();
     if (!extractor) return [];
 
     const output = await extractor(text, { pooling: 'mean', normalize: true });
-    return Array.from(output.data);
+    const result = Array.from(output.data) as number[];
+    vectorCache.set(text, result);
+    return result;
   },
 
   /**
@@ -43,6 +49,7 @@ export const embeddingService = {
         normA += vecA[i] * vecA[i];
         normB += vecB[i] * vecB[i];
     }
+    if (normA === 0 || normB === 0) return 0;
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 };

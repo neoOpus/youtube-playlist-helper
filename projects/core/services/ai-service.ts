@@ -63,6 +63,7 @@ class RemoteProvider implements AIProvider {
     - aiTags: An array of 3-5 relevant tags.
     - energyVibe: One of "Chill", "Productive", "Intense", "Educational".
     - takeaways: A list of 3 key learning points or highlights.
+    - logic: A short explanation of why these tags were chosen.
 
     Video Title: ${video.title}
     Video Channel: ${video.channel}
@@ -95,7 +96,7 @@ class RemoteProvider implements AIProvider {
             aiSummary: content.aiSummary,
             aiTags: content.aiTags,
             energyVibe: content.energyVibe,
-            notes: content.takeaways ? `Key Takeaways:\n- ${content.takeaways.join('\n- ')}` : undefined
+            notes: content.takeaways ? `Key Takeaways:\n- ${content.takeaways.join('\n- ')}\n\nAI Logic: ${content.logic}` : undefined
         };
     } catch (error) {
         console.error("Remote AI analysis failed, falling back to local:", error);

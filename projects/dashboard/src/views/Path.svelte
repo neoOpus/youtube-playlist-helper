@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade, fly, slide } from "svelte/transition";
-  import { storageService, notificationService } from "@yph/core";
+  import { storageService, notificationService, audioService } from "@yph/core";
   import type { Playlist, Video } from "@yph/core";
   import { CheckIcon, TerminalIcon, PlusMultiple, InfoIcon, SuperButton, Breadcrumbs } from "@yph/ui-kit";
 
@@ -33,6 +33,7 @@
           playlist.loadedVideos[activeVideoIndex].watched = true;
           await storageService.savePlaylist(playlist);
           notificationService.success("Milestone achieved.");
+          audioService.playSignal('milestone');
 
           if (activeVideoIndex < playlist.loadedVideos.length - 1) {
               activeVideoIndex++;

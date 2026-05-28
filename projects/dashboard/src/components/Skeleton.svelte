@@ -1,29 +1,30 @@
-<svelte:options runes={true} />
 <script lang="ts">
-  let { width = "100%", height = "1rem", borderRadius = "4px", className = "" } = $props();
+  let { width = "100%", height = "1rem", radius = "var(--radius-sm)" } = $props();
 </script>
 
-<div
-    class="pro-skeleton {className}"
-    style:width={width}
-    style:height={height}
-    style:border-radius={borderRadius}
-></div>
+<div class="skeleton" style="width: {width}; height: {height}; border-radius: {radius};">
+    <div class="shimmer"></div>
+</div>
 
 <style>
-    .pro-skeleton {
+    .skeleton {
+        background: var(--bg-tertiary);
+        overflow: hidden;
+        position: relative;
+    }
+    .shimmer {
+        position: absolute;
+        inset: 0;
         background: linear-gradient(
             90deg,
-            rgba(255, 255, 255, 0.03) 25%,
-            rgba(255, 255, 255, 0.08) 50%,
-            rgba(255, 255, 255, 0.03) 75%
+            transparent 0%,
+            rgba(255, 255, 255, 0.03) 50%,
+            transparent 100%
         );
-        background-size: 200% 100%;
-        animation: skeleton-loading 1.5s infinite;
+        animation: shimmer 2s infinite;
+        transform: translateX(-100%);
     }
-
-    @keyframes skeleton-loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+    @keyframes shimmer {
+        100% { transform: translateX(100%); }
     }
 </style>

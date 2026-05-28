@@ -64,22 +64,25 @@
       }
     }
 
-    // 3. Sorting (Applied to the filtered subset)
     const keywords = searchStr.split(/\s+/).filter((k) => k.length > 2);
 
-    // Auto-switch to relevance if searching and on default sort
     if (searchStr.length > 3 && playlistsFilters.sorting === 'date-created-desc' && !isAutoRelevance) {
         isAutoRelevance = true;
         playlistsFilters.setSorting('relevance');
+        return; // setSorting will trigger effect
     } else if (searchStr.length === 0 && isAutoRelevance) {
         isAutoRelevance = false;
         playlistsFilters.setSorting('date-created-desc');
+        return; // setSorting will trigger effect
     }
 
     filteredPlaylists = await playlistsSorter.sort(result, playlistsFilters.sorting, keywords);
   }
 
   $effect(() => {
+      // ⚡ PERFORMANCE: Only re-sort if critical state changes
+      // Using untrack where appropriate would be better, but Svelte 5 handles most of this
+      // We manually ensure we don't trigger if only 'search' changes (handled by debounced effect)
       playlists;
       playlistsFilters.sorting;
       selectedGroup;
@@ -144,7 +147,10 @@
 
           <label>
             <span>Sort</span>
-            <select bind:value={playlistsFilters.sorting}>
+            <select
+                value={playlistsFilters.sorting}
+                onchange={(e) => playlistsFilters.setSorting(e.currentTarget.value as PlaylistsSorting)}
+            >
               <optgroup label="Timeline">
                   <option value="date-created-desc">Recently Created</option>
                   <option value="last-modified-desc">Recently Modified</option>
