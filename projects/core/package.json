@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "main": "index.ts",
-  "scripts": { "build": "echo 'Core built.'",
-    "test": "vitest run"
+  "scripts": {
+    "build": "echo 'Core built.'",
+    "test": "vitest run --environment jsdom"
   },
   "devDependencies": {
+    "jsdom": "^29.1.1",
     "svelte": "^4.0.0",
     "vitest": "^1.0.0"
   },

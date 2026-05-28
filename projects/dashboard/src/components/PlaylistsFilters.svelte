@@ -3,7 +3,7 @@
   import { debounce, playlistsSorter } from "@yph/core";
   import type { Playlist, PlaylistsSorting } from "@yph/core";
   import { SearchIcon, Filter, TerminalIcon } from "@yph/ui-kit";
-  import { playlistsSearch, playlistsSorting } from "../stores/playlists-filters";
+  import { playlistsFilters } from "../stores/playlists-filters.svelte";
   import { fly, fade } from "svelte/transition";
 
   let {
@@ -37,7 +37,7 @@
     }
 
     // 2. Search Filter
-    const searchStr = $playlistsSearch.trim();
+    const searchStr = playlistsFilters.search.trim();
     if (searchStr) {
       if (useRegex) {
         try {
@@ -68,21 +68,21 @@
     const keywords = searchStr.split(/\s+/).filter((k) => k.length > 2);
 
     // Auto-switch to relevance if searching and on default sort
-    if (searchStr.length > 3 && $playlistsSorting === 'date-created-desc' && !isAutoRelevance) {
+    if (searchStr.length > 3 && playlistsFilters.sorting === 'date-created-desc' && !isAutoRelevance) {
         isAutoRelevance = true;
-        playlistsSorting.set('relevance');
+        playlistsFilters.setSorting('relevance');
     } else if (searchStr.length === 0 && isAutoRelevance) {
         isAutoRelevance = false;
-        playlistsSorting.set('date-created-desc');
+        playlistsFilters.setSorting('date-created-desc');
     }
 
-    result = playlistsSorter.sort(result, $playlistsSorting, keywords);
+    result = playlistsSorter.sort(result, playlistsFilters.sorting, keywords);
     filteredPlaylists = result;
   }
 
   $effect(() => {
       playlists;
-      $playlistsSorting;
+      playlistsFilters.sorting;
       selectedGroup;
       useRegex;
       searchInVideos;
@@ -90,7 +90,7 @@
   });
 
   $effect(() => {
-      $playlistsSearch;
+      playlistsFilters.search;
       debouncedFiltersUpdated();
   });
 
@@ -118,7 +118,7 @@
               <SearchIcon size="16" color="var(--primary)" />
               <input
                 type="text"
-                bind:value={$playlistsSearch}
+                bind:value={playlistsFilters.search}
                 placeholder={useRegex ? "Regex Search..." : "Deep Search nodes... (Press /)"}
               />
               {#if isAutoRelevance}
@@ -145,7 +145,7 @@
 
           <label>
             <span>Sort</span>
-            <select bind:value={$playlistsSorting}>
+            <select bind:value={playlistsFilters.sorting}>
               <optgroup label="Timeline">
                   <option value="date-created-desc">Recently Created</option>
                   <option value="last-modified-desc">Recently Modified</option>

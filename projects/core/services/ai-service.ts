@@ -1,18 +1,17 @@
-import type { Video, Playlist } from "../types/model.js";
+import type { Video, Playlist, AISettings } from "../types/model.js";
+import { storageService } from "./storage-service.js";
+
+export interface AIProvider {
+  analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>>;
+  summarizePlaylist(playlist: Playlist, videos: Video[], settings: AISettings): Promise<string>;
+}
 
 /**
- * AI Service for intelligent playlist analysis and optimization.
- * Part of the "Professional Edition" upgrade.
- * Optimized for high-throughput relevance scoring.
+ * Local Heuristics Provider: No external API calls, uses regex and keywords.
+ * Fallback and "Free Tier" default.
  */
-export const aiService = {
-  /**
-   * Analyzes a video and returns enrichment data.
-   */
+class LocalHeuristicsProvider implements AIProvider {
   async analyzeVideo(video: Video): Promise<Partial<Video>> {
-    // Simulate AI analysis delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
     const tags = ["AI-Enhanced"];
     const title = (video.title || "").toLowerCase();
     if (title.includes("tutorial")) tags.push("Educational");
@@ -20,7 +19,6 @@ export const aiService = {
     if (title.includes("music")) tags.push("Music");
     if (title.includes("rick")) tags.push("Meme", "Classic");
 
-    // Vibe/Energy heuristic analysis
     let vibe: Video['energyVibe'] = 'Productive';
     const vibes: Video['energyVibe'][] = ['Chill', 'Productive', 'Intense', 'Educational'];
 
@@ -28,7 +26,6 @@ export const aiService = {
     else if (title.includes("workout") || title.includes("metal")) vibe = 'Intense';
     else if (title.includes("course") || title.includes("lesson")) vibe = 'Educational';
     else {
-        // Pseudo-random but deterministic based on title length for variety
         vibe = vibes[title.length % vibes.length];
     }
 
@@ -37,13 +34,143 @@ export const aiService = {
       aiTags: tags,
       energyVibe: vibe
     };
+  }
+
+  async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
+    return `This is a collection of ${videos.length} videos focusing on "${playlist.title}". Neural density is high.`;
+  }
+}
+
+/**
+ * Remote Provider: Supports OpenAI-compatible endpoints.
+ */
+class RemoteProvider implements AIProvider {
+  async analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>> {
+    if (!settings.apiKey && settings.provider !== 'local-heuristics') {
+        return new LocalHeuristicsProvider().analyzeVideo(video);
+    }
+
+    const baseUrl = settings.baseUrl || this.getDefaultBaseUrl(settings.provider);
+    const model = settings.model || this.getDefaultModel(settings.provider);
+
+    const prompt = `Analyze this video title and description. Return a JSON object with:
+    - aiSummary: A short 1-sentence summary.
+    - aiTags: An array of 3-5 relevant tags.
+    - energyVibe: One of "Chill", "Productive", "Intense", "Educational".
+
+    Video Title: ${video.title}
+    Video Channel: ${video.channel}
+    Video Notes: ${video.notes || 'None'}`;
+
+    try {
+        const response = await fetch(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${settings.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    { role: "system", content: "You are a helpful AI that analyzes video content. Always return valid JSON." },
+                    { role: "user", content: prompt }
+                ],
+                response_format: { type: "json_object" },
+                temperature: settings.temperature ?? 0.7
+            })
+        });
+
+        if (!response.ok) throw new Error(`AI Provider Error: ${response.statusText}`);
+
+        const data = await response.json();
+        const content = JSON.parse(data.choices[0].message.content);
+
+        return {
+            aiSummary: content.aiSummary,
+            aiTags: content.aiTags,
+            energyVibe: content.energyVibe
+        };
+    } catch (error) {
+        console.error("Remote AI analysis failed, falling back to local:", error);
+        return new LocalHeuristicsProvider().analyzeVideo(video);
+    }
+  }
+
+  async summarizePlaylist(playlist: Playlist, videos: Video[], settings: AISettings): Promise<string> {
+    const baseUrl = settings.baseUrl || this.getDefaultBaseUrl(settings.provider);
+    const model = settings.model || this.getDefaultModel(settings.provider);
+
+    const prompt = `Summarize this playlist titled "${playlist.title}" which contains ${videos.length} videos.
+    Provide a cohesive summary of the overall theme and learning goals.`;
+
+    try {
+        const response = await fetch(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${settings.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model,
+                messages: [{ role: "user", content: prompt }],
+                temperature: 0.5
+            })
+        });
+
+        if (!response.ok) return "Neural density is high. Summary unavailable.";
+        const data = await response.json();
+        return data.choices[0].message.content;
+    } catch {
+        return "Neural density is high. Summary pending.";
+    }
+  }
+
+  private getDefaultBaseUrl(provider: string): string {
+      switch (provider) {
+          case 'openrouter': return "https://openrouter.ai/api/v1";
+          case 'anthropic': return "https://api.anthropic.com/v1"; // Usually needs a bridge for OpenAI compatibility
+          default: return "https://api.openai.com/v1";
+      }
+  }
+
+  private getDefaultModel(provider: string): string {
+      switch (provider) {
+          case 'openrouter': return "meta-llama/llama-3-8b-instruct:free";
+          case 'openai': return "gpt-3.5-turbo";
+          default: return "gpt-3.5-turbo";
+      }
+  }
+}
+
+const providers: Record<string, AIProvider> = {
+    'local-heuristics': new LocalHeuristicsProvider(),
+    'openai': new RemoteProvider(),
+    'openrouter': new RemoteProvider(),
+    'anthropic': new RemoteProvider(),
+    'custom-openai-compatible': new RemoteProvider()
+};
+
+/**
+ * AI Service for intelligent playlist analysis and optimization.
+ */
+export const aiService = {
+  async getSettings(): Promise<AISettings> {
+    const settings = await storageService.getSettings();
+    return settings.ai || {
+        provider: 'local-heuristics',
+        model: 'default',
+        enabled: true
+    };
   },
 
-  /**
-   * Calculates relevance score for a video based on keywords.
-   * Uses a multi-signal approach (Title, AI Tags, Rating).
-   * ⚡ PERFORMANCE: Keywords should be pre-lowercased for maximum speed in hot loops.
-   */
+  async analyzeVideo(video: Video): Promise<Partial<Video>> {
+    const settings = await this.getSettings();
+    if (!settings.enabled) return {};
+
+    const provider = providers[settings.provider] || providers['local-heuristics'];
+    return provider.analyzeVideo(video, settings);
+  },
+
   calculateVideoRelevance(video: Video, keywords: string[]): number {
     if (!video || !keywords.length) return 0;
     let score = 0;
@@ -51,18 +178,12 @@ export const aiService = {
     const summary = (video.aiSummary || "").toLowerCase();
     const tags = video.aiTags || [];
 
-    // ⚡ PERFORMANCE: Pre-lowercase tags once per video, not per keyword.
     const lowerTags = tags.map((t) => t.toLowerCase());
 
     for (let i = 0; i < keywords.length; i++) {
       const k = keywords[i];
-
-      // Signal 1: Title (High weight)
       if (title.includes(k)) score += 10;
-      // Signal 2: Summary (Medium weight)
       if (summary.includes(k)) score += 5;
-
-      // Signal 3: AI Tags (High weight)
       for (let j = 0; j < lowerTags.length; j++) {
         if (lowerTags[j].includes(k)) {
           score += 15;
@@ -70,16 +191,10 @@ export const aiService = {
         }
       }
     }
-
-    // Signal 4: Rating (Small boost)
     if (video.rating) score += video.rating * 5;
-
     return score;
   },
 
-  /**
-   * Aggregates relevance for an entire playlist.
-   */
   calculatePlaylistRelevance(playlist: Playlist, keywords: string[]): number {
     if (!playlist || !keywords.length) return 0;
     let score = 0;
@@ -89,7 +204,6 @@ export const aiService = {
     for (let i = 0; i < keywords.length; i++) {
       const k = keywords[i];
       if (title.includes(k)) score += 20;
-
       for (let j = 0; j < groups.length; j++) {
         if (groups[j].includes(k)) {
           score += 10;
@@ -100,7 +214,6 @@ export const aiService = {
 
     const videos = playlist.loadedVideos || [];
     if (videos.length > 0) {
-      // Calculate average video relevance
       const videoScores = videos.map((v) =>
         this.calculateVideoRelevance(v, keywords)
       );
@@ -109,9 +222,6 @@ export const aiService = {
     return score;
   },
 
-  /**
-   * Expands a set of keywords using semantic associations.
-   */
   expandKeywords(keywords: string[]): string[] {
     const expansion: Record<string, string[]> = {
       coding: ["programming", "developer", "software", "tutorial", "code", "github"],
@@ -133,15 +243,9 @@ export const aiService = {
     return Array.from(expanded);
   },
 
-  /**
-   * Sorts videos by relevance using a Schwartzian transform for performance.
-   */
   sortByRelevance(videos: Video[], keywords: string[]): Video[] {
     if (!keywords.length) return videos;
     const expandedAndNormalized = this.expandKeywords(keywords);
-
-    // ⚡ PERFORMANCE: Schwartzian Transform
-    // Pre-calculating relevance scores prevents O(N log N) redundant calculations.
     return videos
       .map((v) => ({
         video: v,
@@ -152,13 +256,12 @@ export const aiService = {
   },
 
   async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
-    return `This is a collection of ${videos.length} videos focusing on "${playlist.title}". Neural density is high.`;
+    const settings = await this.getSettings();
+    const provider = providers[settings.provider] || providers['local-heuristics'];
+    return provider.summarizePlaylist(playlist, videos, settings);
   },
 
   sequenceOptimizer: {
-    /**
-     * Optimizes video sequence based on rating and relevance signals.
-     */
     optimize(videos: Video[]) {
       return [...videos].sort((a, b) => (b.rating || 0) - (a.rating || 0));
     },

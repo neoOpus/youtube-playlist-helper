@@ -12,6 +12,18 @@ export type PlaylistsSorting =
   | "video-count-asc"
   | "last-modified-desc";
 
+export type AIProviderType = 'local-heuristics' | 'openai' | 'openrouter' | 'anthropic' | 'custom-openai-compatible';
+
+export interface AISettings {
+  provider: AIProviderType;
+  model: string;
+  apiKey?: string;
+  baseUrl?: string;
+  maxTokens?: number;
+  temperature?: number;
+  enabled: boolean;
+}
+
 export interface Video {
   id: string | number;
   videoId: string;
@@ -66,6 +78,7 @@ export interface Settings {
   disableContextSaved: boolean;
   themeChoice: ThemeChoice;
   viewMode: ViewMode;
+  ai: AISettings;
 }
 
 export interface SmartRule {

@@ -60,6 +60,11 @@ const DEFAULT_SETTINGS: Settings = {
   disableContextSaved: false,
   themeChoice: "device",
   viewMode: "simple",
+  ai: {
+    provider: "local-heuristics",
+    model: "default",
+    enabled: true
+  },
 };
 
 /**

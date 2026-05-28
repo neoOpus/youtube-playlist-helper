@@ -17,6 +17,8 @@ export const enrichmentAgent = {
 
         // Run every 60 seconds for background maintenance
         enrichmentInterval = setInterval(async () => {
+            const settings = await aiService.getSettings();
+            if (!settings.enabled) return;
             await this.processQueue();
         }, 60000);
 
@@ -33,7 +35,7 @@ export const enrichmentAgent = {
         if (playlists.length === 0) return;
 
         let processedCount = 0;
-        const BATCH_SIZE = 5; // Increased batch size for professional throughput
+        const BATCH_SIZE = 10; // Increased batch size for professional throughput
 
         // Reset cursors if playlists changed significantly
         if (lastPlaylistIndex >= playlists.length) {

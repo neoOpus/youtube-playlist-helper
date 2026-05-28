@@ -22,6 +22,7 @@
   import SmartRules from "../components/SmartRules.svelte";
   import SectorDna from "../components/SectorDna.svelte";
   import BulkOperations from "../components/BulkOperations.svelte";
+  import AIArchitect from "../components/AIArchitect.svelte";
   import type { Playlist } from "@yph/core";
 
   let playlists = $state<Playlist[]>([]);
@@ -83,6 +84,7 @@
 
             <SmartRules />
             <BulkOperations />
+            <AIArchitect />
         </div>
 
         <aside class="actions-sidebar">

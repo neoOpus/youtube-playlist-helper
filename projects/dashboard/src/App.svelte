@@ -15,7 +15,7 @@
   import CommandPalette from "./components/CommandPalette.svelte";
   import ShortcutHUD from "./components/ShortcutHUD.svelte";
   import ProErrorBoundary from "./components/ProErrorBoundary.svelte";
-  import { playlistsSearch } from "./stores/playlists-filters";
+  import { playlistsFilters } from "./stores/playlists-filters.svelte";
   import { themeState, initTheme } from "./stores/theme.svelte";
   import { ParametricBackground } from "@yph/ui-kit";
   import { enrichmentAgent } from "@yph/core";
@@ -69,7 +69,7 @@
           } else if (e.key.toLowerCase() === "g") {
               router.push("/gallery");
           } else if (e.key === "Escape") {
-              playlistsSearch.set("");
+              playlistsFilters.search = "";
           }
       };
 
