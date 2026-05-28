@@ -8,6 +8,7 @@
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
   import Gallery from "./views/Gallery.svelte";
+  import Path from "./views/Path.svelte";
   import PlaylistComparison from "./components/PlaylistComparison.svelte";
   import ActionToast from "./components/ActionToast.svelte";
   import Sidebar from "./components/Sidebar.svelte";
@@ -18,7 +19,7 @@
   import { playlistsFilters } from "./stores/playlists-filters.svelte";
   import { themeState, initTheme } from "./stores/theme.svelte";
   import { ParametricBackground } from "@yph/ui-kit";
-  import { enrichmentAgent } from "@yph/core";
+  import { enrichmentAgent, recoveryAgent } from "@yph/core";
   import { router } from "./stores/router";
 
   const routes: Record<string, any> = {
@@ -30,6 +31,7 @@
     "/support": Support,
     "/gallery": Gallery,
     "/edit/:id": PlaylistEditor,
+    "/path/:id": Path,
   };
 
   let showPalette = $state(false);
@@ -45,7 +47,7 @@
 
   onMount(() => {
       initTheme()
-          .then(() => enrichmentAgent.start())
+          .then(() => enrichmentAgent.start().then(() => recoveryAgent.start()))
           .catch((e) => errorBoundary?.catchError(e as Error));
 
       const handleKeyDown = (e: KeyboardEvent) => {

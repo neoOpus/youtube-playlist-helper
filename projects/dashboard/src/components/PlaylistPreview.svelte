@@ -1,6 +1,5 @@
 <svelte:options runes={true} />
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import { router } from "../stores/router";
   import {
     DeleteIcon,
@@ -57,6 +56,10 @@
       router.push(`/edit/${playlist.id}`);
   }
 
+  function navigateToPath() {
+      router.push(`/path/${playlist.id}`);
+  }
+
   function handleMouseMove(e: MouseEvent) {
       const target = e.currentTarget as HTMLElement;
       const rect = target.getBoundingClientRect();
@@ -74,6 +77,7 @@
   }
 
   const menuItems = [
+      { label: "Launch Protocol", icon: PlaylistPlayIcon, onclick: navigateToPath },
       { label: "Modify System", icon: PencilIcon, onclick: navigateToEdit },
       { label: "Neural Scan", icon: TerminalIcon, onclick: () => console.log("Scan initiated") },
       { label: "Export Data", icon: SaveIcon, onclick: () => console.log("Export") },
@@ -89,7 +93,7 @@
     oncontextmenu={handleContextMenu}
     onclick={(e) => {
         if ((e.target as HTMLElement).closest('.selection-overlay, .actions, .card-actions')) return;
-        navigateToEdit();
+        navigateToPath();
     }}
     in:scale={{ start: 0.95, duration: 400 }}
 >
@@ -178,7 +182,6 @@
     z-index: 10;
   }
 
-  /* Custom mouse-following shadow enhancement */
   .playlist-card:hover {
       --luminous-shadow: 0 0 30px -5px rgba(var(--primary-rgb), 0.15);
   }

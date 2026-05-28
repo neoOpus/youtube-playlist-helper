@@ -1,31 +1,37 @@
 <svelte:options runes={true} />
 <script lang="ts">
-  import {
-    LayoutDashboard,
-    PlusCircle,
-    Settings,
-    MessageSquare,
-    ChevronDown,
-    ChevronRight,
-    Monitor,
-    Shield,
-    RefreshCw,
-    Database,
-    Terminal,
-    Merge,
-    Layers
-  } from "lucide-svelte";
+  import { onMount } from "svelte";
   import { Tooltip } from "@yph/ui-kit";
   import { themeState, themes, setTheme } from "../stores/theme.svelte";
   import { router } from "../stores/router";
   import { fly, fade } from "svelte/transition";
+  import {
+      LayoutDashboard,
+      PlusCircle,
+      Database,
+      RefreshCw,
+      Merge,
+      Settings,
+      MessageSquare,
+      ChevronRight,
+      ChevronDown,
+      Monitor,
+      Layers,
+      Terminal,
+      GraduationCap
+  } from "lucide-svelte";
+  import { storageService } from "@yph/core";
+  import type { Playlist } from "@yph/core";
 
-  let { activeRoute } = $props<{ activeRoute: string }>();
-  let systemSettingsExpanded = $state(true);
+  let { activeRoute }: { activeRoute: string } = $props();
+  let systemSettingsExpanded = $state(false);
+  let playlists = $state<Playlist[]>([]);
 
-  function isActive(path: string) {
-    return activeRoute === path;
-  }
+  onMount(async () => {
+      playlists = await storageService.getPlaylists();
+  });
+
+  const isActive = (path: string) => activeRoute === path;
 
   function handleMouseMove(e: MouseEvent) {
       const target = e.currentTarget as HTMLElement;
@@ -37,17 +43,19 @@
   }
 </script>
 
-<aside class="pro-sidebar pro-glass" in:fly={{ x: -20, duration: 600 }}>
+<aside class="pro-sidebar">
   <div class="sidebar-header">
     <div class="logo-area">
-      <div class="logo-icon"><Shield size="24" /></div>
-      <span class="logo-text">YPH <span class="badge primary">PRO</span></span>
+      <div class="logo-icon">
+        <Terminal size="20" />
+      </div>
+      <span class="logo-text">YPH <span class="badge">PRO</span></span>
     </div>
   </div>
 
   <nav class="sidebar-nav">
     <div class="nav-section">
-      <span class="section-label">Main Navigation</span>
+      <span class="section-label">Command Center</span>
       <Tooltip text="Saved Collection" position="right">
         <button
           class="nav-item luminous-hover"
@@ -75,6 +83,22 @@
           {#if isActive("/new")}<div class="active-indicator" in:fade></div>{/if}
         </button>
       </Tooltip>
+    </div>
+
+    <div class="nav-section">
+      <span class="section-label">Learning Paths</span>
+      {#each playlists.filter(p => p.groups?.includes('Curriculum')).slice(0, 3) as path}
+        <Tooltip text={path.title} position="right">
+          <button
+            class="nav-item luminous-hover"
+            class:active={isActive(`/path/${path.id}`)}
+            onclick={() => router.push(`/path/${path.id}`)}
+          >
+            <div class="icon-wrapper"><GraduationCap size="20" /></div>
+            <span class="nav-text">{path.title}</span>
+          </button>
+        </Tooltip>
+      {/each}
     </div>
 
     <div class="nav-section">

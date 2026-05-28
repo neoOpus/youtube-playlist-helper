@@ -38,6 +38,7 @@ export interface Video {
   dateAdded?: number;
   aiSummary?: string;
   aiTags?: string[];
+  embeddings?: number[];
   // Advanced metadata for exports
   duration?: string;
   author?: string;
@@ -79,6 +80,7 @@ export interface Settings {
   themeChoice: ThemeChoice;
   viewMode: ViewMode;
   ai: AISettings;
+  useLocalEmbeddings: boolean;
 }
 
 export interface SmartRule {

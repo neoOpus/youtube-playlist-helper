@@ -1,9 +1,10 @@
-import { storageService, videoService } from '@yph/core';
+import { storageService, videoService, bookmarkService } from '@yph/core';
 
 const playlistBuilderId = "yphPlaylistBuilder";
 const playlistBuilderPageId = "yphPlaylistBuilderPage";
 const addVideoToPlaylistId = "yphAddVideoToPlaylist";
 const addVideoToPlaylistPageId = "yphAddVideoToPlaylistPage";
+const scanBookmarksId = "yphScanBookmarks";
 const idSep = "#";
 const addVideoToPlaylistItemPrefix = `${addVideoToPlaylistId}${idSep}`;
 const addVideoToPlaylistPageItemPrefix = `${addVideoToPlaylistPageId}${idSep}`;
@@ -49,6 +50,13 @@ async function buildContextMenus(settings: any) {
     contextMenuIds.push(addVideoToPlaylistPageId);
     await buildAddVideoToPlaylistItems();
   }
+
+  chrome.contextMenus.create({
+    id: scanBookmarksId,
+    title: "Import YouTube Nodes from Bookmarks",
+    contexts: ["action"],
+  });
+  contextMenuIds.push(scanBookmarksId);
 }
 
 async function buildAddVideoToPlaylistItems() {
@@ -99,6 +107,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       await addVideoToPlaylistBuilder(info);
     } else if (clickedMenuId.startsWith(addVideoToPlaylistItemPrefix) || clickedMenuId.startsWith(addVideoToPlaylistPageItemPrefix)) {
       await addVideoToPlaylist(info, clickedMenuId);
+    } else if (clickedMenuId === scanBookmarksId) {
+      await handleBookmarkScan();
     }
   } catch (error: any) {
     notify(error.message);
@@ -136,6 +146,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 });
+
+async function handleBookmarkScan() {
+    const tree = await chrome.bookmarks.getTree();
+    const videoIds = await bookmarkService.scanBookmarks(tree);
+
+    if (videoIds.length > 0) {
+        const playlistBuilder = await fetchBuilder();
+        const newIds = videoIds.filter(id => !playlistBuilder.includes(id));
+        playlistBuilder.push(...newIds);
+        await saveBuilder(playlistBuilder);
+        chrome.action.setBadgeText({ text: "" + playlistBuilder.length });
+        notify(`Identified ${newIds.length} new YouTube nodes from bookmarks.`, true);
+        await openPlaylistBuilderTab();
+    } else {
+        notify("No YouTube nodes identified in bookmarks.", true);
+    }
+}
 
 async function createPlaylist(videoIds: string[], title?: string) {
   if (videoIds.length === 0) return;

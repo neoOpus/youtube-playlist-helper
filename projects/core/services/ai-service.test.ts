@@ -1,6 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { aiService } from './ai-service.js';
 import type { Video } from '../types/model.js';
+
+// Mock embeddingService to avoid onnxruntime issues in CI/Vitest
+vi.mock('./embedding-service.js', () => ({
+    embeddingService: {
+        init: vi.fn(),
+        getEmbeddings: vi.fn().mockResolvedValue([]),
+        cosineSimilarity: vi.fn().mockReturnValue(0)
+    }
+}));
 
 describe('aiService', () => {
     const mockVideo: Video = {

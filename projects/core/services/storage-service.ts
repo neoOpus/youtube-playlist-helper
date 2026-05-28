@@ -63,7 +63,8 @@ const DEFAULT_SETTINGS: Settings = {
   ai: {
     provider: "local-heuristics",
     model: "default",
-    enabled: true
+    enabled: true,
+  useLocalEmbeddings: false
   },
 };
 

@@ -67,6 +67,7 @@
         <div class="ai-config-grid">
             <div class="row items-center justify-between mb-6">
                 <SuperToggle bind:checked={settings.enabled} label="Enable AI Enrichment Agent" />
+                <SuperToggle bind:checked={settings.useLocalEmbeddings} label="Enable Local Semantic Mapping (WebGPU)" />
                 <div class="presets-row">
                     <span class="preset-label">PRESETS:</span>
                     <button class="preset-btn" onclick={() => applyPreset('openrouter-free')}>OpenRouter Free</button>

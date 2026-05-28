@@ -1,5 +1,6 @@
 import type { Video, Playlist, AISettings } from "../types/model.js";
 import { storageService } from "./storage-service.js";
+import { embeddingService } from "./embedding-service.js";
 
 export interface AIProvider {
   analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>>;
@@ -150,76 +151,94 @@ const providers: Record<string, AIProvider> = {
 };
 
 export const aiService = {
-  async getSettings(): Promise<AISettings> {
+  async getSettings() {
     const settings = await storageService.getSettings();
-    return settings.ai || {
-        provider: 'local-heuristics',
-        model: 'default',
-        enabled: true
+    return {
+        ai: settings.ai || {
+            provider: 'local-heuristics',
+            model: 'default',
+            enabled: true
+        },
+        useLocalEmbeddings: !!settings.useLocalEmbeddings
     };
   },
 
   async analyzeVideo(video: Video): Promise<Partial<Video>> {
-    const settings = await this.getSettings();
-    if (!settings.enabled) return {};
+    const { ai: settings, useLocalEmbeddings } = await this.getSettings();
+    let result: Partial<Video> = {};
 
-    const provider = providers[settings.provider] || providers['local-heuristics'];
-    return provider.analyzeVideo(video, settings);
+    if (settings.enabled) {
+        const provider = providers[settings.provider] || providers['local-heuristics'];
+        result = await provider.analyzeVideo(video, settings);
+    }
+
+    if (useLocalEmbeddings) {
+        const text = `${video.title} ${video.channel} ${video.notes || ''} ${result.aiSummary || ''}`;
+        result.embeddings = await embeddingService.getEmbeddings(text);
+    }
+
+    return result;
   },
 
-  calculateVideoRelevance(video: Video, keywords: string[]): number {
-    if (!video || !keywords.length) return 0;
+  calculateVideoRelevance(video: Video, keywords: string[], searchEmbeddings?: number[]): number {
+    if (!video || (!keywords.length && !searchEmbeddings)) return 0;
     let score = 0;
-    const title = (video.title || "").toLowerCase();
-    const summary = (video.aiSummary || "").toLowerCase();
-    const tags = video.aiTags || [];
 
-    const lowerTags = tags.map((t) => t.toLowerCase());
+    // Keyword match logic
+    if (keywords.length > 0) {
+        const title = (video.title || "").toLowerCase();
+        const summary = (video.aiSummary || "").toLowerCase();
+        const tags = video.aiTags || [];
+        const lowerTags = tags.map((t) => t.toLowerCase());
 
-    for (let i = 0; i < keywords.length; i++) {
-      const k = keywords[i];
-      if (title.includes(k)) score += 10;
-      if (summary.includes(k)) score += 5;
-      for (let j = 0; j < lowerTags.length; j++) {
-        if (lowerTags[j].includes(k)) {
-          score += 15;
-          break;
+        for (let i = 0; i < keywords.length; i++) {
+            const k = keywords[i];
+            if (title.includes(k)) score += 10;
+            if (summary.includes(k)) score += 5;
+            for (let j = 0; j < lowerTags.length; j++) {
+                if (lowerTags[j].includes(k)) {
+                    score += 15;
+                    break;
+                }
+            }
         }
-      }
     }
+
+    // Semantic match logic
+    if (searchEmbeddings && video.embeddings) {
+        const similarity = embeddingService.cosineSimilarity(searchEmbeddings, video.embeddings);
+        score += similarity * 50; // Semantic similarity has high weight
+    }
+
     if (video.rating) score += video.rating * 5;
     return score;
   },
 
-  calculatePlaylistRelevance(playlist: Playlist, keywords: string[]): number {
-    if (!playlist || !keywords.length) return 0;
+  async calculatePlaylistRelevance(playlist: Playlist, keywords: string[], searchEmbeddings?: number[]): Promise<number> {
+    if (!playlist || (!keywords.length && !searchEmbeddings)) return 0;
     let score = 0;
-    const title = (playlist.title || "").toLowerCase();
-    const groups = (playlist.groups || []).map((g) => g.toLowerCase());
 
-    for (let i = 0; i < keywords.length; i++) {
-      const k = keywords[i];
-      if (title.includes(k)) score += 20;
-      for (let j = 0; j < groups.length; j++) {
-        if (groups[j].includes(k)) {
-          score += 10;
-          break;
+    if (keywords.length > 0) {
+        const title = (playlist.title || "").toLowerCase();
+        const groups = (playlist.groups || []).map((g) => g.toLowerCase());
+        for (const k of keywords) {
+            if (title.includes(k)) score += 20;
+            for (const g of groups) { if (g.includes(k)) { score += 10; break; } }
         }
-      }
     }
 
     const videos = playlist.loadedVideos || [];
     if (videos.length > 0) {
-      const videoScores = videos.map((v) =>
-        this.calculateVideoRelevance(v, keywords)
-      );
+      const videoScores = await Promise.all(videos.map((v) =>
+        this.calculateVideoRelevance(v, keywords, searchEmbeddings)
+      ));
       score += videoScores.reduce((a, b) => a + b, 0) / videos.length;
     }
     return score;
   },
 
   async expandKeywords(keywords: string[]): Promise<string[]> {
-    const settings = await this.getSettings();
+    const { ai: settings } = await this.getSettings();
     const baseExpansion: Record<string, string[]> = {
       coding: ["programming", "developer", "software", "tutorial", "code", "github"],
       music: ["song", "audio", "track", "concert", "live", "album"],
@@ -238,7 +257,6 @@ export const aiService = {
       }
     }
 
-    // Attempt AI expansion if remote provider is active
     if (settings.enabled && settings.provider !== 'local-heuristics' && settings.apiKey) {
         try {
             const baseUrl = settings.baseUrl || "https://api.openai.com/v1";
@@ -274,18 +292,27 @@ export const aiService = {
 
   async sortByRelevance(videos: Video[], keywords: string[]): Promise<Video[]> {
     if (!keywords.length) return videos;
+    const { useLocalEmbeddings } = await this.getSettings();
+
     const expandedAndNormalized = await this.expandKeywords(keywords);
-    return videos
-      .map((v) => ({
+    let searchEmbeddings: number[] | undefined;
+
+    if (useLocalEmbeddings) {
+        searchEmbeddings = await embeddingService.getEmbeddings(keywords.join(' '));
+    }
+
+    const scored = await Promise.all(videos.map(async (v) => ({
         video: v,
-        score: this.calculateVideoRelevance(v, expandedAndNormalized),
-      }))
+        score: this.calculateVideoRelevance(v, expandedAndNormalized, searchEmbeddings),
+    })));
+
+    return scored
       .sort((a, b) => b.score - a.score)
       .map((item) => item.video);
   },
 
   async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
-    const settings = await this.getSettings();
+    const { ai: settings } = await this.getSettings();
     const provider = providers[settings.provider] || providers['local-heuristics'];
     return provider.summarizePlaylist(playlist, videos, settings);
   },

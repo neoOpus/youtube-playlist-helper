@@ -1,5 +1,6 @@
 import type { Playlist, PlaylistsSorting } from "../types/model.js";
 import { aiService } from "./ai-service.js";
+import { embeddingService } from "./embedding-service.js";
 
 const collator = new Intl.Collator(undefined, {
   numeric: true,
@@ -74,17 +75,24 @@ export const playlistsSorter = {
         return [...playlists].sort(sorterByType["date-created-desc"]);
       }
 
-      // ⚡ PERFORMANCE: Expand keywords ONCE per sort session, not per comparison.
+      const { ai: settings, useLocalEmbeddings } = await aiService.getSettings();
       const expandedKeywords = await aiService.expandKeywords(keywords);
+      let searchEmbeddings: number[] | undefined;
 
-      return playlists
-        .map((playlist) => ({
+      if (useLocalEmbeddings) {
+          searchEmbeddings = await embeddingService.getEmbeddings(keywords.join(' '));
+      }
+
+      const scored = await Promise.all(playlists.map(async (playlist) => ({
           playlist,
-          score: aiService.calculatePlaylistRelevance(
+          score: await aiService.calculatePlaylistRelevance(
             playlist,
-            expandedKeywords
+            expandedKeywords,
+            searchEmbeddings
           ),
-        }))
+      })));
+
+      return scored
         .sort(
           (a, b) =>
             b.score - a.score || b.playlist.timestamp - a.playlist.timestamp
