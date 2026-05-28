@@ -5,6 +5,7 @@ import { embeddingService } from "./embedding-service.js";
 export interface AIProvider {
   analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>>;
   summarizePlaylist(playlist: Playlist, videos: Video[], settings: AISettings): Promise<string>;
+  testConnection(settings: AISettings): Promise<boolean>;
 }
 
 export const AI_PRESETS: Record<string, Partial<AISettings>> = {
@@ -43,6 +44,8 @@ class LocalHeuristicsProvider implements AIProvider {
   async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
     return `This is a collection of ${videos.length} videos focusing on "${playlist.title}". Neural density is high.`;
   }
+
+  async testConnection() { return true; }
 }
 
 class RemoteProvider implements AIProvider {
@@ -59,6 +62,7 @@ class RemoteProvider implements AIProvider {
     - aiSummary: A short 1-sentence summary.
     - aiTags: An array of 3-5 relevant tags.
     - energyVibe: One of "Chill", "Productive", "Intense", "Educational".
+    - takeaways: A list of 3 key learning points or highlights.
 
     Video Title: ${video.title}
     Video Channel: ${video.channel}
@@ -90,7 +94,8 @@ class RemoteProvider implements AIProvider {
         return {
             aiSummary: content.aiSummary,
             aiTags: content.aiTags,
-            energyVibe: content.energyVibe
+            energyVibe: content.energyVibe,
+            notes: content.takeaways ? `Key Takeaways:\n- ${content.takeaways.join('\n- ')}` : undefined
         };
     } catch (error) {
         console.error("Remote AI analysis failed, falling back to local:", error);
@@ -125,6 +130,28 @@ class RemoteProvider implements AIProvider {
     } catch {
         return "Neural density is high. Summary pending.";
     }
+  }
+
+  async testConnection(settings: AISettings): Promise<boolean> {
+      const baseUrl = settings.baseUrl || this.getDefaultBaseUrl(settings.provider);
+      const model = settings.model || this.getDefaultModel(settings.provider);
+      try {
+          const response = await fetch(`${baseUrl}/chat/completions`, {
+              method: 'POST',
+              headers: {
+                  'Authorization': `Bearer ${settings.apiKey || 'not-required'}`,
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                  model,
+                  messages: [{ role: "user", content: "hi" }],
+                  max_tokens: 5
+              })
+          });
+          return response.ok;
+      } catch {
+          return false;
+      }
   }
 
   private getDefaultBaseUrl(provider: string): string {
@@ -163,6 +190,11 @@ export const aiService = {
     };
   },
 
+  async testConnection(settings: AISettings): Promise<boolean> {
+      const provider = providers[settings.provider] || providers['local-heuristics'];
+      return provider.testConnection(settings);
+  },
+
   async analyzeVideo(video: Video): Promise<Partial<Video>> {
     const { ai: settings, useLocalEmbeddings } = await this.getSettings();
     let result: Partial<Video> = {};
@@ -184,7 +216,6 @@ export const aiService = {
     if (!video || (!keywords.length && !searchEmbeddings)) return 0;
     let score = 0;
 
-    // Keyword match logic
     if (keywords.length > 0) {
         const title = (video.title || "").toLowerCase();
         const summary = (video.aiSummary || "").toLowerCase();
@@ -204,10 +235,9 @@ export const aiService = {
         }
     }
 
-    // Semantic match logic
     if (searchEmbeddings && video.embeddings) {
         const similarity = embeddingService.cosineSimilarity(searchEmbeddings, video.embeddings);
-        score += similarity * 50; // Semantic similarity has high weight
+        score += similarity * 50;
     }
 
     if (video.rating) score += video.rating * 5;

@@ -18,3 +18,5 @@ export * from "./services/backup-service.js";
 export * from "./services/bookmark-service.js";
 export * from "./services/embedding-service.js";
 export * from "./services/recovery-agent.js";
+export * from "./services/sector-intelligence.js";
+export * from "./services/syllabus-architect.js";

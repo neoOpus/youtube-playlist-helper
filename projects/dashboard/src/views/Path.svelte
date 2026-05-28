@@ -77,6 +77,12 @@
                     <div class="node-info mt-6">
                         <h2>{activeVideo.title}</h2>
                         <p class="channel">{activeVideo.channel}</p>
+                        {#if activeVideo.notes}
+                            <div class="takeaways pro-glass mt-4">
+                                <span class="label">Key Takeaways</span>
+                                <pre class="notes-pre">{activeVideo.notes}</pre>
+                            </div>
+                        {/if}
                         <div class="vibe-tags mt-4">
                             {#if activeVideo.energyVibe}
                                 <span class="vibe-badge">{activeVideo.energyVibe}</span>
@@ -146,4 +152,7 @@
 
     .mt-6 { margin-top: 1.5rem; }
     .mt-8 { margin-top: 2rem; }
+.takeaways { padding: 1.5rem; border: 1px dashed var(--border-strong); background: rgba(255,255,255,0.02); }
+    .label { font-size: 0.65rem; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; display: block; }
+    .notes-pre { white-space: pre-wrap; font-family: inherit; font-size: 0.9rem; line-height: 1.6; color: var(--text); margin: 0; }
 </style>

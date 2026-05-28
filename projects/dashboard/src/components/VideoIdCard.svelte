@@ -10,8 +10,9 @@
       ReverseIcon
   } from "@yph/ui-kit";
   import type { Video, VideoHistoryEntry } from "@yph/core";
-  import { aiService, notificationService, historyService } from "@yph/core";
+  import { aiService, notificationService, historyService, sectorIntelligence } from "@yph/core";
   import MetadataTimeMachine from "./MetadataTimeMachine.svelte";
+  import SectorIntelligence from "./SectorIntelligence.svelte";
 
   interface Props {
     video: Video;
@@ -26,7 +27,6 @@
   function close() { display = false; showTimeMachine = false; }
 
   async function save() {
-    // Log history before saving new state
     await historyService.logHistory(video.videoId, video.title, video.channel);
     dispatch("save", video);
     close();
@@ -39,6 +39,8 @@
           const res = await aiService.analyzeVideo(video);
           video.aiSummary = res.aiSummary;
           video.aiTags = res.aiTags;
+          if (res.notes) video.notes = res.notes;
+          video.embeddings = res.embeddings;
           notificationService.success("AI Analysis Complete.");
       } finally {
           loadingAi = false;
@@ -138,6 +140,11 @@
                         </SuperButton>
                     </div>
                 {/if}
+            </div>
+
+            <div class="meta-section mt-6">
+                <span class="label">Sector Placement</span>
+                <SectorIntelligence {video} />
             </div>
 
             <div class="meta-section mt-6">

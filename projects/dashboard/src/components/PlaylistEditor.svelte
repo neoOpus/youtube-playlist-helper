@@ -16,6 +16,7 @@
   import PlaylistVideo from "./PlaylistVideo.svelte";
   import SimplePagination from "./SimplePagination.svelte";
   import SectorDna from "./SectorDna.svelte";
+  import SyllabusArchitect from "./SyllabusArchitect.svelte";
   import {
     SaveIcon,
     PlusMultiple,
@@ -202,6 +203,7 @@
 
             <aside class="editor-sidebar">
                 <SectorDna playlist={{...playlist, loadedVideos: videos}} />
+                <SyllabusArchitect {playlist} bind:videos />
 
                 <div class="sidebar-help pro-glass mt-6">
                     <h4 class="small-title">Sequence Optimization</h4>

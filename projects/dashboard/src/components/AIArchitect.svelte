@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-  import { storageService, notificationService, AI_PRESETS } from "@yph/core";
+  import { storageService, notificationService, AI_PRESETS, aiService } from "@yph/core";
   import {
     SuperSelect,
     SuperInput,
@@ -13,6 +13,7 @@
     PlusMultiple
   } from "@yph/ui-kit";
   import type { AISettings, AIProviderType } from "@yph/core";
+  import { fade } from "svelte/transition";
 
   let settings = $state<AISettings>({
       provider: 'local-heuristics',
@@ -23,7 +24,10 @@
       temperature: 0.7
   });
 
+  let useLocalEmbeddings = $state(false);
   let isLoading = $state(true);
+  let isVerifying = $state(false);
+  let connectionStatus = $state<'idle' | 'success' | 'failed'>('idle');
 
   const providerOptions = [
       { value: 'local-heuristics', label: 'Local Heuristics (Free/Offline)' },
@@ -38,11 +42,12 @@
       if (allSettings.ai) {
           settings = { ...settings, ...allSettings.ai };
       }
+      useLocalEmbeddings = !!allSettings.useLocalEmbeddings;
       isLoading = false;
   });
 
   async function saveAIConfig() {
-      await storageService.updateSettings({ ai: settings });
+      await storageService.updateSettings({ ai: settings, useLocalEmbeddings });
       notificationService.success("AI Visual Architecture updated.");
   }
 
@@ -52,6 +57,16 @@
           settings = { ...settings, ...preset };
           notificationService.info(`Applied preset: ${presetId}`);
       }
+  }
+
+  async function verifyConnection() {
+      isVerifying = true;
+      connectionStatus = 'idle';
+      const success = await aiService.testConnection(settings);
+      connectionStatus = success ? 'success' : 'failed';
+      isVerifying = false;
+      if (success) notificationService.success("Neural Link established.");
+      else notificationService.error("Neural Link failed. Check parameters.");
   }
 
   const showApiFields = $derived(settings.provider !== 'local-heuristics');
@@ -66,8 +81,10 @@
     {#if !isLoading}
         <div class="ai-config-grid">
             <div class="row items-center justify-between mb-6">
-                <SuperToggle bind:checked={settings.enabled} label="Enable AI Enrichment Agent" />
-                <SuperToggle bind:checked={settings.useLocalEmbeddings} label="Enable Local Semantic Mapping (WebGPU)" />
+                <div class="toggles-col">
+                    <SuperToggle bind:checked={settings.enabled} label="Enable AI Enrichment Agent" />
+                    <SuperToggle bind:checked={useLocalEmbeddings} label="Enable Local Semantic Mapping (WebGPU)" />
+                </div>
                 <div class="presets-row">
                     <span class="preset-label">PRESETS:</span>
                     <button class="preset-btn" onclick={() => applyPreset('openrouter-free')}>OpenRouter Free</button>
@@ -98,18 +115,33 @@
                         placeholder="sk-..."
                         bind:value={settings.apiKey}
                     />
-                    <SuperInput
-                        label="Custom Base URL (Optional)"
-                        placeholder="https://..."
-                        bind:value={settings.baseUrl}
-                    />
+                    <div class="input-with-action">
+                        <SuperInput
+                            label="Custom Base URL (Optional)"
+                            placeholder="https://..."
+                            bind:value={settings.baseUrl}
+                        />
+                        <button
+                            class="verify-btn"
+                            onclick={verifyConnection}
+                            disabled={isVerifying}
+                            class:success={connectionStatus === 'success'}
+                            class:failed={connectionStatus === 'failed'}
+                        >
+                            {#if isVerifying}
+                                <TerminalIcon size="14" class="spin" />
+                            {:else}
+                                {connectionStatus === 'success' ? 'Link OK' : (connectionStatus === 'failed' ? 'Retry Link' : 'Verify Link')}
+                            {/if}
+                        </button>
+                    </div>
                 </div>
             {/if}
 
             <div class="footer-actions mt-8">
                 <div class="info-note">
                     <InfoIcon size="14" />
-                    <span>Local heuristics require zero configuration and run entirely in-browser. Remote providers enable semantic keyword expansion.</span>
+                    <span>Local heuristics require zero configuration. WebGPU mapping enables frictionless semantic search without API calls.</span>
                 </div>
                 <SuperButton primary onclick={saveAIConfig}>
                     <SaveIcon size="18" /> Commit AI Parameters
@@ -155,9 +187,33 @@
     }
     .preset-btn:hover { background: var(--hover); border-color: var(--primary); color: var(--primary); }
 
+    .toggles-col { display: flex; flex-direction: column; gap: 8px; }
+
+    .input-with-action { position: relative; }
+    .verify-btn {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        padding: 4px 10px;
+        background: var(--primary);
+        border: none;
+        border-radius: 4px;
+        color: white;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .verify-btn.success { background: var(--success); }
+    .verify-btn.failed { background: var(--danger); }
+
     .mb-6 { margin-bottom: 1.5rem; }
     .items-center { align-items: center; }
     .justify-between { justify-content: space-between; }
+    :global(.spin) { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     @media (max-width: 900px) {
         .row.justify-between { flex-direction: column; align-items: flex-start; gap: 1rem; }
