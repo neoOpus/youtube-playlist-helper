@@ -26,7 +26,7 @@
     filtersUpdated();
   }, 250);
 
-  function filtersUpdated() {
+  async function filtersUpdated() {
     if (!playlists) return;
 
     let result = [...playlists];
@@ -76,8 +76,7 @@
         playlistsFilters.setSorting('date-created-desc');
     }
 
-    result = playlistsSorter.sort(result, playlistsFilters.sorting, keywords);
-    filteredPlaylists = result;
+    filteredPlaylists = await playlistsSorter.sort(result, playlistsFilters.sorting, keywords);
   }
 
   $effect(() => {

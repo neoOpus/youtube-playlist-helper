@@ -118,6 +118,8 @@
                         <option value="vibe">Vibe</option>
                         <option value="tag">Tag</option>
                         <option value="duration">Duration</option>
+                        <option value="title">Title</option>
+                        <option value="summary">AI Summary</option>
                     </select>
                 </div>
                 <div class="logic-block">
@@ -127,6 +129,7 @@
                         <option value="lt">Less Than</option>
                         <option value="eq">Equals</option>
                         <option value="contains">Contains</option>
+                        <option value="matches">Regex Match</option>
                     </select>
                 </div>
                 <div class="logic-block">

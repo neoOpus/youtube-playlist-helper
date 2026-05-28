@@ -6,10 +6,13 @@ export interface AIProvider {
   summarizePlaylist(playlist: Playlist, videos: Video[], settings: AISettings): Promise<string>;
 }
 
-/**
- * Local Heuristics Provider: No external API calls, uses regex and keywords.
- * Fallback and "Free Tier" default.
- */
+export const AI_PRESETS: Record<string, Partial<AISettings>> = {
+    'openai-gpt-4o': { provider: 'openai', model: 'gpt-4o', baseUrl: 'https://api.openai.com/v1' },
+    'openrouter-free': { provider: 'openrouter', model: 'meta-llama/llama-3-8b-instruct:free', baseUrl: 'https://openrouter.ai/api/v1' },
+    'ollama-local': { provider: 'custom-openai-compatible', model: 'llama3', baseUrl: 'http://localhost:11434/v1' },
+    'lm-studio': { provider: 'custom-openai-compatible', model: 'model-identifier', baseUrl: 'http://localhost:1234/v1' }
+};
+
 class LocalHeuristicsProvider implements AIProvider {
   async analyzeVideo(video: Video): Promise<Partial<Video>> {
     const tags = ["AI-Enhanced"];
@@ -41,12 +44,10 @@ class LocalHeuristicsProvider implements AIProvider {
   }
 }
 
-/**
- * Remote Provider: Supports OpenAI-compatible endpoints.
- */
 class RemoteProvider implements AIProvider {
   async analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>> {
-    if (!settings.apiKey && settings.provider !== 'local-heuristics') {
+    const requiresKey = !['local-heuristics', 'custom-openai-compatible'].includes(settings.provider);
+    if (requiresKey && !settings.apiKey) {
         return new LocalHeuristicsProvider().analyzeVideo(video);
     }
 
@@ -66,7 +67,7 @@ class RemoteProvider implements AIProvider {
         const response = await fetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${settings.apiKey}`,
+                'Authorization': `Bearer ${settings.apiKey || 'not-required'}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -107,7 +108,7 @@ class RemoteProvider implements AIProvider {
         const response = await fetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${settings.apiKey}`,
+                'Authorization': `Bearer ${settings.apiKey || 'not-required'}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -128,7 +129,6 @@ class RemoteProvider implements AIProvider {
   private getDefaultBaseUrl(provider: string): string {
       switch (provider) {
           case 'openrouter': return "https://openrouter.ai/api/v1";
-          case 'anthropic': return "https://api.anthropic.com/v1"; // Usually needs a bridge for OpenAI compatibility
           default: return "https://api.openai.com/v1";
       }
   }
@@ -136,7 +136,6 @@ class RemoteProvider implements AIProvider {
   private getDefaultModel(provider: string): string {
       switch (provider) {
           case 'openrouter': return "meta-llama/llama-3-8b-instruct:free";
-          case 'openai': return "gpt-3.5-turbo";
           default: return "gpt-3.5-turbo";
       }
   }
@@ -150,9 +149,6 @@ const providers: Record<string, AIProvider> = {
     'custom-openai-compatible': new RemoteProvider()
 };
 
-/**
- * AI Service for intelligent playlist analysis and optimization.
- */
 export const aiService = {
   async getSettings(): Promise<AISettings> {
     const settings = await storageService.getSettings();
@@ -222,8 +218,9 @@ export const aiService = {
     return score;
   },
 
-  expandKeywords(keywords: string[]): string[] {
-    const expansion: Record<string, string[]> = {
+  async expandKeywords(keywords: string[]): Promise<string[]> {
+    const settings = await this.getSettings();
+    const baseExpansion: Record<string, string[]> = {
       coding: ["programming", "developer", "software", "tutorial", "code", "github"],
       music: ["song", "audio", "track", "concert", "live", "album"],
       tech: ["technology", "gadget", "review", "hardware", "software", "innovation"],
@@ -234,18 +231,50 @@ export const aiService = {
     for (const k of keywords) {
       const lowerK = k.toLowerCase();
       expanded.add(lowerK);
-      if (expansion[lowerK]) {
-        for (const expandedWord of expansion[lowerK]) {
+      if (baseExpansion[lowerK]) {
+        for (const expandedWord of baseExpansion[lowerK]) {
           expanded.add(expandedWord);
         }
       }
     }
+
+    // Attempt AI expansion if remote provider is active
+    if (settings.enabled && settings.provider !== 'local-heuristics' && settings.apiKey) {
+        try {
+            const baseUrl = settings.baseUrl || "https://api.openai.com/v1";
+            const model = settings.model || "gpt-3.5-turbo";
+            const response = await fetch(`${baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${settings.apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model,
+                    messages: [{
+                        role: "user",
+                        content: `Given these keywords: "${keywords.join(', ')}", provide 10-15 additional highly related semantic keywords as a comma-separated list. Respond ONLY with the list.`
+                    }],
+                    temperature: 0.4
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const aiTerms = data.choices[0].message.content.split(',').map((t: string) => t.trim().toLowerCase());
+                for (const term of aiTerms) expanded.add(term);
+            }
+        } catch (e) {
+            console.warn("AI Keyword expansion failed:", e);
+        }
+    }
+
     return Array.from(expanded);
   },
 
-  sortByRelevance(videos: Video[], keywords: string[]): Video[] {
+  async sortByRelevance(videos: Video[], keywords: string[]): Promise<Video[]> {
     if (!keywords.length) return videos;
-    const expandedAndNormalized = this.expandKeywords(keywords);
+    const expandedAndNormalized = await this.expandKeywords(keywords);
     return videos
       .map((v) => ({
         video: v,

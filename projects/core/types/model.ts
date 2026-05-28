@@ -86,8 +86,8 @@ export interface SmartRule {
     name: string;
     active: boolean;
     condition: {
-        field: 'rating' | 'vibe' | 'tag' | 'duration';
-        operator: 'gt' | 'lt' | 'eq' | 'contains';
+        field: 'rating' | 'vibe' | 'tag' | 'duration' | 'title' | 'summary';
+        operator: 'gt' | 'lt' | 'eq' | 'contains' | 'matches';
         value: any;
     };
     action: {
