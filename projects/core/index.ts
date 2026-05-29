@@ -22,3 +22,5 @@ export * from "./services/sector-intelligence.js";
 export * from "./services/syllabus-architect.js";
 export * from "./services/audio-service.js";
 export * from "./services/stress-test.js";
+export * from "./services/heartbeat-service.js";
+export * from "./services/vector-service.js";

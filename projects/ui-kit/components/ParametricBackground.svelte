@@ -8,6 +8,7 @@
   let ctx: CanvasRenderingContext2D;
   let animationFrame: number;
   let time = 0;
+  let grainOpacity = $state(0.06);
 
   const colorConfigs: Record<string, string[]> = {
     "github-light": ["#f8fafc", "#e2e8f0", "#cbd5e1", "#ffffff"],
@@ -70,6 +71,15 @@
     handleResize();
     window.addEventListener("resize", handleResize);
     draw();
+
+    // SOTA: Listen for global variable changes for real-time grain tuning
+    const observer = new MutationObserver(() => {
+        const opacity = getComputedStyle(document.documentElement).getPropertyValue('--grain-opacity');
+        if (opacity) grainOpacity = parseFloat(opacity);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
+    return () => observer.disconnect();
   });
 
   onDestroy(() => {
@@ -82,7 +92,7 @@
 
 <div class="bg-wrapper">
     <canvas bind:this={canvas} class="parametric-bg"></canvas>
-    <div class="grain-overlay"></div>
+    <div class="grain-overlay" style="opacity: {grainOpacity}"></div>
     <div class="vignette"></div>
 </div>
 
@@ -110,10 +120,10 @@
       position: absolute;
       inset: -100%;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-      opacity: 0.06;
       mix-blend-mode: overlay;
       pointer-events: none;
       animation: grain 8s steps(10) infinite;
+      will-change: transform;
   }
 
   @keyframes grain {

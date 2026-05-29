@@ -24,7 +24,8 @@
   import BulkOperations from "../components/BulkOperations.svelte";
   import AIArchitect from "../components/AIArchitect.svelte";
   import NeoStressTest from "../components/NeoStressTest.svelte";
-  import SmartRepairHub from "../components/SmartRepairHub.svelte";
+  import SystemHistory from "../components/SystemHistory.svelte";
+  import RelinkWizard from "../components/RelinkWizard.svelte";
   import type { Playlist } from "@yph/core";
 
   let playlists = $state<Playlist[]>([]);
@@ -51,51 +52,68 @@
         <div class="header-content aura-glow">
             <div class="title-row">
                 <div class="icon-blob"><TerminalIcon size="32" /></div>
-                <h1>System Management</h1>
+                <h1>Intelligence Hub</h1>
             </div>
-            <p class="muted">Oversee infrastructure connections, library quality, and global aesthetics.</p>
+            <p class="muted">Monitor neural agents, infrastructure integrity, and visual protocols.</p>
         </div>
     </header>
 
-    <div class="manage-grid">
-        <div class="main-stats">
-            <div class="visualization-container pro-glass">
-                <div class="viz-header">
-                    <div class="viz-meta">
-                        <MergeIcon size="16" color="var(--primary)" />
-                        <span>NEURAL_MAPPING_ENGINE</span>
-                    </div>
-                    <div class="viz-switcher">
-                        <button class:active={vizMode === 'map'} onclick={() => vizMode = 'map'}>Live Map</button>
-                        <button class:active={vizMode === 'topology'} onclick={() => vizMode = 'topology'}>D3 Topology</button>
+    <div class="command-dashboard">
+        <div class="dashboard-main">
+            <!-- Level 1: Visualization & Triage -->
+            <div class="dashboard-row">
+                <div class="viz-widget-col">
+                    <div class="visualization-container pro-glass">
+                        <div class="viz-header">
+                            <div class="viz-meta">
+                                <MergeIcon size="16" color="var(--primary)" />
+                                <span>NEURAL_MAPPING_ENGINE</span>
+                            </div>
+                            <div class="viz-switcher">
+                                <button class:active={vizMode === 'map'} onclick={() => vizMode = 'map'}>Live Map</button>
+                                <button class:active={vizMode === 'topology'} onclick={() => vizMode = 'topology'}>D3 Topology</button>
+                            </div>
+                        </div>
+                        <div class="viz-content">
+                            {#if vizMode === 'map'}
+                                <div in:fade={{duration: 400}}><InfrastructureMap /></div>
+                            {:else}
+                                <div in:fade={{duration: 400}}><TopologyGraph /></div>
+                            {/if}
+                        </div>
                     </div>
                 </div>
-
-                <div class="viz-content">
-                    {#if vizMode === 'map'}
-                        <div in:fade={{duration: 400}}><InfrastructureMap /></div>
-                    {:else}
-                        <div in:fade={{duration: 400}}><TopologyGraph /></div>
-                    {/if}
+                <div class="relink-widget-col">
+                    <RelinkWizard />
                 </div>
             </div>
 
-            <div class="grid-split mt-8">
+            <!-- Level 2: Analytics & Maintenance -->
+            <div class="dashboard-grid-3 mt-8">
                 <SectorDna {playlists} />
                 <LibraryAuditor />
+                <SystemHistory />
             </div>
 
-            <SmartRules />
-            <BulkOperations />
-            <AIArchitect />
+            <!-- Level 3: Advanced Protocols -->
+            <div class="mt-8">
+                <SmartRules />
+            </div>
+
+            <div class="mt-8">
+                <BulkOperations />
+            </div>
+
+            <div class="mt-8">
+                <AIArchitect />
+            </div>
 
             {#if advancedMode}
                 <NeoStressTest />
-                <SmartRepairHub />
             {/if}
         </div>
 
-        <aside class="actions-sidebar">
+        <aside class="dashboard-sidebar">
             <SystemHealth />
 
             <div class="mt-8">
@@ -119,14 +137,14 @@
             <div class="system-info pro-glass mt-8">
                 <h3 class="card-title"><InfoIcon size="18" /> Infrastructure Core</h3>
                 <div class="v-list mt-6">
-                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.2.0 Pro</span></div>
-                    <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Persistent</span></div>
-                    <div class="v-row"><span>AI Engine</span> <span class="v-val">Local Heuristics (Ready)</span></div>
+                    <div class="v-row"><span>Pro Version</span> <span class="v-val">2.5.0 Elite</span></div>
+                    <div class="v-row"><span>Storage Mode</span> <span class="v-val">IndexedDB / Vector-Enabled</span></div>
+                    <div class="v-row"><span>Neural Agents</span> <span class="v-val">Protocol: HEARTBEAT Active</span></div>
 
                     {#if advancedMode}
                       <div in:fly={{ y: -10, duration: 300 }}>
-                        <div class="v-row"><span>Data Density</span> <span class="v-val">High (Optimized)</span></div>
-                        <div class="v-row"><span>E2EE Status</span> <span class="val success">Active (Pro-Resistant)</span></div>
+                        <div class="v-row"><span>Data Density</span> <span class="v-val">SOTA (Vectorized)</span></div>
+                        <div class="v-row"><span>E2EE Status</span> <span class="val success">Active</span></div>
                       </div>
                     {/if}
 
@@ -143,134 +161,36 @@
 
 <style>
     .view-header { margin-bottom: var(--space-12); }
-    .header-content { display: flex; flex-direction: column; gap: var(--space-3); }
-    .header-content h1 { font-size: 3.5rem; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
+    .header-content h1 { font-size: 3.5rem; font-weight: 900; letter-spacing: -0.05em; }
 
-    .title-row { display: flex; align-items: center; gap: var(--space-5); }
+    .command-dashboard { display: grid; grid-template-columns: 1fr 380px; gap: var(--space-10); margin-top: var(--space-8); }
+    .dashboard-main { display: flex; flex-direction: column; }
 
-    .icon-blob {
-        background: var(--primary);
-        color: white;
-        padding: var(--space-4);
-        border-radius: var(--radius-xl);
-        box-shadow: 0 12px 40px rgba(var(--primary-rgb), 0.5);
-    }
+    .dashboard-row { display: grid; grid-template-columns: 1fr 450px; gap: var(--space-8); }
+    .dashboard-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-8); }
 
-    .manage-grid {
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: var(--space-12);
-        margin-top: var(--space-8);
-    }
-
-    .main-stats { display: flex; flex-direction: column; gap: var(--space-8); }
-
-    .visualization-container {
-        border: 1px solid var(--border);
-        border-radius: 32px;
-        overflow: hidden;
-        background: rgba(0,0,0,0.2);
-    }
-
-    .viz-header {
-        padding: 12px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid var(--border);
-        background: rgba(255,255,255,0.03);
-    }
-
+    .visualization-container { border: 1px solid var(--border-strong); border-radius: 32px; overflow: hidden; background: rgba(0,0,0,0.3); height: 100%; min-height: 500px; }
+    .viz-header { padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.03); }
     .viz-meta { display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 900; color: var(--text-dim); }
-
-    .viz-switcher {
-        display: flex;
-        gap: 6px;
-        background: var(--bg-secondary);
-        padding: 4px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-    }
-    .viz-switcher button {
-        background: transparent;
-        border: none;
-        color: var(--text-dim);
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 0.7rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
+    .viz-switcher { display: flex; gap: 6px; background: var(--bg-secondary); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
+    .viz-switcher button { background: transparent; border: none; color: var(--text-dim); padding: 8px 16px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; }
     .viz-switcher button.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3); }
 
-    .grid-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); }
-
-    .pro-glass {
-        padding: var(--space-8);
-        border-radius: var(--radius-xl);
-    }
-
-    .card-title {
-        margin: 0;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: var(--space-3);
-        font-size: var(--font-lg);
-        color: var(--text);
-    }
-
+    .pro-glass { padding: var(--space-8); border-radius: var(--radius-xl); }
+    .card-title { margin: 0; font-weight: 800; display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-lg); color: var(--text); }
     .btns-stack { display: flex; flex-direction: column; gap: var(--space-3); }
 
     .v-list { display: flex; flex-direction: column; gap: var(--space-3); }
-    .v-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: var(--font-sm);
-        font-weight: 700;
-        color: var(--text-muted);
-        padding: var(--space-2) 0;
-        border-bottom: 1px solid var(--border);
-    }
+    .v-row { display: flex; justify-content: space-between; font-size: var(--font-sm); font-weight: 700; color: var(--text-muted); padding: var(--space-2) 0; border-bottom: 1px solid var(--border); }
     .v-row:last-child { border-bottom: none; }
     .v-val { color: var(--text); font-family: 'JetBrains Mono', monospace; font-weight: 800; }
 
-    .toggle-advanced {
-        margin-top: var(--space-2);
-        font-size: var(--font-xs);
-        font-weight: 800;
-        color: var(--primary);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        cursor: pointer;
-        opacity: 0.8;
-        transition: opacity 0.2s;
-        text-align: center;
-        background: none;
-        border: none;
-        padding: var(--space-2);
-    }
+    .toggle-advanced { margin-top: var(--space-2); font-size: var(--font-xs); font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; text-align: center; background: none; border: none; padding: var(--space-2); }
+    .toggle-advanced:hover { opacity: 1; text-decoration: underline; }
 
-    .toggle-advanced:hover {
-        opacity: 1;
-        text-decoration: underline;
-    }
+    .mt-4 { margin-top: 1rem; }
+    .mt-8 { margin-top: 2rem; }
 
-    .val.success { color: var(--success); }
-
-    :global(.mt-4) { margin-top: var(--space-4) !important; }
-    .mt-6 { margin-top: var(--space-6); }
-    .mt-8 { margin-top: var(--space-8); }
-
-    @media (max-width: 1500px) {
-        .grid-split { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 1200px) {
-        .manage-grid { grid-template-columns: 1fr; }
-        .actions-sidebar { order: -1; }
-    }
+    @media (max-width: 1600px) { .dashboard-row { grid-template-columns: 1fr; } .dashboard-grid-3 { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 1200px) { .command-dashboard { grid-template-columns: 1fr; } .dashboard-sidebar { order: -1; } .dashboard-grid-3 { grid-template-columns: 1fr; } }
 </style>

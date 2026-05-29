@@ -1,43 +1,41 @@
 import { storageService } from "./storage-service.js";
 import { aiService } from "./ai-service.js";
+import { heartbeatService } from "./heartbeat-service.js";
 
 let enrichmentInterval: ReturnType<typeof setInterval> | null = null;
 let lastPlaylistIndex = 0;
 let lastVideoIndex = 0;
+const AGENT_ID = 'enrichment-agent';
 
-/**
- * Enrichment Agent: A background service that incrementally scans and
- * enriches infrastructure nodes with AI metadata.
- * Part of the "Professional Edition" intelligence layer.
- */
 export const enrichmentAgent = {
     async start() {
         console.log("Enrichment Agent online. Monitoring infrastructure...");
+        heartbeatService.registerAgent(AGENT_ID, "Neural Enrichment Agent");
         if (enrichmentInterval) return;
 
-        // Run every 60 seconds for background maintenance
         enrichmentInterval = setInterval(async () => {
-            const settings = await aiService.getSettings();
-            if (!settings.enabled) return;
+            const { ai: settings } = await aiService.getSettings();
+            if (!settings.enabled) {
+                heartbeatService.updateAgent(AGENT_ID, { state: 'suspended', message: 'Manual suspension via settings.' });
+                return;
+            }
             await this.processQueue();
         }, 60000);
 
-        // Immediate first run
         await this.processQueue();
     },
 
-    /**
-     * Optimized processQueue: Uses a cursor-based approach to ensure scalability
-     * across large infrastructure collections.
-     */
     async processQueue() {
+        heartbeatService.updateAgent(AGENT_ID, { state: 'working', message: 'Scanning sectors...' });
         const playlists = await storageService.getPlaylists();
-        if (playlists.length === 0) return;
+        if (playlists.length === 0) {
+            heartbeatService.updateAgent(AGENT_ID, { state: 'idle', message: 'Infrastructure empty.' });
+            return;
+        }
 
         let processedCount = 0;
-        const BATCH_SIZE = 10; // Increased batch size for professional throughput
+        const BATCH_SIZE = 10;
 
-        // Reset cursors if playlists changed significantly
         if (lastPlaylistIndex >= playlists.length) {
             lastPlaylistIndex = 0;
             lastVideoIndex = 0;
@@ -45,10 +43,8 @@ export const enrichmentAgent = {
 
         let currentPlIdx = lastPlaylistIndex;
         let currentVidIdx = lastVideoIndex;
-
-        // Flattened search starting from cursors
         let iterations = 0;
-        const maxIterations = playlists.length; // Max full pass
+        const maxIterations = playlists.length;
 
         while (processedCount < BATCH_SIZE && iterations < maxIterations) {
             const pl = playlists[currentPlIdx];
@@ -64,13 +60,13 @@ export const enrichmentAgent = {
             const video = videos[currentVidIdx];
 
             if (!video.aiSummary) {
-                console.log(`Enrichment Agent: Processing node "${video.title}" in "${pl.title}"...`);
+                heartbeatService.updateAgent(AGENT_ID, {
+                    message: `Enriching: ${video.title.substring(0, 20)}...`,
+                    progress: Math.round((processedCount / BATCH_SIZE) * 100),
+                    activeNodeId: video.id // SOTA Tracking
+                });
                 const enrichment = await aiService.analyzeVideo(video);
-
-                // Update node state
                 videos[currentVidIdx] = { ...video, ...enrichment };
-
-                // We save after each enrichment or at the end of playlist to ensure persistence
                 await storageService.savePlaylist(pl);
                 processedCount++;
             }
@@ -86,9 +82,12 @@ export const enrichmentAgent = {
         lastPlaylistIndex = currentPlIdx;
         lastVideoIndex = currentVidIdx;
 
-        if (processedCount > 0) {
-            console.log(`Enrichment Agent: Batch complete. ${processedCount} nodes optimized.`);
-        }
+        heartbeatService.updateAgent(AGENT_ID, {
+            state: 'idle',
+            message: processedCount > 0 ? `Batch complete. ${processedCount} nodes optimized.` : 'Infrastructure at maximum resonance.',
+            progress: 100,
+            activeNodeId: undefined
+        });
     },
 
     stop() {
@@ -96,6 +95,6 @@ export const enrichmentAgent = {
             clearInterval(enrichmentInterval);
             enrichmentInterval = null;
         }
-        console.log("Enrichment Agent suspended.");
+        heartbeatService.updateAgent(AGENT_ID, { state: 'suspended', activeNodeId: undefined });
     }
 };

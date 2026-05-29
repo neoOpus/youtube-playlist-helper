@@ -1,51 +1,52 @@
 import { storageService } from "./storage-service.js";
 import { alternativesService } from "./alternatives-service.js";
 import { notificationService } from "./utils.js";
-import { actionLogger } from "./action-logger.js";
+import { heartbeatService } from "./heartbeat-service.js";
 import type { Video } from "../types/model.js";
 
 let recoveryInterval: ReturnType<typeof setInterval> | null = null;
+const AGENT_ID = 'recovery-agent';
 
 export const recoveryAgent = {
     async start() {
         if (recoveryInterval) return;
-        console.log("Recovery Agent online. Monitoring node availability...");
+        heartbeatService.registerAgent(AGENT_ID, "Autonomous Recovery Agent");
 
-        // Proactive check every 2 hours
         recoveryInterval = setInterval(async () => {
             await this.scanForDeadNodes();
         }, 7200000);
 
-        // Initial scan
         this.scanForDeadNodes();
     },
 
     async scanForDeadNodes() {
+        heartbeatService.updateAgent(AGENT_ID, { state: 'working', message: 'Auditing integrity...' });
         const playlists = await storageService.getPlaylists();
+        let totalChecked = 0;
+        let deadFound = 0;
+
         for (const pl of playlists) {
             if (!pl.loadedVideos) continue;
-
             for (const video of pl.loadedVideos) {
-                // If it looks like a dead node (Unknown Title) or we haven't checked it lately
                 if (video.title === "Unknown Video" || !video.title) {
                     await this.attemptRecovery(video, pl.id);
+                    deadFound++;
                 }
+                totalChecked++;
             }
         }
+
+        heartbeatService.updateAgent(AGENT_ID, {
+            state: 'idle',
+            message: deadFound > 0 ? `Audit complete. ${deadFound} nodes require triage.` : 'Infrastructure integrity verified.',
+            progress: 100
+        });
     },
 
     async attemptRecovery(video: Video, playlistId: string) {
-        console.log(`Recovery Agent: Validating node "${video.videoId}"...`);
         const isDead = await alternativesService.isVideoUnavailable(video.videoId);
-
         if (isDead) {
-            console.warn(`Recovery Agent: Node "${video.videoId}" is confirmed OFFLINE.`);
-            const alts = alternativesService.getSearchUrls(video.title || "Unknown Video", video.videoId);
-
-            // In Alpha, we notify the user with a direct link to the Wayback Machine or other mirrors
             notificationService.info(`Node OFFLINE: "${video.title || video.videoId}". Recovery protocols recommended.`);
-
-            // Logic for automatic mirror linking would go here in Beta
         }
     },
 
@@ -54,5 +55,6 @@ export const recoveryAgent = {
             clearInterval(recoveryInterval);
             recoveryInterval = null;
         }
+        heartbeatService.updateAgent(AGENT_ID, { state: 'suspended' });
     }
 };

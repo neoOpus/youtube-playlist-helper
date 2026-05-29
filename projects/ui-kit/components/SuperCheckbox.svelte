@@ -1,6 +1,7 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { scale } from "svelte/transition";
+  import { spring } from "svelte/motion";
 
   interface Props {
     checked?: boolean | "mixed";
@@ -15,6 +16,8 @@
     label = "",
     onchange = (val: boolean | "mixed") => {}
   }: Props = $props();
+
+  const boxScale = spring(1, { stiffness: 0.2, damping: 0.5 });
 
   function toggle() {
     if (disabled) return;
@@ -35,15 +38,18 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="super-checkbox-container"
     class:disabled
     onclick={(e) => { e.stopPropagation(); toggle(); }}
+    onmousedown={() => boxScale.set(0.85)}
+    onmouseup={() => boxScale.set(1)}
+    onmouseleave={() => boxScale.set(1)}
     role="checkbox"
     aria-checked={checked === "mixed" ? "mixed" : checked}
     onkeydown={handleKeydown}
     tabindex={disabled ? -1 : 0}
+    style="transform: scale({$boxScale});"
 >
   <div class="checkbox-box" class:checked={checked === true || checked === 'mixed'}>
     {#if checked === true}
@@ -75,16 +81,11 @@
     outline: none;
     padding: var(--space-1);
     border-radius: var(--radius-sm);
-    transition: all 0.2s;
+    transition: transform 0.1s ease;
   }
 
   .super-checkbox-container:hover:not(.disabled) .checkbox-box {
       border-color: var(--primary);
-  }
-
-  .super-checkbox-container:focus-visible {
-      box-shadow: 0 0 0 2px var(--primary);
-      outline-offset: 2px;
   }
 
   .checkbox-box {
@@ -95,7 +96,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-secondary);
+    background: var(--bg-tertiary);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     color: white;
     flex-shrink: 0;
@@ -104,17 +105,19 @@
   .checkbox-box.checked {
     background: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
+    box-shadow: 0 0 12px rgba(var(--primary-rgb), 0.5);
   }
 
   .checkbox-label {
-    font-size: var(--font-sm);
-    font-weight: 700;
-    color: var(--text);
+    font-size: var(--font-xs);
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   .disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 </style>

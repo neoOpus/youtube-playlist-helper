@@ -10,11 +10,11 @@
   let playlist = $state<Playlist | null>(null);
   let activeVideoIndex = $state(0);
   let loading = $state(true);
+  let isNarrating = $state(false);
 
   onMount(async () => {
       playlist = await storageService.getPlaylist(params.id);
       if (playlist && playlist.loadedVideos) {
-          // Find first un-watched video
           const firstUnwatched = playlist.loadedVideos.findIndex(v => !v.watched);
           if (firstUnwatched !== -1) activeVideoIndex = firstUnwatched;
       }
@@ -43,6 +43,24 @@
 
   function selectVideo(index: number) {
       activeVideoIndex = index;
+  }
+
+  function toggleNarration() {
+      if (isNarrating) {
+          window.speechSynthesis.cancel();
+          isNarrating = false;
+          return;
+      }
+
+      if (activeVideo?.notes) {
+          const text = `Key takeaways for ${activeVideo.title}. ${activeVideo.notes}`;
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 1.05;
+          utterance.pitch = 1;
+          utterance.onend = () => isNarrating = false;
+          window.speechSynthesis.speak(utterance);
+          isNarrating = true;
+      }
   }
 </script>
 
@@ -76,15 +94,25 @@
                         ></iframe>
                     </div>
                     <div class="node-info mt-6">
-                        <h2>{activeVideo.title}</h2>
+                        <div class="node-header-row">
+                            <h2>{activeVideo.title}</h2>
+                            {#if activeVideo.notes}
+                                <button class="narrate-btn" onclick={toggleNarration} class:active={isNarrating} title="Narrate Takeaways">
+                                    <TerminalIcon size="14" />
+                                    <span>{isNarrating ? 'STOP_NARRATION' : 'NARRATE_TAKEAWAYS'}</span>
+                                </button>
+                            {/if}
+                        </div>
                         <p class="channel">{activeVideo.channel}</p>
+
                         {#if activeVideo.notes}
-                            <div class="takeaways pro-glass mt-4">
+                            <div class="takeaways pro-glass mt-4" in:slide>
                                 <span class="label">Key Takeaways</span>
                                 <pre class="notes-pre">{activeVideo.notes}</pre>
                             </div>
                         {/if}
-                        <div class="vibe-tags mt-4">
+
+                        <div class="vibe-tags mt-6">
                             {#if activeVideo.energyVibe}
                                 <span class="vibe-badge">{activeVideo.energyVibe}</span>
                             {/if}
@@ -139,6 +167,16 @@
     .stage { aspect-ratio: 16 / 9; overflow: hidden; border-radius: 24px; border: 1px solid var(--border-strong); }
     iframe { width: 100%; height: 100%; }
 
+    .node-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .narrate-btn { display: flex; align-items: center; gap: 8px; background: rgba(var(--primary-rgb), 0.1); border: 1px solid var(--primary); padding: 4px 10px; border-radius: 6px; color: var(--primary); font-size: 10px; font-weight: 900; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; }
+    .narrate-btn:hover { background: var(--primary); color: white; }
+    .narrate-btn.active { animation: narrate-pulse 1s infinite alternate; }
+    @keyframes narrate-pulse { from { opacity: 0.7; } to { opacity: 1; } }
+
+    .takeaways { padding: 1.5rem; border: 1px dashed var(--border-strong); background: rgba(255,255,255,0.02); }
+    .label { font-size: 0.65rem; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; display: block; }
+    .notes-pre { white-space: pre-wrap; font-family: inherit; font-size: 0.9rem; line-height: 1.6; color: var(--text); margin: 0; }
+
     .syllabus-sidebar { padding: var(--space-6); display: flex; flex-direction: column; }
     .syllabus-list { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 60vh; }
     .syllabus-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: transparent; border: none; border-radius: 12px; cursor: pointer; text-align: left; color: var(--text-muted); transition: all 0.2s; }
@@ -153,7 +191,4 @@
 
     .mt-6 { margin-top: 1.5rem; }
     .mt-8 { margin-top: 2rem; }
-.takeaways { padding: 1.5rem; border: 1px dashed var(--border-strong); background: rgba(255,255,255,0.02); }
-    .label { font-size: 0.65rem; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; display: block; }
-    .notes-pre { white-space: pre-wrap; font-family: inherit; font-size: 0.9rem; line-height: 1.6; color: var(--text); margin: 0; }
 </style>

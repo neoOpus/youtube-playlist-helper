@@ -1,6 +1,7 @@
 import type { Video, Playlist, AISettings } from "../types/model.js";
 import { storageService } from "./storage-service.js";
 import { embeddingService } from "./embedding-service.js";
+import { vectorService } from "./vector-service.js";
 
 export interface AIProvider {
   analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>>;
@@ -208,6 +209,10 @@ export const aiService = {
     if (useLocalEmbeddings) {
         const text = `${video.title} ${video.channel} ${video.notes || ''} ${result.aiSummary || ''}`;
         result.embeddings = await embeddingService.getEmbeddings(text);
+        // SOTA: Persistence in dedicated vector service
+        if (result.embeddings) {
+            await vectorService.saveVector(String(video.id), result.embeddings);
+        }
     }
 
     return result;

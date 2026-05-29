@@ -1,101 +1,89 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-  import { storageService } from "@yph/core";
-  import { ShieldCheck, Database, Zap, Activity } from "lucide-svelte";
-  import { fade, fly } from "svelte/transition";
+  import { globalHeartbeat, heartbeatService } from "@yph/core";
+  import { TerminalIcon, InfoIcon } from "@yph/ui-kit";
+  import { fade, fly, slide } from "svelte/transition";
 
-  let totalNodes = $state(0);
-  let activeClusters = $state(0);
-  let neuralDensity = $state(0);
-  let status = $state("Stable");
+  let agents = $state<Record<string, any>>({});
+  let metrics = $state(heartbeatService.getSystemMetrics());
 
-  onMount(async () => {
-      const playlists = await storageService.getPlaylists();
-      activeClusters = playlists.length;
-
-      let nodes = 0;
-      let enriched = 0;
-
-      playlists.forEach(pl => {
-          if (pl.loadedVideos) {
-              pl.loadedVideos.forEach(v => {
-                  nodes++;
-                  if (v.aiSummary) enriched++;
-              });
-          }
-      });
-
-      totalNodes = nodes;
-      neuralDensity = nodes > 0 ? Math.round((enriched / nodes) * 100) : 0;
+  onMount(() => {
+      const unsubscribe = globalHeartbeat.subscribe(v => agents = v);
+      const interval = setInterval(() => {
+          metrics = heartbeatService.getSystemMetrics();
+      }, 2000);
+      return () => {
+          unsubscribe();
+          clearInterval(interval);
+      };
   });
 </script>
 
-<div class="system-health pro-glass p-8 mt-8" in:fade>
+<div class="system-health pro-glass p-6">
     <div class="health-header">
-        <Activity size="18" color="var(--success)" />
-        <h3 class="card-title">Infrastructure Health</h3>
+        <h3 class="card-title"><TerminalIcon size="18" /> System Heartbeat</h3>
+        <div class="uptime">UP: {metrics.uptime}s</div>
     </div>
 
-    <div class="health-stats mt-6">
-        <div class="health-item" in:fly={{ y: 10, delay: 100 }}>
-            <div class="icon-wrapper primary"><Database size="16" /></div>
-            <div class="info">
-                <span class="label">Total Nodes</span>
-                <span class="val">{totalNodes}</span>
-            </div>
+    <div class="metrics-grid mt-6">
+        <div class="metric-box">
+            <span class="m-label">Memory</span>
+            <span class="m-val">{metrics.memory}MB</span>
         </div>
-
-        <div class="health-item" in:fly={{ y: 10, delay: 200 }}>
-            <div class="icon-wrapper info"><Zap size="16" /></div>
-            <div class="info">
-                <span class="label">Neural Density</span>
-                <span class="val">{neuralDensity}%</span>
-            </div>
+        <div class="metric-box">
+            <span class="m-label">Agents</span>
+            <span class="m-val">{metrics.agentCount}</span>
         </div>
-
-        <div class="health-item" in:fly={{ y: 10, delay: 300 }}>
-            <div class="icon-wrapper success"><ShieldCheck size="16" /></div>
-            <div class="info">
-                <span class="label">System State</span>
-                <span class="val success-text">{status}</span>
-            </div>
+        <div class="metric-box">
+            <span class="m-label">Status</span>
+            <span class="m-val success">NOMINAL</span>
         </div>
     </div>
 
-    <div class="progress-bar mt-6">
-        <div class="fill" style="width: {neuralDensity}%"></div>
+    <div class="agents-list mt-8">
+        {#each Object.values(agents) as agent (agent.id)}
+            <div class="agent-row" in:fade>
+                <div class="agent-info">
+                    <div class="agent-name-row">
+                        <span class="agent-name">{agent.name}</span>
+                        <div class="pulse-dot {agent.state}"></div>
+                    </div>
+                    <p class="agent-msg">{agent.message || 'Waiting for protocol...'}</p>
+                </div>
+                {#if agent.progress !== undefined}
+                    <div class="agent-progress">
+                        <div class="p-fill" style="width: {agent.progress}%"></div>
+                    </div>
+                {/if}
+            </div>
+        {/each}
     </div>
 </div>
 
 <style>
-    .system-health { border: 1px solid var(--border); }
-    .health-header { display: flex; align-items: center; gap: 12px; }
-    .card-title { margin: 0; font-weight: 800; font-size: var(--font-sm); text-transform: uppercase; letter-spacing: 1px; }
+    .health-header { display: flex; justify-content: space-between; align-items: center; }
+    .uptime { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; color: var(--text-dim); }
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .metric-box { background: var(--bg); padding: 8px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+    .m-label { font-size: 8px; font-weight: 900; color: var(--text-dim); text-transform: uppercase; }
+    .m-val { font-size: 11px; font-weight: 800; color: var(--primary); font-family: 'JetBrains Mono', monospace; }
+    .m-val.success { color: var(--success); }
 
-    .health-stats { display: flex; flex-direction: column; gap: 16px; }
-    .health-item { display: flex; align-items: center; gap: 14px; }
+    .agents-list { display: flex; flex-direction: column; gap: 12px; }
+    .agent-row { display: flex; flex-direction: column; gap: 6px; }
+    .agent-name-row { display: flex; align-items: center; gap: 8px; }
+    .agent-name { font-size: 0.7rem; font-weight: 900; color: var(--text); text-transform: uppercase; letter-spacing: 0.5px; }
+    .agent-msg { margin: 0; font-size: 10px; color: var(--text-muted); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .icon-wrapper {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--hover);
-        color: var(--text-muted);
-    }
+    .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); }
+    .pulse-dot.working { background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: agent-pulse 1s infinite alternate; }
+    .pulse-dot.idle { background: var(--success); }
 
-    .icon-wrapper.primary { color: var(--primary); background: rgba(var(--primary-rgb), 0.1); }
-    .icon-wrapper.info { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
-    .icon-wrapper.success { color: var(--success); background: rgba(var(--success-rgb), 0.1); }
+    .agent-progress { height: 2px; background: var(--hover); width: 100%; border-radius: 1px; overflow: hidden; }
+    .p-fill { height: 100%; background: var(--primary); transition: width 0.4s ease; }
 
-    .info { display: flex; flex-direction: column; gap: 2px; }
-    .label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-    .val { font-size: 1.1rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: var(--text); }
-    .success-text { color: var(--success); }
-
-    .progress-bar { height: 4px; background: var(--hover); border-radius: 2px; overflow: hidden; }
-    .fill { height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary); transition: width 1.5s cubic-bezier(0.23, 1, 0.32, 1); }
+    @keyframes agent-pulse { from { opacity: 0.4; } to { opacity: 1; } }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
 </style>
