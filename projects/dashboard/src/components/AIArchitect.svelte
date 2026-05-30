@@ -38,16 +38,27 @@
   ];
 
   onMount(async () => {
-      const allSettings = await storageService.getSettings();
-      if (allSettings.ai) {
-          settings = { ...settings, ...allSettings.ai };
-      }
-      useLocalEmbeddings = !!allSettings.useLocalEmbeddings;
+      const state = await aiService.getSettings();
+      settings = { ...settings, ...state.ai };
+      // Try to fetch real key if available
+      const realKey = await aiService.getSecureKey(settings.provider);
+      if (realKey) settings.apiKey = realKey;
+
+      useLocalEmbeddings = state.useLocalEmbeddings;
       isLoading = false;
   });
 
   async function saveAIConfig() {
-      await storageService.updateSettings({ ai: settings, useLocalEmbeddings });
+      // Logic for secure storage
+      if (settings.apiKey && settings.apiKey !== '********') {
+          await aiService.setSecureKey(settings.provider, settings.apiKey);
+      }
+
+      // Strip key before saving to general settings
+      const toSave = { ...settings };
+      delete toSave.apiKey;
+
+      await storageService.updateSettings({ ai: toSave, useLocalEmbeddings });
       notificationService.success("AI Visual Architecture updated.");
   }
 
@@ -141,7 +152,7 @@
             <div class="footer-actions mt-8">
                 <div class="info-note">
                     <InfoIcon size="14" />
-                    <span>Local heuristics require zero configuration. WebGPU mapping enables frictionless semantic search without API calls.</span>
+                    <span>Local heuristics require zero configuration. WebGPU mapping enables frictionless semantic search without API calls. Credentials are stored securely.</span>
                 </div>
                 <SuperButton primary onclick={saveAIConfig}>
                     <SaveIcon size="18" /> Commit AI Parameters

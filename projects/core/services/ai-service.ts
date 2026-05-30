@@ -52,7 +52,9 @@ class LocalHeuristicsProvider implements AIProvider {
 class RemoteProvider implements AIProvider {
   async analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>> {
     const requiresKey = !['local-heuristics', 'custom-openai-compatible'].includes(settings.provider);
-    if (requiresKey && !settings.apiKey) {
+    const apiKey = await aiService.getSecureKey(settings.provider);
+
+    if (requiresKey && !apiKey) {
         return new LocalHeuristicsProvider().analyzeVideo(video);
     }
 
@@ -74,7 +76,7 @@ class RemoteProvider implements AIProvider {
         const response = await fetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${settings.apiKey || 'not-required'}`,
+                'Authorization': `Bearer ${apiKey || 'not-required'}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -108,6 +110,7 @@ class RemoteProvider implements AIProvider {
   async summarizePlaylist(playlist: Playlist, videos: Video[], settings: AISettings): Promise<string> {
     const baseUrl = settings.baseUrl || this.getDefaultBaseUrl(settings.provider);
     const model = settings.model || this.getDefaultModel(settings.provider);
+    const apiKey = await aiService.getSecureKey(settings.provider);
 
     const prompt = `Summarize this playlist titled "${playlist.title}" which contains ${videos.length} videos.
     Provide a cohesive summary of the overall theme and learning goals.`;
@@ -116,7 +119,7 @@ class RemoteProvider implements AIProvider {
         const response = await fetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${settings.apiKey || 'not-required'}`,
+                'Authorization': `Bearer ${apiKey || 'not-required'}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -137,11 +140,12 @@ class RemoteProvider implements AIProvider {
   async testConnection(settings: AISettings): Promise<boolean> {
       const baseUrl = settings.baseUrl || this.getDefaultBaseUrl(settings.provider);
       const model = settings.model || this.getDefaultModel(settings.provider);
+      const apiKey = settings.apiKey || await aiService.getSecureKey(settings.provider);
       try {
           const response = await fetch(`${baseUrl}/chat/completions`, {
               method: 'POST',
               headers: {
-                  'Authorization': `Bearer ${settings.apiKey || 'not-required'}`,
+                  'Authorization': `Bearer ${apiKey || 'not-required'}`,
                   'Content-Type': 'application/json'
               },
               body: JSON.stringify({
@@ -182,14 +186,27 @@ const providers: Record<string, AIProvider> = {
 export const aiService = {
   async getSettings() {
     const settings = await storageService.getSettings();
+    const ai = settings.ai || {
+        provider: 'local-heuristics',
+        model: 'default',
+        enabled: true
+    };
+    // Ensure we don't return the real apiKey in general settings for safety
+    if (ai.apiKey) ai.apiKey = '********';
     return {
-        ai: settings.ai || {
-            provider: 'local-heuristics',
-            model: 'default',
-            enabled: true
-        },
+        ai,
         useLocalEmbeddings: !!settings.useLocalEmbeddings
     };
+  },
+
+  async getSecureKey(provider: string): Promise<string | null> {
+      const key = `ai_key_${provider}`;
+      return await storageService.fetchObject(key, null);
+  },
+
+  async setSecureKey(provider: string, value: string) {
+      const key = `ai_key_${provider}`;
+      await storageService.storeObject(key, value);
   },
 
   async testConnection(settings: AISettings): Promise<boolean> {
@@ -209,7 +226,6 @@ export const aiService = {
     if (useLocalEmbeddings) {
         const text = `${video.title} ${video.channel} ${video.notes || ''} ${result.aiSummary || ''}`;
         result.embeddings = await embeddingService.getEmbeddings(text);
-        // SOTA: Persistence in dedicated vector service
         if (result.embeddings) {
             await vectorService.saveVector(String(video.id), result.embeddings);
         }
@@ -293,14 +309,15 @@ export const aiService = {
       }
     }
 
-    if (settings.enabled && settings.provider !== 'local-heuristics' && settings.apiKey) {
+    const apiKey = await this.getSecureKey(settings.provider);
+    if (settings.enabled && settings.provider !== 'local-heuristics' && apiKey) {
         try {
             const baseUrl = settings.baseUrl || "https://api.openai.com/v1";
             const model = settings.model || "gpt-3.5-turbo";
             const response = await fetch(`${baseUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${settings.apiKey}`,
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
