@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "main": "index.ts",
-  "scripts": { "build": "echo 'Core built.'",
+  "scripts": {
+    "build": "echo 'Core built.'",
     "test": "vitest run"
   },
   "devDependencies": {
