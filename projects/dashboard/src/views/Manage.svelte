@@ -1,6 +1,7 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
+import AIArchitect from "../components/AIArchitect.svelte";
   import { storageService, notificationService } from "@yph/core";
   import { SuperButton } from "@yph/ui-kit";
   import {
@@ -99,6 +100,7 @@
 
                 <div class="divider"></div>
                 <ThemeArchitect />
+                <AIArchitect />
             </section>
 
             <section class="settings-card surface-1 mt-8">

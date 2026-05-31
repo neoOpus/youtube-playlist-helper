@@ -1,3 +1,4 @@
+/* @vitest-environment jsdom */
 import { describe, it, expect } from 'vitest';
 import { aiService } from './ai-service.js';
 import type { Video } from '../types/model.js';

@@ -1,11 +1,36 @@
-import { playlistsSorter } from "@yph/core";
+import { storageService } from "@yph/core";
 import type { PlaylistsSorting } from "@yph/core";
 
-export const filtersState = $state({
-    search: "",
-    sorting: "date-created-desc" as PlaylistsSorting,
-    group: "All"
-});
+const sortingStorageKey = "playlists-sorting";
+const defaultSorting: PlaylistsSorting = "date-created-desc";
+
+function createFiltersState() {
+    let search = $state("");
+    let sorting = $state<PlaylistsSorting>(defaultSorting);
+    let group = $state("All");
+
+    storageService
+        .fetchObject(sortingStorageKey, defaultSorting)
+        .then((val) => {
+            if (val) sorting = val as PlaylistsSorting;
+        });
+
+    return {
+        get search() { return search; },
+        set search(v: string) { search = v; },
+
+        get sorting() { return sorting; },
+        set sorting(v: PlaylistsSorting) {
+            sorting = v;
+            storageService.storeObject(sortingStorageKey, v);
+        },
+
+        get group() { return group; },
+        set group(v: string) { group = v; }
+    };
+}
+
+export const filtersState = createFiltersState();
 
 export const playlistsSearch = {
     get value() { return filtersState.search; },

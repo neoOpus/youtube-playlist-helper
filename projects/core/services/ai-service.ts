@@ -1,9 +1,17 @@
-import type { Video, Playlist } from "../types/model.js";
+import type { Video, Playlist, AISettings } from "../types/model.js";
+import { storageService } from "./storage-service.js";
 
-export const aiService = {
+export interface AIProvider {
+  analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>>;
+  summarizePlaylist(playlist: Playlist, videos: Video[], settings: AISettings): Promise<string>;
+}
+
+/**
+ * Local Heuristics Provider: No external API calls, uses regex and keywords.
+ * Fallback and "Free Tier" default.
+ */
+class LocalHeuristicsProvider implements AIProvider {
   async analyzeVideo(video: Video): Promise<Partial<Video>> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
     const tags = ["AI-Enhanced"];
     const title = (video.title || "").toLowerCase();
 
@@ -35,6 +43,134 @@ export const aiService = {
       aiTags: tags,
       energyVibe: vibe
     };
+  }
+
+  async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
+    if (!videos.length) return "Empty infrastructure.";
+    const topTags = new Map<string, number>();
+    videos.forEach(v => (v.aiTags || []).forEach(t => topTags.set(t, (topTags.get(t) || 0) + 1)));
+    const sorted = Array.from(topTags.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(t => t[0]);
+    return `This collection of ${videos.length} nodes focuses on ${sorted.join(", ")}. Neural density is nominal.`;
+  }
+}
+
+/**
+ * Remote Provider: Supports OpenAI-compatible endpoints.
+ */
+class RemoteProvider implements AIProvider {
+  async analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>> {
+    if (!settings.apiKey && settings.provider !== 'local-heuristics') {
+        return new LocalHeuristicsProvider().analyzeVideo(video);
+    }
+
+    const baseUrl = settings.baseUrl || this.getDefaultBaseUrl(settings.provider);
+    const model = settings.model || this.getDefaultModel(settings.provider);
+
+    const prompt = `Analyze this video title and description. Return a JSON object with:
+    - aiSummary: A short 1-sentence summary.
+    - aiTags: An array of 3-5 relevant tags.
+    - energyVibe: One of "Chill", "Productive", "Intense", "Educational", "Inspirational", "Deep Focus".
+
+    Video Title: ${video.title}
+    Video Channel: ${video.channel}
+    Video Notes: ${video.notes || 'None'}`;
+
+    try {
+        const response = await fetch(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${settings.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    { role: "system", content: "You are a helpful AI that analyzes video content. Always return valid JSON." },
+                    { role: "user", content: prompt }
+                ],
+                response_format: { type: "json_object" },
+                temperature: settings.temperature ?? 0.7
+            })
+        });
+
+        if (!response.ok) throw new Error(`AI Provider Error: ${response.statusText}`);
+
+        const data = await response.json();
+        const content = JSON.parse(data.choices[0].message.content);
+
+        return {
+            aiSummary: content.aiSummary,
+            aiTags: content.aiTags,
+            energyVibe: content.energyVibe
+        };
+    } catch (error) {
+        console.error("Remote AI analysis failed, falling back to local:", error);
+        return new LocalHeuristicsProvider().analyzeVideo(video);
+    }
+  }
+
+  async summarizePlaylist(playlist: Playlist, videos: Video[], settings: AISettings): Promise<string> {
+    const baseUrl = settings.baseUrl || this.getDefaultBaseUrl(settings.provider);
+    const model = settings.model || this.getDefaultModel(settings.provider);
+
+    const prompt = `Summarize this playlist titled "${playlist.title}" which contains ${videos.length} videos.
+    Provide a cohesive summary of the overall theme and learning goals.`;
+
+    try {
+        const response = await fetch(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${settings.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model,
+                messages: [{ role: "user", content: prompt }],
+                temperature: 0.5
+            })
+        });
+
+        if (!response.ok) return new LocalHeuristicsProvider().summarizePlaylist(playlist, videos);
+        const data = await response.json();
+        return data.choices[0].message.content;
+    } catch {
+        return new LocalHeuristicsProvider().summarizePlaylist(playlist, videos);
+    }
+  }
+
+  private getDefaultBaseUrl(provider: string): string {
+      switch (provider) {
+          case 'openrouter': return "https://openrouter.ai/api/v1";
+          case 'anthropic': return "https://api.anthropic.com/v1";
+          default: return "https://api.openai.com/v1";
+      }
+  }
+
+  private getDefaultModel(provider: string): string {
+      switch (provider) {
+          case 'openrouter': return "meta-llama/llama-3-8b-instruct:free";
+          case 'openai': return "gpt-3.5-turbo";
+          default: return "gpt-3.5-turbo";
+      }
+  }
+}
+
+const providers: Record<string, AIProvider> = {
+    'local-heuristics': new LocalHeuristicsProvider(),
+    'openai': new RemoteProvider(),
+    'openrouter': new RemoteProvider(),
+    'anthropic': new RemoteProvider(),
+    'custom-openai-compatible': new RemoteProvider()
+};
+
+export const aiService = {
+  async analyzeVideo(video: Video): Promise<Partial<Video>> {
+    const allSettings = await storageService.getSettings();
+    const settings = allSettings.ai;
+    if (!settings?.enabled) return {};
+
+    const provider = providers[settings.provider] || providers['local-heuristics'];
+    return provider.analyzeVideo(video, settings);
   },
 
   calculateVideoRelevance(video: Video, keywords: string[]): number {
@@ -92,11 +228,12 @@ export const aiService = {
   },
 
   async summarizePlaylist(playlist: Playlist, videos: Video[]): Promise<string> {
-    if (!videos.length) return "Empty infrastructure.";
-    const topTags = new Map<string, number>();
-    videos.forEach(v => (v.aiTags || []).forEach(t => topTags.set(t, (topTags.get(t) || 0) + 1)));
-    const sorted = Array.from(topTags.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(t => t[0]);
-    return `This collection of ${videos.length} nodes focuses on ${sorted.join(", ")}. Neural density is nominal.`;
+    const allSettings = await storageService.getSettings();
+    const settings = allSettings.ai;
+    if (!settings?.enabled) return "Neural density is nominal.";
+
+    const provider = providers[settings.provider] || providers['local-heuristics'];
+    return provider.summarizePlaylist(playlist, videos, settings);
   },
 
   sequenceOptimizer: {

@@ -14,6 +14,18 @@ export type PlaylistsSorting =
   | "video-count-asc"
   | "last-modified-desc";
 
+export type AIProviderType = 'local-heuristics' | 'openai' | 'openrouter' | 'anthropic' | 'custom-openai-compatible';
+
+export interface AISettings {
+  provider: AIProviderType;
+  model: string;
+  apiKey?: string;
+  baseUrl?: string;
+  maxTokens?: number;
+  temperature?: number;
+  enabled: boolean;
+}
+
 export interface Video {
   id: string | number;
   videoId: string;
@@ -86,6 +98,7 @@ export interface Settings {
   notificationVerbosity: "none" | "minimal" | "all";
   reducedMotion: boolean;
   lowPowerMode: boolean;
+  ai: AISettings;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -109,5 +122,11 @@ export const DEFAULT_SETTINGS: Settings = {
   enableDeepScanByDefault: false,
   notificationVerbosity: "all",
   reducedMotion: false,
-  lowPowerMode: false
+  lowPowerMode: false,
+  ai: {
+      enabled: true,
+      provider: 'local-heuristics',
+      model: 'default',
+      temperature: 0.7
+  }
 };
