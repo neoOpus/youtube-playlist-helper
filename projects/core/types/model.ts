@@ -1,6 +1,8 @@
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "black";
 export type ThemeChoice = "device" | Theme;
-export type ViewMode = "simple" | "advanced";
+export type ViewMode = "simple" | "advanced" | "compact";
+export type UiDensity = "compact" | "normal" | "spacious";
+export type AnimationIntensity = "none" | "low" | "full";
 
 export type PlaylistsSorting =
   | "date-created-asc"
@@ -26,18 +28,26 @@ export interface Video {
   dateAdded?: number;
   aiSummary?: string;
   aiTags?: string[];
-  // Advanced metadata for exports
-  duration?: string;
+  duration?: string; // e.g. "12:45"
+  durationSeconds?: number;
   author?: string;
   views?: string;
   publishedDate?: string;
-  energyVibe?: 'Chill' | 'Productive' | 'Intense' | 'Educational';
+  energyVibe?: 'Chill' | 'Productive' | 'Intense' | 'Educational' | 'Inspirational' | 'Deep Focus';
 }
 
-export interface PlaylistExport {
-  title: string;
-  videos: string[];
-  timestamp: number;
+export interface CurriculumStep {
+    videoId: string;
+    title: string;
+    completed: boolean;
+    milestone?: string;
+}
+
+export interface CurriculumSettings {
+    enabled: boolean;
+    currentStepIndex: number;
+    steps: CurriculumStep[];
+    targetCompletionDate?: number;
 }
 
 export interface Playlist {
@@ -45,40 +55,59 @@ export interface Playlist {
   title: string;
   loadedVideos?: Video[];
   videos: string[];
-  /** Date created */
   timestamp: number;
   saved?: boolean;
   groups?: string[];
   lastModified?: number;
+  curriculum?: CurriculumSettings;
 }
 
 export interface Settings {
   [id: string]: any;
+  themeChoice: ThemeChoice;
+  viewMode: ViewMode;
+  uiDensity: UiDensity;
+  animationIntensity: AnimationIntensity;
+  sidebarPosition: "left" | "right";
+  accentColorOverride?: string;
+  fontScale: number;
   openPlaylistEditorAfterCreation: boolean;
   openPlaylistPage: boolean;
   closeAfterCombine: boolean;
-  disableThumbnails: boolean;
   openPlaylistBuilderAfterAdd: boolean;
   openSavedPlaylistAfterAdd: boolean;
-  defaultEditorPage: "/new" | "/saved";
+  defaultEditorPage: string;
   saveCreatedPlaylists: boolean;
+  disableThumbnails: boolean;
   disableContextBuilder: boolean;
   disableContextSaved: boolean;
-  themeChoice: ThemeChoice;
-  viewMode: ViewMode;
+  autoSaveInterval: number;
+  enableDeepScanByDefault: boolean;
+  notificationVerbosity: "none" | "minimal" | "all";
+  reducedMotion: boolean;
+  lowPowerMode: boolean;
 }
 
-export interface SmartRule {
-    id: string;
-    name: string;
-    active: boolean;
-    condition: {
-        field: 'rating' | 'vibe' | 'tag' | 'duration';
-        operator: 'gt' | 'lt' | 'eq' | 'contains';
-        value: any;
-    };
-    action: {
-        type: 'tag' | 'rate' | 'decommission' | 'notify';
-        params: any;
-    };
-}
+export const DEFAULT_SETTINGS: Settings = {
+  themeChoice: "device",
+  viewMode: "simple",
+  uiDensity: "normal",
+  animationIntensity: "full",
+  sidebarPosition: "left",
+  fontScale: 1.0,
+  openPlaylistEditorAfterCreation: true,
+  openPlaylistPage: false,
+  closeAfterCombine: false,
+  openPlaylistBuilderAfterAdd: true,
+  openSavedPlaylistAfterAdd: true,
+  defaultEditorPage: "/saved",
+  saveCreatedPlaylists: false,
+  disableThumbnails: false,
+  disableContextBuilder: false,
+  disableContextSaved: false,
+  autoSaveInterval: 5,
+  enableDeepScanByDefault: false,
+  notificationVerbosity: "all",
+  reducedMotion: false,
+  lowPowerMode: false
+};

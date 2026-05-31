@@ -45,7 +45,7 @@
   import { onMount } from "svelte";
 </script>
 
-<div class="sector-comparison pro-glass mt-8" in:fade>
+<div class="sector-comparison surface-1 mt-8" in:fade>
     <div class="comp-header">
         <MergeIcon size="20" color="var(--primary)" />
         <div class="title-meta">

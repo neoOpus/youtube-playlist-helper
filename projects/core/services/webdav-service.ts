@@ -2,6 +2,7 @@ import { storageService } from "./storage-service";
 
 /**
  * Service for WebDAV synchronization.
+ * Enhanced with robustness and pre-restoration validation.
  */
 export const webdavService = {
   /**
@@ -11,9 +12,13 @@ export const webdavService = {
     storageService.onSave(async (id) => {
       // Auto-sync on significant changes (playlists or settings)
       if (id.startsWith("playlist_") || id === "theme-choice") {
-          const config = await this.getConfig();
-          if (config.enabled && config.autoSync) {
-              await this.sync();
+          try {
+              const config = await this.getConfig();
+              if (config.enabled && config.autoSync) {
+                  await this.sync();
+              }
+          } catch (e) {
+              console.error("WebDAV Auto-sync Trigger Failed:", e);
           }
       }
     });
@@ -42,13 +47,18 @@ export const webdavService = {
     if (!config.url) return false;
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
       const response = await fetch(config.url, {
         method: "PROPFIND",
         headers: {
           Authorization: "Basic " + btoa(config.username + ":" + config.password),
           Depth: "0",
         },
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       return response.ok;
     } catch (error) {
       console.error("WebDAV connection failed:", error);
@@ -58,7 +68,6 @@ export const webdavService = {
 
   /**
    * Performs a synchronization operation (Upload local to remote).
-   * Note: This is a basic implementation. A full sync would handle merging.
    */
   async sync(): Promise<boolean> {
     const config = await this.getConfig();
@@ -75,6 +84,11 @@ export const webdavService = {
           return acc;
         }, {});
 
+      if (Object.keys(syncData).length === 0) {
+          console.warn("WebDAV: Nothing to sync.");
+          return true;
+      }
+
       const targetUrl = config.url.endsWith("/") ? config.url + config.fileName : config.url + "/" + config.fileName;
 
       const response = await fetch(targetUrl, {
@@ -85,7 +99,7 @@ export const webdavService = {
         },
         body: JSON.stringify({
             timestamp: Date.now(),
-            version: "1.0",
+            version: "2.0", // Upgraded protocol version
             data: syncData
         }),
       });
@@ -122,7 +136,13 @@ export const webdavService = {
 
           if (response.ok) {
               const remote = await response.json();
-              console.log("WebDAV: Downloaded remote data from", new Date(remote.timestamp).toLocaleString());
+
+              // VALIDATION: Ensure remote data is valid and has a timestamp
+              if (!remote || !remote.data || typeof remote.timestamp !== 'number') {
+                  throw new Error("Malformed remote backup data.");
+              }
+
+              console.log("WebDAV: Validated remote data from", new Date(remote.timestamp).toLocaleString());
 
               // Restore data to local storage
               for (const key in remote.data) {

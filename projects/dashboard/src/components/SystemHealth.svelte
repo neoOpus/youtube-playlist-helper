@@ -1,101 +1,71 @@
 <svelte:options runes={true} />
 <script lang="ts">
+  import { Activity, Database, Cpu, Zap } from "lucide-svelte";
   import { onMount } from "svelte";
-  import { storageService } from "@yph/core";
-  import { ShieldCheck, Database, Zap, Activity } from "lucide-svelte";
-  import { fade, fly } from "svelte/transition";
 
-  let totalNodes = $state(0);
-  let activeClusters = $state(0);
-  let neuralDensity = $state(0);
-  let status = $state("Stable");
+  let stats = $state({
+      memory: "0 MB",
+      nodes: 0,
+      heartbeat: "STABLE",
+      uptime: "00:00:00"
+  });
 
-  onMount(async () => {
-      const playlists = await storageService.getPlaylists();
-      activeClusters = playlists.length;
-
-      let nodes = 0;
-      let enriched = 0;
-
-      playlists.forEach(pl => {
-          if (pl.loadedVideos) {
-              pl.loadedVideos.forEach(v => {
-                  nodes++;
-                  if (v.aiSummary) enriched++;
-              });
-          }
-      });
-
-      totalNodes = nodes;
-      neuralDensity = nodes > 0 ? Math.round((enriched / nodes) * 100) : 0;
+  onMount(() => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+          const diff = Date.now() - start;
+          const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+          const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+          const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+          stats.uptime = `${h}:${m}:${s}`;
+          // Simulated metrics
+          stats.memory = (performance as any).memory ? Math.round((performance as any).memory.usedJSHeapSize / 1048576) + " MB" : "N/A";
+      }, 1000);
+      return () => clearInterval(interval);
   });
 </script>
 
-<div class="system-health pro-glass p-8 mt-8" in:fade>
+<div class="system-health surface-1">
     <div class="health-header">
-        <Activity size="18" color="var(--success)" />
-        <h3 class="card-title">Infrastructure Health</h3>
+        <Activity size="16" class="text-primary" />
+        <span class="label">Telemetry Dashboard</span>
     </div>
 
-    <div class="health-stats mt-6">
-        <div class="health-item" in:fly={{ y: 10, delay: 100 }}>
-            <div class="icon-wrapper primary"><Database size="16" /></div>
-            <div class="info">
-                <span class="label">Total Nodes</span>
-                <span class="val">{totalNodes}</span>
-            </div>
+    <div class="stats-stack">
+        <div class="stat-row">
+            <span class="s-label"><Database size="12" /> STORAGE_USAGE</span>
+            <span class="s-val">{stats.memory}</span>
         </div>
-
-        <div class="health-item" in:fly={{ y: 10, delay: 200 }}>
-            <div class="icon-wrapper info"><Zap size="16" /></div>
-            <div class="info">
-                <span class="label">Neural Density</span>
-                <span class="val">{neuralDensity}%</span>
-            </div>
+        <div class="stat-row">
+            <span class="s-label"><Cpu size="12" /> ENGINE_STATUS</span>
+            <span class="s-val text-success">{stats.heartbeat}</span>
         </div>
-
-        <div class="health-item" in:fly={{ y: 10, delay: 300 }}>
-            <div class="icon-wrapper success"><ShieldCheck size="16" /></div>
-            <div class="info">
-                <span class="label">System State</span>
-                <span class="val success-text">{status}</span>
-            </div>
+        <div class="stat-row">
+            <span class="s-label"><Zap size="12" /> SESSION_UPTIME</span>
+            <span class="s-val mono">{stats.uptime}</span>
         </div>
     </div>
 
-    <div class="progress-bar mt-6">
-        <div class="fill" style="width: {neuralDensity}%"></div>
+    <div class="health-footer">
+        <div class="pulse-dot active"></div>
+        <span>CORE_V4_RUNNING</span>
     </div>
 </div>
 
 <style>
-    .system-health { border: 1px solid var(--border); }
-    .health-header { display: flex; align-items: center; gap: 12px; }
-    .card-title { margin: 0; font-weight: 800; font-size: var(--font-sm); text-transform: uppercase; letter-spacing: 1px; }
+    .system-health { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .health-header { display: flex; align-items: center; gap: 10px; }
+    .label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }
 
-    .health-stats { display: flex; flex-direction: column; gap: 16px; }
-    .health-item { display: flex; align-items: center; gap: 14px; }
+    .stats-stack { display: flex; flex-direction: column; gap: 12px; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; }
+    .s-label { display: flex; align-items: center; gap: 8px; font-size: 0.6rem; font-weight: 800; color: var(--text-dim); }
+    .s-val { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .text-success { color: var(--success); }
 
-    .icon-wrapper {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--hover);
-        color: var(--text-muted);
-    }
-
-    .icon-wrapper.primary { color: var(--primary); background: rgba(var(--primary-rgb), 0.1); }
-    .icon-wrapper.info { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
-    .icon-wrapper.success { color: var(--success); background: rgba(var(--success-rgb), 0.1); }
-
-    .info { display: flex; flex-direction: column; gap: 2px; }
-    .label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-    .val { font-size: 1.1rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: var(--text); }
-    .success-text { color: var(--success); }
-
-    .progress-bar { height: 4px; background: var(--hover); border-radius: 2px; overflow: hidden; }
-    .fill { height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary); transition: width 1.5s cubic-bezier(0.23, 1, 0.32, 1); }
+    .health-footer { border-top: 1px solid var(--border-base); padding-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.55rem; font-weight: 900; color: var(--text-dim); letter-spacing: 0.15em; }
+    .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+    .pulse-dot.active { animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
 </style>

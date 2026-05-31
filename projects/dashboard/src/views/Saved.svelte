@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, fly, scale } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { storageService } from "@yph/core";
   import type { Playlist } from "@yph/core";
@@ -9,8 +9,10 @@
   import PlaylistPreview from "../components/PlaylistPreview.svelte";
   import PlaylistCardSkeleton from "../components/PlaylistCardSkeleton.svelte";
   import EmptyState from "../components/EmptyState.svelte";
-  import { SearchIcon, PlaylistPlayIcon, DeleteIcon, SuperButton, Breadcrumbs, InfoIcon } from "@yph/ui-kit";
+  import { SuperButton } from "@yph/ui-kit";
   import { router } from "../stores/router";
+  import { Star, Hash, Layers, ListFilter, Trash2 } from "lucide-svelte";
+  import { appState } from "../stores/theme.svelte";
 
   let playlists = $state<Playlist[]>([]);
   let filteredPlaylists = $state<Playlist[]>([]);
@@ -20,16 +22,16 @@
 
   let virtualFolders = $derived.by(() => {
       const tagMap = new Map<string, number>();
-      const ratings = { high: 0 };
+      let highCount = 0;
       playlists.forEach(pl => {
           (pl.loadedVideos || []).forEach(v => {
               (v.aiTags || []).forEach(t => tagMap.set(t, (tagMap.get(t) || 0) + 1));
-              if (v.rating && v.rating >= 4) ratings.high++;
+              if (v.rating && v.rating >= 4) highCount++;
           });
       });
       return [
-          { title: "Favorites (4+ ★)", count: ratings.high, type: 'rating' },
-          ...Array.from(tagMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([tag, count]) => ({ title: `#${tag}`, count, type: 'tag' as const }))
+          { title: "High Resonance", count: highCount, icon: Star },
+          ...Array.from(tagMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([tag, count]) => ({ title: `#${tag}`, count, icon: Hash }))
       ];
   });
 
@@ -41,7 +43,7 @@
                 const tag = selectedFolder.slice(1);
                 return (pl.loadedVideos || []).some(v => (v.aiTags || []).includes(tag));
             }
-            if (selectedFolder === "Favorites (4+ ★)") {
+            if (selectedFolder === "High Resonance") {
                 return (pl.loadedVideos || []).some(v => v.rating && v.rating >= 4);
             }
             return true;
@@ -51,11 +53,9 @@
   onMount(async () => {
     try {
         const data = await storageService.getPlaylists();
-        if (data && data.length > 0) {
-            playlists = data;
-        }
+        playlists = data || [];
     } finally {
-        setTimeout(() => loading = false, 800); // Visual breathing room for skeleton
+        setTimeout(() => loading = false, 500);
     }
   });
 
@@ -70,12 +70,10 @@
       selectedIds = new Set(selectedIds);
   }
 
-  function clearSelection() {
-      selectedIds = new Set();
-  }
+  function clearSelection() { selectedIds = new Set(); }
 
   async function deleteSelected() {
-      if (confirm(`Decommission ${selectedIds.size} nodes?`)) {
+      if (confirm(`Purge ${selectedIds.size} nodes?`)) {
           for (const id of selectedIds) {
               const pl = playlists.find(p => p.id === id);
               if (pl) await storageService.removePlaylist(pl);
@@ -86,53 +84,56 @@
   }
 </script>
 
-<main in:fade class="view-container">
-  <header class="view-header">
-      <div class="header-content aura-glow">
-          <Breadcrumbs items={[{label: 'INFRASTRUCTURE'}, {label: 'SAVED NODES', active: true}]} />
-          <h1>Saved Infrastructure</h1>
-          <p class="muted">Access your curated YouTube nodes and collections.</p>
+<main class="view-container">
+  <header class="page-header">
+      <div class="header-info">
+          <h1>Saved Collections</h1>
+          <p class="text-secondary">Manage and modulate your curated YouTube intelligence nodes.</p>
+      </div>
+      <div class="header-actions">
+          <SuperButton primary onclick={() => router.push('/new')}>New Intake</SuperButton>
       </div>
   </header>
 
-  <div class="view-layout">
-      <aside class="folders-sidebar">
-          <p class="section-label">VIRTUAL NODES</p>
+  <div class="main-layout">
+      <aside class="sidebar-nav surface-1">
+          <span class="nav-label">Virtual Sectors</span>
           <button
-            class="folder-item luminous-hover"
+            class="sidebar-item"
             class:active={selectedFolder === 'all'}
             onclick={() => selectedFolder = 'all'}
           >
-              <PlaylistPlayIcon size="16" />
-              <span>All Infrastructure</span>
-              <span class="count">{playlists.length}</span>
+            <Layers size="16" />
+            <span>All Nodes</span>
+            <span class="badge">{playlists.length}</span>
           </button>
 
-          {#each virtualFolders as folder (folder.title)}
-              <button
-                class="folder-item luminous-hover"
-                class:active={selectedFolder === folder.title}
-                onclick={() => selectedFolder = folder.title}
-                in:fly={{ x: -10, delay: 100 }}
-              >
-                  <SearchIcon size="16" color="var(--primary)" />
-                  <span>{folder.title}</span>
-                  <span class="count">{folder.count}</span>
-              </button>
+          <div class="sidebar-divider"></div>
+
+          {#each virtualFolders as folder}
+            <button
+              class="sidebar-item"
+              class:active={selectedFolder === folder.title}
+              onclick={() => selectedFolder = folder.title}
+            >
+              <folder.icon size="16" />
+              <span>{folder.title}</span>
+              <span class="badge">{folder.count}</span>
+            </button>
           {/each}
       </aside>
 
-      <section class="content-area">
+      <div class="content-view">
           <PlaylistsFilters {playlists} bind:filteredPlaylists />
 
-          <div class="results-grid mt-8">
+          <div class="grid-container mt-6">
               {#if loading}
                   {#each Array(4) as _}
                       <PlaylistCardSkeleton />
                   {/each}
               {:else if displayedPlaylists.length > 0}
                   {#each displayedPlaylists as pl (pl.id)}
-                      <div animate:flip={{ duration: 500 }} in:scale={{ start: 0.98, duration: 400 }}>
+                      <div animate:flip={{ duration: 300 }}>
                           <PlaylistPreview
                             playlist={pl}
                             selected={selectedIds.has(pl.id)}
@@ -142,123 +143,113 @@
                       </div>
                   {/each}
               {:else}
-                  <div class="full-width" in:fade>
+                  <div class="empty-wrap">
                       <EmptyState
-                        title="Intelligence Grid Offline"
-                        message="No curated nodes found in this sector. Start a new intake to populate your infrastructure."
-                        actionLabel="Begin New Intake"
+                        title="Empty Sector"
+                        message="No curated nodes found in this coordinate."
+                        actionLabel="Begin Intake"
                         actionClick={() => router.push('/new')}
                       />
                   </div>
               {/if}
           </div>
-      </section>
+      </div>
   </div>
 
   {#if selectedIds.size > 0}
-    <div class="selection-bar pro-glass-high visible" transition:fly={{ y: 100, duration: 600 }}>
-        <div class="selection-info">
-            <span class="badge primary">{selectedIds.size}</span>
-            <span class="bold ml-2">Nodes Selected</span>
-        </div>
-        <div class="selection-actions">
-            <SuperButton outline onclick={clearSelection}>Cancel</SuperButton>
-            <SuperButton danger onclick={deleteSelected} title="Decommission All">
-                <DeleteIcon size="18" />
-            </SuperButton>
+    <div class="selection-fab surface-2" in:fly={{ y: 20 }} out:fade>
+        <span class="sel-info"><b>{selectedIds.size}</b> Nodes Selected</span>
+        <div class="fab-actions">
+            <button class="ghost-btn" onclick={clearSelection}>Cancel</button>
+            <button class="danger-btn" onclick={deleteSelected}><Trash2 size="16" /> Purge</button>
         </div>
     </div>
   {/if}
 </main>
 
 <style>
-  .view-header { margin-bottom: var(--space-8); padding-bottom: var(--space-6); border-bottom: 1px solid var(--border); }
-  .header-content { display: flex; flex-direction: column; gap: var(--space-4); }
-
-  .view-layout {
-    display: grid;
-    grid-template-columns: var(--sidebar-width) 1fr;
-    gap: var(--space-12);
-    align-items: start;
+  .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: var(--space-8);
+      padding-bottom: var(--space-8);
+      border-bottom: 1px solid var(--border-base);
   }
 
-  .folders-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    position: sticky;
-    top: var(--space-12);
+  h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+
+  .main-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: var(--space-8);
+      align-items: start;
   }
 
-  .section-label {
-    font-size: 0.65rem;
-    font-weight: 900;
-    color: var(--text-muted);
-    letter-spacing: 0.15em;
-    padding-left: var(--space-4);
-    margin-bottom: var(--space-4);
-    text-transform: uppercase;
-    opacity: 0.6;
+  .sidebar-nav {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
   }
 
-  .folder-item {
-    border: none;
-    background: transparent;
-    padding: var(--space-4) var(--space-5);
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: all 0.3s var(--easing-standard);
-    text-align: left;
-    font-weight: 700;
+  .nav-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; padding: 8px 12px; }
+
+  .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all var(--duration-fast);
+      text-align: left;
   }
 
-  .folder-item:hover { background: var(--hover); color: var(--text); transform: translateX(6px); }
-  .folder-item.active { background: var(--hover); color: var(--primary); box-shadow: inset 4px 0 0 var(--primary); font-weight: 800; }
-  .folder-item span { flex-grow: 1; }
+  .sidebar-item:hover { background: var(--border-subtle); color: var(--text-main); }
+  .sidebar-item.active { background: rgba(var(--primary-rgb), 0.1); color: var(--primary); }
 
-  .count {
-    font-size: 0.65rem;
-    font-weight: 800;
-    font-family: 'JetBrains Mono', monospace;
-    opacity: 0.5;
+  .badge { margin-left: auto; font-size: 0.7rem; opacity: 0.5; font-family: 'JetBrains Mono', monospace; }
+
+  .sidebar-divider { height: 1px; background: var(--border-base); margin: 8px; }
+
+  .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: var(--space-6);
   }
 
-  .results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: var(--space-8);
+  .empty-wrap { grid-column: 1 / -1; padding: var(--space-16); }
+
+  .selection-fab {
+      position: fixed;
+      bottom: var(--space-8);
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      border: 1px solid var(--primary);
   }
 
-  .full-width { grid-column: 1 / -1; }
-  .mt-8 { margin-top: var(--space-8); }
+  .sel-info { font-size: 0.9rem; }
+  .fab-actions { display: flex; gap: 12px; }
 
-  .selection-bar {
-    position: fixed;
-    bottom: var(--space-12);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-    padding: var(--space-5) var(--space-12);
-    display: flex;
-    align-items: center;
-    gap: var(--space-12);
-    border-radius: var(--radius-xl);
-  }
+  .ghost-btn { background: transparent; border: none; color: var(--text-secondary); font-weight: 700; cursor: pointer; }
+  .danger-btn { background: var(--danger); color: white; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; }
 
-  .selection-info { display: flex; align-items: center; gap: var(--space-4); }
-  .selection-actions { display: flex; align-items: center; gap: var(--space-4); }
+  .mt-6 { margin-top: 1.5rem; }
 
-  @media (max-width: 1200px) {
-    .view-layout { grid-template-columns: 200px 1fr; gap: var(--space-8); }
-  }
-
-  @media (max-width: 900px) {
-    .view-layout { grid-template-columns: 1fr; }
-    .folders-sidebar { display: none; }
-    .view-container { padding: var(--space-4); }
+  @media (max-width: 1000px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .sidebar-nav { display: none; }
   }
 </style>

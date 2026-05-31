@@ -1,15 +1,11 @@
 <svelte:options runes={true} />
 <script lang="ts">
-  import { fade, fly, slide } from "svelte/transition";
   import {
-      TerminalIcon,
-      PlusMultiple,
-      DeleteIcon,
-      SuperButton,
-      CheckIcon,
-      InfoIcon,
-      SearchIcon
-  } from "@yph/ui-kit";
+    Terminal,
+    Check,
+    X,
+    MessageSquare
+  } from "lucide-svelte";
   import { storageService, notificationService } from "@yph/core";
   import type { Playlist, Video } from "@yph/core";
 
@@ -31,99 +27,65 @@
       try {
           const playlists = await storageService.getPlaylists();
           let modifiedCount = 0;
-          const [command, ...args] = query.split(" ");
-
           for (const pl of playlists) {
               if (!pl.loadedVideos) continue;
               let plModified = false;
-
-              for (let i = 0; i < pl.loadedVideos.length; i++) {
-                  const video = pl.loadedVideos[i];
-                  let target = false;
-
-                  // Parse target (simplified for now: "tag:X", "rating:Y", "all")
-                  if (query.includes("all")) target = true;
-                  else if (query.includes("tag:") && (video.aiTags || []).some(t => query.includes(`tag:${t}`))) target = true;
-                  else if (query.includes("rating:") && video.rating === parseInt(query.split("rating:")[1])) target = true;
-
-                  if (target) {
+              for (const video of pl.loadedVideos) {
+                  if (query.includes("all") || (video.aiTags || []).some(t => query.includes(`tag:${t}`))) {
                       if (query.includes("add-tag:")) {
                           const tag = query.split("add-tag:")[1].split(" ")[0];
-                          if (!video.aiTags) video.aiTags = [];
-                          if (!video.aiTags.includes(tag)) {
-                              video.aiTags.push(tag);
-                              plModified = true;
-                              modifiedCount++;
-                          }
-                      } else if (query.includes("set-rating:")) {
-                          const rating = parseInt(query.split("set-rating:")[1]);
-                          if (video.rating !== rating) {
-                              video.rating = rating;
+                          if (!video.aiTags?.includes(tag)) {
+                              video.aiTags = [...(video.aiTags || []), tag];
                               plModified = true;
                               modifiedCount++;
                           }
                       }
                   }
               }
-
-              if (plModified) {
-                  await storageService.savePlaylist(pl);
-              }
+              if (plModified) await storageService.savePlaylist(pl);
           }
-
           log(`SUCCESS: ${modifiedCount} nodes modulated.`);
-          notificationService.success(`Bulk modulation complete: ${modifiedCount} nodes.`);
+          notificationService.success(`Bulk complete: ${modifiedCount} nodes.`);
           query = "";
-      } catch (err) {
+      } catch (err: any) {
           log(`ERROR: ${err.message}`);
-          notificationService.error("Bulk modulation failed.");
       } finally {
           processing = false;
       }
   }
 </script>
 
-<div class="bulk-ops pro-glass mt-8" in:fade>
-    <div class="ops-header">
-        <TerminalIcon size="20" color="var(--primary)" />
-        <div class="title-meta">
-            <h3>Mass Maintenance & Modulation</h3>
-            <p>Terminal-inspired query interface for bulk infrastructure modulation.</p>
+<div class="bulk-ops surface-1 mt-8">
+    <div class="header">
+        <Terminal size="18" class="text-primary" />
+        <div class="info">
+            <h3>Mass Modulation</h3>
+            <p class="text-secondary">Terminal interface for bulk infrastructure operations.</p>
         </div>
     </div>
 
-    <div class="ops-body mt-6">
-        <div class="query-box luminous-hover">
+    <div class="body mt-6">
+        <div class="input-row surface-2">
             <span class="prompt">></span>
             <input
                 bind:value={query}
-                placeholder="tag:Priority add-tag:Reviewed"
-                class="query-input"
+                placeholder="all add-tag:Reviewed"
                 onkeydown={e => e.key === 'Enter' && executeBulk()}
             />
             <button class="exec-btn" onclick={executeBulk} disabled={processing || !query}>
-                {#if processing}
-                    <TerminalIcon size="16" class="spin" />
-                {:else}
-                    <CheckIcon size="16" />
-                {/if}
+                <Check size="16" />
             </button>
         </div>
 
-        <div class="hints mt-4">
-            <div class="hint-item"><span class="cmd">all set-rating:5</span> Full infrastructure optimization</div>
-            <div class="hint-item"><span class="cmd">tag:Old add-tag:Archive</span> Semantic state migration</div>
-        </div>
-
         {#if showConsole}
-            <div class="console mt-6" transition:slide>
+            <div class="console mt-4">
                 <div class="console-header">
                     <span>SYSTEM_LOG</span>
-                    <button class="close-console" onclick={() => showConsole = false}>×</button>
+                    <button onclick={() => showConsole = false}><X size="14" /></button>
                 </div>
                 <div class="console-body">
                     {#each logs as l}
-                        <div class="log-line">> {l}</div>
+                        <div class="line">> {l}</div>
                     {/each}
                 </div>
             </div>
@@ -132,62 +94,24 @@
 </div>
 
 <style>
-    .bulk-ops { padding: var(--space-8); border: 1px solid var(--border); }
-    .ops-header { display: flex; align-items: center; gap: 16px; }
-    .title-meta h3 { margin: 0; font-size: var(--font-lg); font-weight: 800; color: var(--text); }
-    .title-meta p { margin: 0; font-size: var(--font-xs); color: var(--text-muted); font-weight: 600; }
+    .bulk-ops { padding: 24px; border: 1px solid var(--border-base); }
+    .header { display: flex; align-items: center; gap: 16px; }
+    h3 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+    p { font-size: 0.8rem; margin: 0; }
 
-    .query-box {
-        background: var(--bg-secondary);
-        border: 2px solid var(--border);
-        border-radius: 12px;
-        padding: 4px 16px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-    .prompt { font-family: 'JetBrains Mono', monospace; font-weight: 900; color: var(--primary); font-size: 1.2rem; }
-    .query-input {
-        background: transparent;
-        border: none;
-        color: white;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.9rem;
-        font-weight: 700;
-        flex-grow: 1;
-        padding: 12px 0;
-        outline: none;
-    }
-    .exec-btn {
-        background: var(--primary);
-        color: white;
-        border: none;
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.2s;
-    }
-    .exec-btn:hover:not(:disabled) { transform: scale(1.1); }
-    .exec-btn:disabled { opacity: 0.5; background: var(--text-dim); }
+    .input-row { display: flex; align-items: center; padding: 4px 16px; border-radius: 8px; border: 1px solid var(--border-strong); }
+    .prompt { font-family: monospace; font-weight: 900; color: var(--primary); margin-right: 12px; }
+    input { flex: 1; background: transparent; border: none; padding: 12px 0; color: var(--text-main); font-family: monospace; font-weight: 600; outline: none; }
 
-    .hints { display: flex; gap: 20px; }
-    .hint-item { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
-    .cmd { font-family: 'JetBrains Mono', monospace; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 6px; border-radius: 4px; }
+    .exec-btn { background: var(--primary); color: white; border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .exec-btn:disabled { opacity: 0.5; }
 
-    .console { background: #0a0f19; border-radius: 12px; border: 1px solid var(--border-strong); overflow: hidden; }
-    .console-header { background: #1a1f29; padding: 6px 16px; display: flex; justify-content: space-between; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 900; color: var(--text-dim); border-bottom: 1px solid var(--border); }
-    .close-console { background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; }
-    .console-body { padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--success); display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
-    .log-line { opacity: 0.9; }
+    .console { background: var(--bg-app); border-radius: 8px; border: 1px solid var(--border-strong); overflow: hidden; }
+    .console-header { background: var(--bg-surface-2); padding: 4px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.6rem; font-weight: 800; color: var(--text-muted); }
+    .console-header button { background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
+    .console-body { padding: 8px 12px; font-family: monospace; font-size: 0.75rem; color: var(--secondary); max-height: 150px; overflow-y: auto; }
 
-    :global(.spin) { animation: spin 1s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .mt-4 { margin-top: 1rem; }
-    .mt-6 { margin-top: 1.5rem; }
     .mt-8 { margin-top: 2rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-4 { margin-top: 1rem; }
 </style>
