@@ -133,7 +133,6 @@
     .empty-state { padding: 2rem; text-align: center; color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 12px; border: 1px dashed var(--border); border-radius: 12px; }
     .empty-state p { font-size: 0.75rem; font-weight: 700; margin: 0; }
 
-    .mt-4 { margin-top: 1rem; }
     .mt-6 { margin-top: 1.5rem; }
     .mt-8 { margin-top: 2rem; }
 </style>

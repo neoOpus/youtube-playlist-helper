@@ -11,3 +11,9 @@ built/
 /*.log
 /dist
 /dist-zip
+
+# Test artifacts
+verification/
+performance_baseline.log
+stress_test_output.log
+ui_test_output.log
