@@ -9,6 +9,8 @@
     "test": "npm test --workspaces"
   },
   "devDependencies": {
-    "svelte": "^5.55.4"
+    "svelte": "^5.0.0",
+    "jsdom": "^24.0.0",
+    "vitest": "^1.0.0"
   }
 }
