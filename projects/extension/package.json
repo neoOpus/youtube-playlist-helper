@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm run build --workspace=@yph/dashboard"
+    "build": "vite build -c vite.background.config.ts"
   }
 }

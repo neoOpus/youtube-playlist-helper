@@ -17,7 +17,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
-        background: path.resolve(__dirname, '../extension/background.ts')
       },
       output: {
         entryFileNames: 'build/[name].js',
@@ -25,8 +24,5 @@ export default defineConfig({
         assetFileNames: 'build/[name].[ext]',
       },
     },
-  },
-  server: {
-    port: 5000,
   },
 });

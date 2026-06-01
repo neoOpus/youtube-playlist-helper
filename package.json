@@ -5,7 +5,7 @@
     "projects/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace=@yph/dashboard && npm run build --workspace=@yph/extension",
     "test": "npm test --workspaces"
   },
   "devDependencies": {
