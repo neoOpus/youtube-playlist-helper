@@ -9,10 +9,10 @@
   },
   "action": {
     "default_title": "YouTube Playlist Helper",
-    "default_popup": "editor/index.html"
+    "default_popup": "dist/editor/index.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "dist/background.js"
   },
   "permissions": [
     "bookmarks",

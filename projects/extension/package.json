@@ -4,5 +4,8 @@
   "private": true,
   "scripts": {
     "build": "vite build -c vite.background.config.ts"
+  },
+  "devDependencies": {
+    "vite": "^5.3.1"
   }
 }

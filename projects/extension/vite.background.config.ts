@@ -9,7 +9,7 @@ export default defineConfig({
   },
   build: {
     emptyOutDir: false,
-    outDir: '.',
+    outDir: 'dist',
     lib: {
       entry: path.resolve(__dirname, 'background.ts'),
       name: 'YPHBackground',
