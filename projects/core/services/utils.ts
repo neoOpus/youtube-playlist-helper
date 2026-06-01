@@ -8,7 +8,7 @@ let informInstance: Notyf | null = null;
  * Browser-only.
  */
 function getNotyf() {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || typeof document === "undefined") return null;
   if (!notifyInstance) {
     notifyInstance = new Notyf({
       duration: 5000,
@@ -23,7 +23,7 @@ function getNotyf() {
  * Browser-only.
  */
 function getInform() {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || typeof document === "undefined") return null;
   if (!informInstance) {
     informInstance = new Notyf({
       duration: 5000,
@@ -43,18 +43,30 @@ function getInform() {
 export const notificationService = {
   error(message: string) {
     const n = getNotyf();
-    n?.error(message);
-    return () => n?.dismissAll();
+    if (n) {
+      n.error(message);
+      return () => n.dismissAll();
+    }
+    console.error("[SERVICE WORKER ERROR]", message);
+    return () => {};
   },
   success(message: string) {
     const n = getNotyf();
-    n?.success(message);
-    return () => n?.dismissAll();
+    if (n) {
+      n.success(message);
+      return () => n.dismissAll();
+    }
+    console.log("[SERVICE WORKER SUCCESS]", message);
+    return () => {};
   },
   info(message: string) {
     const i = getInform();
-    i?.open({ type: "info", message });
-    return () => i?.dismissAll();
+    if (i) {
+      i.open({ type: "info", message });
+      return () => i.dismissAll();
+    }
+    console.log("[SERVICE WORKER INFO]", message);
+    return () => {};
   },
 };
 
