@@ -23,10 +23,12 @@ export default defineConfig({
         entryFileNames: 'build/[name].js',
         chunkFileNames: 'build/[name].js',
         assetFileNames: 'build/[name].[ext]',
+        manualChunks: (id) => {
+          if (id.includes('background.ts') || id.includes('projects/core')) {
+            return 'background';
+          }
+        }
       },
     },
-  },
-  server: {
-    port: 5000,
   },
 });
