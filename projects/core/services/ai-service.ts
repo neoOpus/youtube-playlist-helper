@@ -1,6 +1,12 @@
 import type { Video, Playlist, AISettings } from "../types/model.js";
 import { storageService } from "./storage-service.js";
 
+export const AI_PRESETS: Record<string, Partial<AISettings>> = {
+    "openai-gpt-4o": { provider: "openai", model: "gpt-4o", baseUrl: "https://api.openai.com/v1" },
+    "openrouter-free": { provider: "openrouter", model: "meta-llama/llama-3-8b-instruct:free", baseUrl: "https://openrouter.ai/api/v1" },
+    "ollama-local": { provider: "custom-openai-compatible", model: "llama3", baseUrl: "http://localhost:11434/v1" },
+    "lm-studio": { provider: "custom-openai-compatible", model: "model-identifier", baseUrl: "http://localhost:1234/v1" }
+};
 export interface AIProvider {
   analyzeVideo(video: Video, settings: AISettings): Promise<Partial<Video>>;
   summarizePlaylist(playlist: Playlist, videos: Video[], settings: AISettings): Promise<string>;

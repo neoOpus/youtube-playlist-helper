@@ -1,9 +1,11 @@
 import { storageService } from "./storage-service.js";
 import { aiService } from "./ai-service.js";
+import { heartbeatService } from "./heartbeat-service.js";
 
 let enrichmentInterval: ReturnType<typeof setInterval> | null = null;
 let lastPlaylistIndex = 0;
 let lastVideoIndex = 0;
+const AGENT_ID = 'enrichment-agent';
 
 /**
  * Enrichment Agent: A background service that incrementally scans and
@@ -11,8 +13,8 @@ let lastVideoIndex = 0;
  */
 export const enrichmentAgent = {
     async start() {
-        console.log("Enrichment Agent online. Monitoring infrastructure...");
         if (enrichmentInterval) return;
+        heartbeatService.registerAgent(AGENT_ID, "AI Enrichment Agent");
 
         // Run every 60 seconds for background maintenance
         enrichmentInterval = setInterval(async () => {
@@ -32,17 +34,21 @@ export const enrichmentAgent = {
         const aiSettings = allSettings.ai;
 
         if (!aiSettings?.enabled) {
-            console.log("Enrichment Agent: AI enrichment is disabled in settings.");
+            heartbeatService.updateAgent(AGENT_ID, { state: 'suspended', message: 'AI Enrichment Disabled' });
             return;
         }
 
         const playlists = await storageService.getPlaylists();
-        if (playlists.length === 0) return;
+        if (playlists.length === 0) {
+            heartbeatService.updateAgent(AGENT_ID, { state: 'idle', message: 'Infrastructure empty.' });
+            return;
+        }
+
+        heartbeatService.updateAgent(AGENT_ID, { state: 'working', message: 'Scanning sectors...' });
 
         let processedCount = 0;
-        const BATCH_SIZE = 10; // Increased batch size for professional throughput
+        const BATCH_SIZE = 10;
 
-        // Reset cursors if playlists changed significantly
         if (lastPlaylistIndex >= playlists.length) {
             lastPlaylistIndex = 0;
             lastVideoIndex = 0;
@@ -51,9 +57,8 @@ export const enrichmentAgent = {
         let currentPlIdx = lastPlaylistIndex;
         let currentVidIdx = lastVideoIndex;
 
-        // Flattened search starting from cursors
         let iterations = 0;
-        const maxIterations = playlists.length; // Max full pass
+        const maxIterations = playlists.length;
 
         while (processedCount < BATCH_SIZE && iterations < maxIterations) {
             const pl = playlists[currentPlIdx];
@@ -69,10 +74,9 @@ export const enrichmentAgent = {
             const video = videos[currentVidIdx];
 
             if (!video.aiSummary) {
-                console.log(`Enrichment Agent: Processing node "${video.title}" in "${pl.title}" using ${aiSettings.provider}...`);
+                heartbeatService.updateAgent(AGENT_ID, { activeNodeId: video.videoId, message: `Optimizing ${video.title.slice(0, 15)}...` });
                 const enrichment = await aiService.analyzeVideo(video);
 
-                // Update node state
                 if (enrichment && Object.keys(enrichment).length > 0) {
                     videos[currentVidIdx] = { ...video, ...enrichment };
                     await storageService.savePlaylist(pl);
@@ -91,9 +95,10 @@ export const enrichmentAgent = {
         lastPlaylistIndex = currentPlIdx;
         lastVideoIndex = currentVidIdx;
 
-        if (processedCount > 0) {
-            console.log(`Enrichment Agent: Batch complete. ${processedCount} nodes optimized.`);
-        }
+        heartbeatService.updateAgent(AGENT_ID, {
+            state: 'idle',
+            message: processedCount > 0 ? `Batch complete. ${processedCount} nodes optimized.` : 'Infrastructure synchronized.'
+        });
     },
 
     stop() {
@@ -101,6 +106,6 @@ export const enrichmentAgent = {
             clearInterval(enrichmentInterval);
             enrichmentInterval = null;
         }
-        console.log("Enrichment Agent suspended.");
+        heartbeatService.updateAgent(AGENT_ID, { state: 'suspended' });
     }
 };

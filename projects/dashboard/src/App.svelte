@@ -19,7 +19,7 @@
   import ProErrorBoundary from "./components/ProErrorBoundary.svelte";
   import { filtersState } from "./stores/playlists-filters";
   import { appState, initAppState } from "./stores/theme.svelte";
-  import { enrichmentAgent } from "@yph/core";
+  import { enrichmentAgent, recoveryAgent } from "@yph/core";
   import { router } from "./stores/router";
   import { ParametricBackground } from "@yph/ui-kit";
 
@@ -46,7 +46,6 @@
   $effect(() => {
       const current = router.path;
       if (current !== prevPath) {
-          // Heuristic for directional transitions
           const order = ["/", "/new", "/manage", "/sync", "/support"];
           const prevIdx = order.indexOf(prevPath);
           const currIdx = order.indexOf(current);
@@ -66,7 +65,10 @@
 
   onMount(() => {
       initAppState()
-          .then(() => enrichmentAgent.start())
+          .then(() => {
+              enrichmentAgent.start();
+              recoveryAgent.start();
+          })
           .catch((e) => errorBoundary?.catchError(e as Error));
 
       const handleKeyDown = (e: KeyboardEvent) => {

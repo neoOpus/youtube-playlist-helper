@@ -1,9 +1,11 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-import AIArchitect from "../components/AIArchitect.svelte";
   import { storageService, notificationService } from "@yph/core";
   import { SuperButton } from "@yph/ui-kit";
+  import AIArchitect from "../components/AIArchitect.svelte";
+  import SmartRules from "../components/SmartRules.svelte";
+  import ThemeArchitect from "../components/ThemeArchitect.svelte";
   import {
     Trash2,
     Monitor,
@@ -19,60 +21,48 @@ import AIArchitect from "../components/AIArchitect.svelte";
     Layers
   } from "lucide-svelte";
   import { appState, updatePreference } from "../stores/theme.svelte";
-  import type { Playlist } from "@yph/core";
-  import ThemeArchitect from "../components/ThemeArchitect.svelte";
-
-  let playlists = $state<Playlist[]>([]);
-
-  onMount(async () => {
-    playlists = await storageService.getPlaylists();
-  });
 
   async function clearAll() {
-      if (confirm("CRITICAL: This will irreversibly purge the entire environment. Proceed?")) {
-          for (const pl of playlists) await storageService.removePlaylist(pl);
-          notificationService.success("Environment decommissioned.");
-          window.location.reload();
-      }
+    if (confirm("DANGER: This will purge all local data. Proceed?")) {
+      localStorage.clear();
+      window.location.reload();
+    }
   }
+
+  onMount(() => {
+    console.log("System Management Console Online.");
+  });
 </script>
 
-<div class="view-container">
+<div class="manage-view">
     <header class="view-header">
-        <h1>System Preferences</h1>
-        <p class="text-secondary">Orchestrate the interface foundation and behavioral logic.</p>
+        <h1>System Management</h1>
+        <p class="text-secondary">Global infrastructure configuration and environment parameters.</p>
     </header>
 
     <div class="settings-grid">
-        <!-- Visual Architecture -->
         <div class="main-column">
+            <!-- Interface Design -->
             <section class="settings-card surface-1">
                 <div class="card-header">
-                    <Monitor size="20" class="icon-primary" />
-                    <h2>Interface & Appearance</h2>
+                    <Palette size="20" class="icon-primary" />
+                    <h2>Interface & Experience</h2>
                 </div>
-
                 <div class="settings-group">
                     <div class="setting-item">
                         <div class="label-info">
-                            <span class="label">UI Density</span>
-                            <p class="desc">Global scale for padding and component spacing.</p>
-                        </div>
-                        <select value={appState.density} onchange={e => updatePreference('uiDensity', e.currentTarget.value as any)}>
-                            <option value="compact">Compact (Tight)</option>
-                            <option value="normal">Normal (Standard)</option>
-                            <option value="spacious">Spacious (Relaxed)</option>
-                        </select>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="label-info">
-                            <span class="label">Font Magnification</span>
-                            <p class="desc">Scaling factor for all textual elements.</p>
+                            <span class="label">Interface Scaling</span>
+                            <p class="desc">Adjust the global font size and UI element proportions.</p>
                         </div>
                         <div class="control-wrap">
-                            <input type="range" min="0.8" max="1.2" step="0.05" value={appState.fontScale}
-                                   oninput={e => updatePreference('fontScale', +e.currentTarget.value)} />
+                            <input
+                                type="range"
+                                min="0.8"
+                                max="1.4"
+                                step="0.05"
+                                value={appState.fontScale}
+                                oninput={e => updatePreference('fontScale', +e.currentTarget.value)}
+                            />
                             <span class="val">{(appState.fontScale * 100).toFixed(0)}%</span>
                         </div>
                     </div>
@@ -100,8 +90,13 @@ import AIArchitect from "../components/AIArchitect.svelte";
 
                 <div class="divider"></div>
                 <ThemeArchitect />
-                <AIArchitect />
             </section>
+
+            <!-- AI Visual Architecture (Ported Feature) -->
+            <AIArchitect />
+
+            <!-- Smart Rules Registry (v2 Upgrade) -->
+            <SmartRules />
 
             <section class="settings-card surface-1 mt-8">
                 <div class="card-header">
@@ -214,7 +209,7 @@ import AIArchitect from "../components/AIArchitect.svelte";
     .settings-grid { display: grid; grid-template-columns: 1fr 380px; gap: var(--space-10); }
     .main-column, .side-column { display: flex; flex-direction: column; }
 
-    .settings-card { padding: var(--space-10); }
+    .settings-card { padding: var(--space-10); border: 1px solid var(--border-base); border-radius: 12px; }
     .card-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; border-bottom: 1px solid var(--border-base); padding-bottom: 20px; }
     .card-header h2 { font-size: 1.15rem; font-weight: 700; margin: 0; }
     :global(.icon-primary) { color: var(--primary); }

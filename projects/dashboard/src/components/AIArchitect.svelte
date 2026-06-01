@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 <script lang="ts">
   import { onMount } from "svelte";
-  import { storageService } from "@yph/core";
+  import { storageService, notificationService, AI_PRESETS } from "@yph/core";
   import {
     SuperSelect,
     SuperInput,
@@ -10,7 +10,7 @@
   } from "@yph/ui-kit";
   import { SaveIcon, InfoIcon } from "@yph/ui-kit";
   import type { AISettings } from "@yph/core";
-  import { BrainCircuit } from "lucide-svelte";
+  import { BrainCircuit, Sparkles } from "lucide-svelte";
 
   let settings = $state<AISettings>({
       provider: 'local-heuristics',
@@ -41,15 +41,32 @@
 
   async function saveAIConfig() {
       await storageService.updateSettings({ ai: settings });
+      notificationService.success("AI Visual Architecture updated.");
+  }
+
+  function applyPreset(presetId: string) {
+      const preset = AI_PRESETS[presetId];
+      if (preset) {
+          settings = { ...settings, ...preset };
+          notificationService.info(`Applied preset: ${presetId}`);
+      }
   }
 
   const showApiFields = $derived(settings.provider !== 'local-heuristics');
 </script>
 
 <section class="settings-card surface-1 mt-8">
-    <div class="card-header">
-        <BrainCircuit size="20" class="icon-primary" />
-        <h2>AI Architect</h2>
+    <div class="card-header justify-between">
+        <div class="flex items-center gap-4">
+            <BrainCircuit size="20" class="icon-primary" />
+            <h2>AI Architect</h2>
+        </div>
+        <div class="presets-row">
+            <Sparkles size="14" class="text-primary" />
+            <button class="preset-btn" onclick={() => applyPreset('openrouter-free')}>OpenRouter</button>
+            <button class="preset-btn" onclick={() => applyPreset('openai-gpt-4o')}>GPT-4o</button>
+            <button class="preset-btn" onclick={() => applyPreset('ollama-local')}>Ollama</button>
+        </div>
     </div>
     <p class="desc mb-8">Configure the neural engine responsible for content enrichment and semantic analysis.</p>
 
@@ -57,8 +74,8 @@
         <div class="ai-config-grid">
             <div class="setting-item">
                 <div class="label-info">
-                    <span class="label">Creation Protocol</span>
-                    <p class="desc">Enable AI Enrichment Agent for background scanning.</p>
+                    <span class="label">Enrichment Protocol</span>
+                    <p class="desc">Enable background AI agent to automatically scan and tag nodes.</p>
                 </div>
                 <SuperToggle bind:checked={settings.enabled} />
             </div>
@@ -126,8 +143,18 @@
         font-style: italic;
     }
 
-    @media (max-width: 768px) {
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-4 { gap: 16px; }
+    .justify-between { justify-content: space-between; }
+
+    .presets-row { display: flex; align-items: center; gap: 8px; background: var(--bg-surface-2); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-subtle); }
+    .preset-btn { background: transparent; border: none; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.2s; }
+    .preset-btn:hover { color: var(--primary); }
+
+    @media (max-width: 900px) {
         .grid-2 { grid-template-columns: 1fr; }
         .footer-actions { flex-direction: column; gap: 16px; align-items: flex-start; }
+        .presets-row { display: none; }
     }
 </style>

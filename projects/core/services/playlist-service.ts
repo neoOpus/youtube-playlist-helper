@@ -48,16 +48,17 @@ export const playlistService = {
           case 'vibe': actualValue = String(video.energyVibe || ""); break;
           case 'tag': actualValue = video.aiTags || []; break;
           case 'duration': actualValue = String(video.duration || ""); break;
+          case 'title': actualValue = String(video.title || ""); break;
+          case 'summary': actualValue = String(video.aiSummary || ""); break;
           default: return false;
       }
 
-      // Normalize comparison value based on field type
-      const normalizedValue = field === 'rating' ? Number(value) : value;
+      const normalizedValue = field === 'rating' ? Number(value) : String(value);
 
       switch (operator) {
           case 'gt': return actualValue > normalizedValue;
           case 'lt': return actualValue < normalizedValue;
-          case 'eq': return actualValue === normalizedValue;
+          case 'eq': return (Array.isArray(actualValue) ? actualValue.join(',') : actualValue) === normalizedValue;
           case 'contains':
             if (Array.isArray(actualValue)) {
                 return actualValue.some(v => String(v).toLowerCase().includes(String(normalizedValue).toLowerCase()));
@@ -91,7 +92,6 @@ export const playlistService = {
               }
               break;
           case 'decommission':
-              // Marks for decommissioning using a dedicated boolean flag
               if (!video.selected) {
                 video.selected = true;
                 modified = true;
