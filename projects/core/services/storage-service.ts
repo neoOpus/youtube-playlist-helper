@@ -56,6 +56,7 @@ export const storageService = {
           });
       });
     } else {
+      if (typeof localStorage === 'undefined') return defaultValue;
       const value = localStorage.getItem(id);
       if (value) {
         try {
@@ -75,6 +76,7 @@ export const storageService = {
     if (typeof chrome !== "undefined" && chrome.storage) {
       await chrome.storage.local.set({ [id]: value });
     } else {
+      if (typeof localStorage === 'undefined') return;
       if (value === null) localStorage.removeItem(id);
       else localStorage.setItem(id, value);
     }
@@ -87,6 +89,7 @@ export const storageService = {
           chrome.storage.local.get(null, (result) => resolve(result || {}));
       });
     } else {
+      if (typeof localStorage === 'undefined') return {};
       const all: Record<string, any> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -101,7 +104,7 @@ export const storageService = {
 
   async removeObject(id: string): Promise<void> {
     if (typeof chrome !== "undefined" && chrome.storage) await chrome.storage.local.remove(id);
-    else localStorage.removeItem(id);
+    else if (typeof localStorage !== 'undefined') localStorage.removeItem(id);
   },
 
   async generatePlaylistId(): Promise<string> {
@@ -158,7 +161,7 @@ export const storageService = {
             } else if (typeof DEFAULT_SETTINGS[key] === 'number') {
                 settings[key] = +val;
             } else {
-                try { settings[key] = JSON.parse(val); } catch { settings[key] = val; }
+                try { settings[key] = typeof val === 'string' ? JSON.parse(val) : val; } catch { settings[key] = val; }
             }
         }
     });

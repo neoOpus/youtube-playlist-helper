@@ -1,7 +1,21 @@
-import type { Video, Playlist } from "../types/model.js";
+import type { Video, Playlist, Settings } from "../types/model.js";
+import { storageService } from "./storage-service.js";
 
 export const aiService = {
   async analyzeVideo(video: Video): Promise<Partial<Video>> {
+    const settings = await storageService.getSettings();
+    const ai = settings.ai;
+
+    if (!ai.enabled) return {};
+
+    if (ai.provider === 'local') {
+        return this.runLocalHeuristics(video);
+    }
+
+    return this.runRemoteAnalysis(video, ai);
+  },
+
+  async runLocalHeuristics(video: Video): Promise<Partial<Video>> {
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     const tags = ["AI-Enhanced"];
@@ -35,6 +49,12 @@ export const aiService = {
       aiTags: tags,
       energyVibe: vibe
     };
+  },
+
+  async runRemoteAnalysis(video: Video, ai: any): Promise<Partial<Video>> {
+      console.log(`Remote analysis triggered via ${ai.provider} using model ${ai.model}`);
+      // Mock remote implementation - in reality this would fetch from OpenAI/OpenRouter
+      return this.runLocalHeuristics(video);
   },
 
   calculateVideoRelevance(video: Video, keywords: string[]): number {

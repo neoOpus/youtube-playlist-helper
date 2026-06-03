@@ -1,77 +1,54 @@
-<svelte:options runes={true} />
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { storageService, notificationService } from "@yph/core";
-  import { SuperButton } from "@yph/ui-kit";
-  import {
-    Trash2,
-    Monitor,
-    Activity,
-    ShieldCheck,
-    Zap,
-    Database,
-    Bell,
-    MousePointer2,
-    Palette,
-    Compass,
-    Settings as SettingsIcon,
-    Layers
-  } from "lucide-svelte";
-  import { appState, updatePreference } from "../stores/theme.svelte";
-  import type { Playlist } from "@yph/core";
-  import ThemeArchitect from "../components/ThemeArchitect.svelte";
+    import { storageService, notificationService } from "@yph/core";
+    import { Monitor, Activity, Trash2, ShieldCheck, Bell, Compass, Layout } from "lucide-svelte";
+    import { appState, updatePreference } from "../stores/theme.svelte";
+    import ThemeArchitect from "../components/ThemeArchitect.svelte";
+    import AIArchitect from "../components/AIArchitect.svelte";
 
-  let playlists = $state<Playlist[]>([]);
-
-  onMount(async () => {
-    playlists = await storageService.getPlaylists();
-  });
-
-  async function clearAll() {
-      if (confirm("CRITICAL: This will irreversibly purge the entire environment. Proceed?")) {
-          for (const pl of playlists) await storageService.removePlaylist(pl);
-          notificationService.success("Environment decommissioned.");
-          window.location.reload();
-      }
-  }
+    async function clearAll() {
+        if (confirm("DANGER: This will permanently wipe all local data and playlists. Continue?")) {
+            await chrome.storage.local.clear();
+            localStorage.clear();
+            notificationService.success("Environment decommissioned.");
+            setTimeout(() => window.location.reload(), 1000);
+        }
+    }
 </script>
 
 <div class="view-container">
     <header class="view-header">
         <h1>System Preferences</h1>
-        <p class="text-secondary">Orchestrate the interface foundation and behavioral logic.</p>
+        <p class="desc">Global configuration and core infrastructure management.</p>
     </header>
 
     <div class="settings-grid">
-        <!-- Visual Architecture -->
+        <!-- Interface & Workflow -->
         <div class="main-column">
             <section class="settings-card surface-1">
                 <div class="card-header">
                     <Monitor size="20" class="icon-primary" />
-                    <h2>Interface & Appearance</h2>
+                    <h2>Interface Architecture</h2>
                 </div>
 
                 <div class="settings-group">
                     <div class="setting-item">
                         <div class="label-info">
-                            <span class="label">UI Density</span>
-                            <p class="desc">Global scale for padding and component spacing.</p>
+                            <span class="label">Information Density</span>
+                            <p class="desc">Adjust vertical rhythm and component scaling.</p>
                         </div>
-                        <select value={appState.density} onchange={e => updatePreference('uiDensity', e.currentTarget.value as any)}>
-                            <option value="compact">Compact (Tight)</option>
-                            <option value="normal">Normal (Standard)</option>
-                            <option value="spacious">Spacious (Relaxed)</option>
-                        </select>
+                        <div class="toggle-group">
+                            <button class:active={appState.density === 'compact'} onclick={() => updatePreference('uiDensity', 'compact')}>Compact</button>
+                            <button class:active={appState.density === 'normal'} onclick={() => updatePreference('uiDensity', 'normal')}>Normal</button>
+                            <button class:active={appState.density === 'spacious'} onclick={() => updatePreference('uiDensity', 'spacious')}>Spacious</button>
+                        </div>
                     </div>
 
                     <div class="setting-item">
                         <div class="label-info">
-                            <span class="label">Font Magnification</span>
-                            <p class="desc">Scaling factor for all textual elements.</p>
+                            <span class="label">Global Scale</span>
                         </div>
                         <div class="control-wrap">
-                            <input type="range" min="0.8" max="1.2" step="0.05" value={appState.fontScale}
-                                   oninput={e => updatePreference('fontScale', +e.currentTarget.value)} />
+                            <input type="range" min="0.8" max="1.3" step="0.05" value={appState.fontScale} oninput={e => updatePreference('fontScale', +e.currentTarget.value)} />
                             <span class="val">{(appState.fontScale * 100).toFixed(0)}%</span>
                         </div>
                     </div>
@@ -90,7 +67,7 @@
                         <div class="label-info">
                             <span class="label">Default Landing Plane</span>
                         </div>
-                        <select onchange={e => updatePreference('defaultEditorPage', e.currentTarget.value as any)}>
+                        <select value={appState.defaultEditorPage} onchange={e => updatePreference('defaultEditorPage', e.currentTarget.value as any)}>
                             <option value="/saved">Saved Collections</option>
                             <option value="/new">New Intake</option>
                         </select>
@@ -100,6 +77,8 @@
                 <div class="divider"></div>
                 <ThemeArchitect />
             </section>
+
+            <AIArchitect />
 
             <section class="settings-card surface-1 mt-8">
                 <div class="card-header">
@@ -112,14 +91,14 @@
                             <span class="label">Creation Protocol</span>
                             <p class="desc">Immediately open editor after generating a new node.</p>
                         </div>
-                        <input type="checkbox" checked onchange={e => updatePreference('openPlaylistEditorAfterCreation', e.currentTarget.checked)} />
+                        <input type="checkbox" checked={appState.openPlaylistEditorAfterCreation} onchange={e => updatePreference('openPlaylistEditorAfterCreation', e.currentTarget.checked)} />
                     </div>
                     <div class="setting-item">
                         <div class="label-info">
                             <span class="label">Persistent Auto-Save</span>
                             <p class="desc">Commit changes to local storage every X minutes.</p>
                         </div>
-                        <select onchange={e => updatePreference('autoSaveInterval', +e.currentTarget.value)}>
+                        <select value={appState.autoSaveInterval} onchange={e => updatePreference('autoSaveInterval', +e.currentTarget.value)}>
                             <option value="1">1 Minute</option>
                             <option value="5">5 Minutes</option>
                             <option value="15">15 Minutes</option>
@@ -162,7 +141,7 @@
                             <span class="label">Resource Efficiency</span>
                             <p class="desc">Disable background canvas effects.</p>
                         </div>
-                        <input type="checkbox" onchange={e => updatePreference('lowPowerMode', e.currentTarget.checked)} />
+                        <input type="checkbox" checked={appState.lowPowerMode} onchange={e => updatePreference('lowPowerMode', e.currentTarget.checked)} />
                     </div>
                 </div>
             </section>
@@ -177,7 +156,7 @@
                         <div class="label-info">
                             <span class="label">Feedback Verbosity</span>
                         </div>
-                        <select onchange={e => updatePreference('notificationVerbosity', e.currentTarget.value as any)}>
+                        <select value={appState.notificationVerbosity} onchange={e => updatePreference('notificationVerbosity', e.currentTarget.value as any)}>
                             <option value="all">Verbosity: Maximum</option>
                             <option value="minimal">Action-Only</option>
                             <option value="none">Silent Mode</option>

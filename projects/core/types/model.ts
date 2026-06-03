@@ -62,6 +62,13 @@ export interface Playlist {
   curriculum?: CurriculumSettings;
 }
 
+export interface AISettings {
+    provider: 'local' | 'openai' | 'openrouter';
+    apiKey: string;
+    model: string;
+    enabled: boolean;
+}
+
 export interface Settings {
   [id: string]: any;
   themeChoice: ThemeChoice;
@@ -86,6 +93,7 @@ export interface Settings {
   notificationVerbosity: "none" | "minimal" | "all";
   reducedMotion: boolean;
   lowPowerMode: boolean;
+  ai: AISettings;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -109,5 +117,11 @@ export const DEFAULT_SETTINGS: Settings = {
   enableDeepScanByDefault: false,
   notificationVerbosity: "all",
   reducedMotion: false,
-  lowPowerMode: false
+  lowPowerMode: false,
+  ai: {
+      provider: 'local',
+      apiKey: '',
+      model: 'gpt-3.5-turbo',
+      enabled: true
+  }
 };
