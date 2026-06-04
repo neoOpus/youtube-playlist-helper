@@ -1,5 +1,4 @@
 import type { Video } from "../types/model.js";
-import { metadataService } from "./metadata-service.js";
 
 let videoIdCount = 1000;
 
@@ -29,39 +28,28 @@ export const videoService = {
             id: videoIdCount++,
             videoId,
             url: `https://www.youtube.com/watch?v=${videoId}`,
-            title: "Loading node...",
-            channel: "",
+            title: "Loading video...",
+            channel: "YouTube",
             thumbnailUrl: this.getVideoThumbnailUrl(videoId),
-            dateAdded: Date.now(),
             duration: "0:00",
             durationSeconds: 0
-        } as any;
+        };
     },
 
     async fetchVideo(videoId: string): Promise<Video | null> {
-        let title = "Unknown Video";
-        let channel = "";
-        let duration = "10:00";
-        let durationSeconds = 600;
+        let title = "YouTube Video";
+        let channel = "Channel";
 
         try {
             const res = await fetch(
                 `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
             );
             const json = await res.json();
-            title = json.title || "Unknown Video";
-            channel = json.author_name || "";
-
-            // Heuristic duration based on title length for variety in simulated data
-            durationSeconds = 300 + (title.length * 12) % 1800;
-            const mins = Math.floor(durationSeconds / 60);
-            const secs = durationSeconds % 60;
-            duration = `${mins}:${secs.toString().padStart(2, '0')}`;
+            title = json.title || "YouTube Video";
+            channel = json.author_name || "Channel";
         } catch (e) {
             console.error("Error fetching video info:", e);
         }
-
-        const metadata = await metadataService.getVideoMetadata(videoId);
 
         return {
             id: videoIdCount++,
@@ -70,10 +58,8 @@ export const videoService = {
             title,
             channel,
             thumbnailUrl: this.getVideoThumbnailUrl(videoId),
-            dateAdded: Date.now(),
-            duration,
-            durationSeconds,
-            ...metadata
-        } as any;
+            duration: "0:00",
+            durationSeconds: 0
+        };
     }
 };

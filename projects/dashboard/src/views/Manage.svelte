@@ -1,15 +1,14 @@
 <script lang="ts">
     import { storageService, notificationService } from "@yph/core";
-    import { Monitor, Activity, Trash2, ShieldCheck, Bell, Compass, Layout } from "lucide-svelte";
+    import { Monitor, Activity, Trash2, ShieldCheck, Bell, Compass } from "lucide-svelte";
     import { appState, updatePreference } from "../stores/theme.svelte";
     import ThemeArchitect from "../components/ThemeArchitect.svelte";
-    import AIArchitect from "../components/AIArchitect.svelte";
 
     async function clearAll() {
         if (confirm("DANGER: This will permanently wipe all local data and playlists. Continue?")) {
             await chrome.storage.local.clear();
             localStorage.clear();
-            notificationService.success("Environment decommissioned.");
+            notificationService.success("System Reset Complete.");
             setTimeout(() => window.location.reload(), 1000);
         }
     }
@@ -17,24 +16,22 @@
 
 <div class="view-container">
     <header class="view-header">
-        <h1>System Preferences</h1>
-        <p class="desc">Global configuration and core infrastructure management.</p>
+        <h1>Settings</h1>
+        <p class="desc">Configure your experience and manage data.</p>
     </header>
 
     <div class="settings-grid">
-        <!-- Interface & Workflow -->
         <div class="main-column">
             <section class="settings-card surface-1">
                 <div class="card-header">
                     <Monitor size="20" class="icon-primary" />
-                    <h2>Interface Architecture</h2>
+                    <h2>Interface</h2>
                 </div>
 
                 <div class="settings-group">
                     <div class="setting-item">
                         <div class="label-info">
                             <span class="label">Information Density</span>
-                            <p class="desc">Adjust vertical rhythm and component scaling.</p>
                         </div>
                         <div class="toggle-group">
                             <button class:active={appState.density === 'compact'} onclick={() => updatePreference('uiDensity', 'compact')}>Compact</button>
@@ -45,32 +42,12 @@
 
                     <div class="setting-item">
                         <div class="label-info">
-                            <span class="label">Global Scale</span>
-                        </div>
-                        <div class="control-wrap">
-                            <input type="range" min="0.8" max="1.3" step="0.05" value={appState.fontScale} oninput={e => updatePreference('fontScale', +e.currentTarget.value)} />
-                            <span class="val">{(appState.fontScale * 100).toFixed(0)}%</span>
-                        </div>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="label-info">
-                            <span class="label">Sidebar Orientation</span>
+                            <span class="label">Sidebar Position</span>
                         </div>
                         <div class="toggle-group">
-                            <button class:active={appState.sidebar === 'left'} onclick={() => updatePreference('sidebarPosition', 'left')}>Left-Aligned</button>
-                            <button class:active={appState.sidebar === 'right'} onclick={() => updatePreference('sidebarPosition', 'right')}>Right-Aligned</button>
+                            <button class:active={appState.sidebar === 'left'} onclick={() => updatePreference('sidebarPosition', 'left')}>Left</button>
+                            <button class:active={appState.sidebar === 'right'} onclick={() => updatePreference('sidebarPosition', 'right')}>Right</button>
                         </div>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="label-info">
-                            <span class="label">Default Landing Plane</span>
-                        </div>
-                        <select value={appState.defaultEditorPage} onchange={e => updatePreference('defaultEditorPage', e.currentTarget.value as any)}>
-                            <option value="/saved">Saved Collections</option>
-                            <option value="/new">New Intake</option>
-                        </select>
                     </div>
                 </div>
 
@@ -78,37 +55,22 @@
                 <ThemeArchitect />
             </section>
 
-            <AIArchitect />
-
             <section class="settings-card surface-1 mt-8">
                 <div class="card-header">
                     <Compass size="20" class="icon-primary" />
-                    <h2>Workflow Automation</h2>
+                    <h2>Workflow</h2>
                 </div>
                 <div class="settings-group">
                     <div class="setting-item">
                         <div class="label-info">
-                            <span class="label">Creation Protocol</span>
-                            <p class="desc">Immediately open editor after generating a new node.</p>
+                            <span class="label">Open Editor after creation</span>
                         </div>
                         <input type="checkbox" checked={appState.openPlaylistEditorAfterCreation} onchange={e => updatePreference('openPlaylistEditorAfterCreation', e.currentTarget.checked)} />
-                    </div>
-                    <div class="setting-item">
-                        <div class="label-info">
-                            <span class="label">Persistent Auto-Save</span>
-                            <p class="desc">Commit changes to local storage every X minutes.</p>
-                        </div>
-                        <select value={appState.autoSaveInterval} onchange={e => updatePreference('autoSaveInterval', +e.currentTarget.value)}>
-                            <option value="1">1 Minute</option>
-                            <option value="5">5 Minutes</option>
-                            <option value="15">15 Minutes</option>
-                        </select>
                     </div>
                 </div>
             </section>
         </div>
 
-        <!-- System & Performance -->
         <div class="side-column">
             <section class="settings-card surface-1">
                 <div class="card-header">
@@ -119,47 +81,12 @@
                 <div class="settings-group">
                     <div class="setting-item">
                         <div class="label-info">
-                            <span class="label">Animation Dynamics</span>
+                            <span class="label">Animations</span>
                         </div>
                         <select value={appState.animation} onchange={e => updatePreference('animationIntensity', e.currentTarget.value as any)}>
-                            <option value="full">High-Fidelity Transitions</option>
-                            <option value="low">Optimized Performance</option>
-                            <option value="none">Disabled (Instant)</option>
-                        </select>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="label-info">
-                            <span class="label">Reduced Motion</span>
-                            <p class="desc">Minimize parallax and scale effects.</p>
-                        </div>
-                        <input type="checkbox" checked={appState.reducedMotion} onchange={e => updatePreference('reducedMotion', e.currentTarget.checked)} />
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="label-info">
-                            <span class="label">Resource Efficiency</span>
-                            <p class="desc">Disable background canvas effects.</p>
-                        </div>
-                        <input type="checkbox" checked={appState.lowPowerMode} onchange={e => updatePreference('lowPowerMode', e.currentTarget.checked)} />
-                    </div>
-                </div>
-            </section>
-
-            <section class="settings-card surface-1 mt-6">
-                <div class="card-header">
-                    <Bell size="20" class="icon-primary" />
-                    <h2>Communication</h2>
-                </div>
-                <div class="settings-group">
-                    <div class="setting-item">
-                        <div class="label-info">
-                            <span class="label">Feedback Verbosity</span>
-                        </div>
-                        <select value={appState.notificationVerbosity} onchange={e => updatePreference('notificationVerbosity', e.currentTarget.value as any)}>
-                            <option value="all">Verbosity: Maximum</option>
-                            <option value="minimal">Action-Only</option>
-                            <option value="none">Silent Mode</option>
+                            <option value="full">Full</option>
+                            <option value="low">Low</option>
+                            <option value="none">None</option>
                         </select>
                     </div>
                 </div>
@@ -168,15 +95,15 @@
             <section class="settings-card surface-1 danger-card mt-6">
                 <div class="card-header">
                     <ShieldCheck size="20" />
-                    <h2>Security & Privacy</h2>
+                    <h2>Data Management</h2>
                 </div>
                 <div class="settings-group">
                     <div class="setting-item">
                         <div class="label-info">
-                            <span class="label">Environment Purge</span>
-                            <p class="desc">Wipe all local indices and configurations.</p>
+                            <span class="label">Reset All Data</span>
+                            <p class="desc">This cannot be undone.</p>
                         </div>
-                        <button class="danger-btn" onclick={clearAll}><Trash2 size="16" /> Decommission</button>
+                        <button class="danger-btn" onclick={clearAll}><Trash2 size="16" /> Wipe Data</button>
                     </div>
                 </div>
             </section>
@@ -185,69 +112,44 @@
 </div>
 
 <style>
-    .view-header { margin-bottom: var(--space-12); }
-    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 4px; }
+    .view-header { margin-bottom: 2rem; }
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 4px; }
 
-    .settings-grid { display: grid; grid-template-columns: 1fr 380px; gap: var(--space-10); }
+    .settings-grid { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
     .main-column, .side-column { display: flex; flex-direction: column; }
 
-    .settings-card { padding: var(--space-10); }
-    .card-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; border-bottom: 1px solid var(--border-base); padding-bottom: 20px; }
-    .card-header h2 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+    .settings-card { padding: 1.5rem; }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-base); padding-bottom: 1rem; }
+    .card-header h2 { font-size: 1rem; font-weight: 700; margin: 0; }
     :global(.icon-primary) { color: var(--primary); }
 
-    .settings-group { display: flex; flex-direction: column; gap: 32px; }
-    .setting-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; }
+    .settings-group { display: flex; flex-direction: column; gap: 1.5rem; }
+    .setting-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 
-    .label-info { flex: 1; }
-    .label { display: block; font-weight: 700; font-size: 1rem; margin-bottom: 6px; color: var(--text-main); }
-    .desc { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; line-height: 1.5; }
+    .label { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+    .desc { font-size: 0.8rem; color: var(--text-secondary); }
 
     select {
         background: var(--bg-surface-2); border: 1px solid var(--border-strong);
-        color: var(--text-main); padding: 10px 16px; border-radius: 8px;
-        font-weight: 600; font-size: 0.9rem; outline: none; cursor: pointer;
-        min-width: 180px; transition: border-color 0.2s;
+        color: var(--text-main); padding: 8px; border-radius: 6px;
     }
-    select:hover { border-color: var(--text-muted); }
 
-    .control-wrap { display: flex; align-items: center; gap: 16px; }
-    .val { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--primary); width: 44px; text-align: right; }
-
-    .toggle-group { display: flex; background: var(--bg-surface-2); padding: 4px; border-radius: 10px; border: 1px solid var(--border-base); }
+    .toggle-group { display: flex; background: var(--bg-surface-2); padding: 2px; border-radius: 8px; }
     .toggle-group button {
         background: transparent; border: none; color: var(--text-secondary);
-        padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;
-        cursor: pointer; transition: all 0.2s;
+        padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+        cursor: pointer;
     }
-    .toggle-group button.active { background: var(--bg-surface-3); color: var(--text-main); box-shadow: var(--shadow-sm); }
+    .toggle-group button.active { background: var(--bg-surface-3); color: var(--text-main); }
 
-    .divider { height: 1px; background: var(--border-base); margin: 32px 0; }
+    .divider { height: 1px; background: var(--border-base); margin: 1.5rem 0; }
 
-    .danger-card { border-color: rgba(239, 68, 68, 0.3); }
     .danger-btn {
-        background: var(--danger); color: white; border: none; padding: 12px 24px;
-        border-radius: 8px; font-weight: 700; font-size: 0.9rem;
-        cursor: pointer; display: flex; align-items: center; gap: 10px; transition: opacity 0.2s;
+        background: var(--danger); color: white; border: none; padding: 10px 16px;
+        border-radius: 6px; font-weight: 700; font-size: 0.8rem;
+        cursor: pointer; display: flex; align-items: center; gap: 8px;
     }
-    .danger-btn:hover { opacity: 0.95; }
-
-    input[type="checkbox"] {
-        appearance: none; width: 22px; height: 22px; border: 2px solid var(--border-strong);
-        border-radius: 6px; cursor: pointer; position: relative; transition: all 0.2s;
-    }
-    input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
-    input[type="checkbox"]:checked::after {
-        content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 900;
-    }
-
-    input[type="range"] { accent-color: var(--primary); }
 
     .mt-8 { margin-top: 2rem; }
     .mt-6 { margin-top: 1.5rem; }
-
-    @media (max-width: 1200px) {
-        .settings-grid { grid-template-columns: 1fr; }
-        .side-column { order: 2; }
-    }
 </style>

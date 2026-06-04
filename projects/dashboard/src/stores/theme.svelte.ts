@@ -8,8 +8,9 @@ interface AppState {
     animation: AnimationIntensity;
     sidebar: "left" | "right";
     fontScale: number;
-    reducedMotion: boolean;
-    lowPowerMode: boolean;
+    defaultEditorPage: string;
+    openPlaylistEditorAfterCreation: boolean;
+    autoSaveInterval: number;
 }
 
 export const appState = $state<AppState>({
@@ -19,18 +20,13 @@ export const appState = $state<AppState>({
     animation: "full",
     sidebar: "left",
     fontScale: 1.0,
-    reducedMotion: false,
-    lowPowerMode: false
+    defaultEditorPage: "/saved",
+    openPlaylistEditorAfterCreation: true,
+    autoSaveInterval: 5
 });
 
-export const themes = [
-  { id: "light", name: "Modern Light", primary: "#3b82f6", bg: "#f8fafc" },
-  { id: "dark", name: "Obsidian Night", primary: "#3b82f6", bg: "#0f172a" },
-  { id: "black", name: "OLED Black", primary: "#10b981", bg: "#000000" }
-];
-
 export async function initAppState() {
-    await storageService.init(); // Core service initialization
+    await storageService.init();
     const settings = await storageService.getSettings();
     updateFromSettings(settings);
 
@@ -50,8 +46,9 @@ function updateFromSettings(settings: Settings) {
     appState.animation = settings.animationIntensity;
     appState.sidebar = settings.sidebarPosition;
     appState.fontScale = settings.fontScale;
-    appState.reducedMotion = settings.reducedMotion;
-    appState.lowPowerMode = settings.lowPowerMode;
+    appState.defaultEditorPage = settings.defaultEditorPage;
+    appState.openPlaylistEditorAfterCreation = settings.openPlaylistEditorAfterCreation;
+    appState.autoSaveInterval = settings.autoSaveInterval;
 
     if (settings.themeChoice !== "device") {
         appState.theme = settings.themeChoice as Theme;

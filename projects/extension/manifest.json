@@ -1,28 +1,25 @@
 {
   "name": "YouTube Playlist Helper",
-  "description": "YouTube playlist editor and generator - Pro Edition",
-  "version": "3.0.0",
+  "description": "YouTube playlist editor and generator",
+  "version": "1.0.0",
   "manifest_version": 3,
   "icons": {
     "48": "icons/icon_48.png",
     "128": "icons/icon_128.png"
   },
   "action": {
-    "default_title": "YouTube Playlist Helper",
+    "default_title": "YPH",
     "default_popup": "dist/editor/index.html"
   },
   "background": {
     "service_worker": "dist/background.js"
   },
   "permissions": [
-    "bookmarks",
-    "tabs",
     "storage",
-    "notifications",
+    "tabs",
     "contextMenus"
   ],
   "host_permissions": [
-    "https://www.youtube.com/watch*",
-    "https://www.youtube.com/playlist*"
+    "https://www.youtube.com/*"
   ]
 }

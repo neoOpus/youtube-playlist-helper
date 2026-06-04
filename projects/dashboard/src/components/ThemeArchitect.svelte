@@ -1,98 +1,48 @@
-<svelte:options runes={true} />
 <script lang="ts">
-  import {
-    themes,
-    appState,
-    setTheme
-  } from "../stores/theme.svelte";
-  import { Check } from "lucide-svelte";
+    import { Palette, Sun, Moon, Laptop } from "lucide-svelte";
+    import { appState, setTheme } from "../stores/theme.svelte";
+
+    const choices = [
+        { id: "device", name: "System", icon: Laptop },
+        { id: "light", name: "Light", icon: Sun },
+        { id: "dark", name: "Dark", icon: Moon },
+        { id: "black", name: "OLED", icon: Moon }
+    ];
 </script>
 
-<section class="theme-architect">
+<div class="theme-architect">
     <div class="header">
-        <h3>Base Theme Architecture</h3>
-        <p class="text-secondary">Select the fundamental color foundation for your environment.</p>
+        <Palette size="16" />
+        <h3>Appearance</h3>
     </div>
 
     <div class="theme-grid">
-        {#each themes as theme}
+        {#each choices as choice}
             <button
-                class="theme-card surface-1"
-                class:active={appState.choice === theme.id}
-                onclick={() => setTheme(theme.id as any)}
+                class="theme-btn"
+                class:active={appState.choice === choice.id}
+                onclick={() => setTheme(choice.id as any)}
             >
-                <div class="swatch" style="background: {theme.bg}">
-                    <div class="accent-line" style="background: {theme.primary}"></div>
-                </div>
-                <div class="theme-info">
-                    <span class="theme-name">{theme.name}</span>
-                    {#if appState.choice === theme.id}
-                        <div class="check-mark"><Check size="12" /></div>
-                    {/if}
-                </div>
+                <svelte:component this={choice.icon} size="14" />
+                <span>{choice.name}</span>
             </button>
         {/each}
     </div>
-</section>
+</div>
 
 <style>
-    .theme-architect { display: flex; flex-direction: column; gap: 24px; }
-    h3 { font-size: 1rem; font-weight: 700; margin: 0; }
-    p { font-size: 0.8rem; margin: 4px 0 0; }
+    .theme-architect { display: flex; flex-direction: column; gap: 1rem; }
+    .header { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+    .header h3 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    .theme-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 16px;
-    }
-
-    .theme-card {
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        cursor: pointer;
+    .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .theme-btn {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        padding: 12px 8px; border-radius: 10px; border: 1px solid var(--border-base);
+        background: var(--bg-surface-2); color: var(--text-secondary); cursor: pointer;
         transition: all 0.2s;
-        text-align: left;
-        border: 1px solid var(--border-base);
     }
-
-    .theme-card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
-    .theme-card.active { border-color: var(--primary); background: rgba(var(--primary-rgb), 0.05); }
-
-    .swatch {
-        height: 60px;
-        border-radius: 6px;
-        border: 1px solid var(--border-base);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .accent-line {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        height: 4px;
-    }
-
-    .theme-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .theme-name {
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-
-    .check-mark {
-        width: 18px;
-        height: 18px;
-        background: var(--primary);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+    .theme-btn span { font-size: 0.75rem; font-weight: 600; }
+    .theme-btn:hover { border-color: var(--border-strong); background: var(--bg-surface-3); }
+    .theme-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 </style>

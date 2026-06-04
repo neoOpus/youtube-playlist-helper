@@ -1,18 +1,7 @@
 export type Theme = "light" | "dark" | "black";
 export type ThemeChoice = "device" | Theme;
-export type ViewMode = "simple" | "advanced" | "compact";
 export type UiDensity = "compact" | "normal" | "spacious";
 export type AnimationIntensity = "none" | "low" | "full";
-
-export type PlaylistsSorting =
-  | "date-created-asc"
-  | "date-created-desc"
-  | "title-az"
-  | "title-za"
-  | "relevance"
-  | "video-count-desc"
-  | "video-count-asc"
-  | "last-modified-desc";
 
 export interface Video {
   id: string | number;
@@ -21,107 +10,40 @@ export interface Video {
   title: string;
   channel: string;
   thumbnailUrl: string;
-  selected?: boolean;
-  watched?: boolean;
-  notes?: string;
-  rating?: number;
-  dateAdded?: number;
-  aiSummary?: string;
-  aiTags?: string[];
-  duration?: string; // e.g. "12:45"
+  duration?: string;
   durationSeconds?: number;
-  author?: string;
-  views?: string;
-  publishedDate?: string;
-  energyVibe?: 'Chill' | 'Productive' | 'Intense' | 'Educational' | 'Inspirational' | 'Deep Focus';
-}
-
-export interface CurriculumStep {
-    videoId: string;
-    title: string;
-    completed: boolean;
-    milestone?: string;
-}
-
-export interface CurriculumSettings {
-    enabled: boolean;
-    currentStepIndex: number;
-    steps: CurriculumStep[];
-    targetCompletionDate?: number;
+  aiTags?: string[];
+  aiSummary?: string;
 }
 
 export interface Playlist {
   id: string;
   title: string;
-  loadedVideos?: Video[];
   videos: string[];
   timestamp: number;
   saved?: boolean;
-  groups?: string[];
   lastModified?: number;
-  curriculum?: CurriculumSettings;
-}
-
-export interface AISettings {
-    provider: 'local' | 'openai' | 'openrouter';
-    apiKey: string;
-    model: string;
-    enabled: boolean;
 }
 
 export interface Settings {
   [id: string]: any;
   themeChoice: ThemeChoice;
-  viewMode: ViewMode;
   uiDensity: UiDensity;
   animationIntensity: AnimationIntensity;
   sidebarPosition: "left" | "right";
-  accentColorOverride?: string;
   fontScale: number;
   openPlaylistEditorAfterCreation: boolean;
-  openPlaylistPage: boolean;
-  closeAfterCombine: boolean;
-  openPlaylistBuilderAfterAdd: boolean;
-  openSavedPlaylistAfterAdd: boolean;
-  defaultEditorPage: string;
-  saveCreatedPlaylists: boolean;
-  disableThumbnails: boolean;
-  disableContextBuilder: boolean;
-  disableContextSaved: boolean;
   autoSaveInterval: number;
-  enableDeepScanByDefault: boolean;
-  notificationVerbosity: "none" | "minimal" | "all";
-  reducedMotion: boolean;
-  lowPowerMode: boolean;
-  ai: AISettings;
+  defaultEditorPage: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   themeChoice: "device",
-  viewMode: "simple",
   uiDensity: "normal",
   animationIntensity: "full",
   sidebarPosition: "left",
   fontScale: 1.0,
   openPlaylistEditorAfterCreation: true,
-  openPlaylistPage: false,
-  closeAfterCombine: false,
-  openPlaylistBuilderAfterAdd: true,
-  openSavedPlaylistAfterAdd: true,
-  defaultEditorPage: "/saved",
-  saveCreatedPlaylists: false,
-  disableThumbnails: false,
-  disableContextBuilder: false,
-  disableContextSaved: false,
   autoSaveInterval: 5,
-  enableDeepScanByDefault: false,
-  notificationVerbosity: "all",
-  reducedMotion: false,
-  lowPowerMode: false,
-  ai: {
-      provider: 'local',
-      apiKey: '',
-      model: 'gpt-3.5-turbo',
-      enabled: true
-  }
+  defaultEditorPage: "/saved"
 };
