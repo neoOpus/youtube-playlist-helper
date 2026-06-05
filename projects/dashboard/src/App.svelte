@@ -1,13 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, fly } from "svelte/transition";
+  import { fade } from "svelte/transition";
   import PlaylistEditor from "./components/PlaylistEditor.svelte";
   import New from "./views/New.svelte";
   import Saved from "./views/Saved.svelte";
   import Manage from "./views/Manage.svelte";
   import Support from "./views/Support.svelte";
   import Sync from "./views/Sync.svelte";
-  import ActionToast from "./components/ActionToast.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import ProErrorBoundary from "./components/ProErrorBoundary.svelte";
   import { appState, initAppState } from "./stores/theme.svelte";
@@ -52,7 +51,6 @@
             </div>
           {/key}
       </main>
-      <ActionToast />
     </div>
 </ProErrorBoundary>
 

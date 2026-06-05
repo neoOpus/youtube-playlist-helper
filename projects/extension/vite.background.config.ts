@@ -16,5 +16,10 @@ export default defineConfig({
       formats: ['iife'],
       fileName: () => 'background.js',
     },
+    rollupOptions: {
+      output: {
+        extend: true,
+      }
+    }
   },
 });

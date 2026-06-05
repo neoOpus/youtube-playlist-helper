@@ -3,14 +3,42 @@ import { DEFAULT_SETTINGS } from "../types/model";
 
 const PLAYLIST_KEY_PREFIX = "playlist_";
 const ID_COUNTER_KEY = "PlaylistIdCounter";
+const SCHEMA_VERSION_KEY = "YPH_Schema_Version";
+const CURRENT_SCHEMA_VERSION = 4;
+
+type StorageChangeListener = (id: string, obj: any) => void | Promise<void>;
+const changeListeners: Set<StorageChangeListener> = new Set();
 
 function playlistToDto(playlist: Playlist) {
-  return { ...playlist };
+  const dto = { ...playlist };
+  delete dto.loadedVideos;
+  return dto;
+}
+
+function notifySavedPlaylistsChanged() {
+  if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+    chrome.runtime.sendMessage({ cmd: "update-saved-playlists" }).catch(() => {});
+  }
 }
 
 export const storageService = {
+  onSave(listener: StorageChangeListener) {
+    changeListeners.add(listener);
+  },
+
   async init() {
-      // Basic initialization
+      const version = await this.fetchObject(SCHEMA_VERSION_KEY, 0);
+      if (version < CURRENT_SCHEMA_VERSION) {
+          await this.runMigrations(version);
+      }
+  },
+
+  async runMigrations(fromVersion: number) {
+      console.log(`Storage: Migrating schema from v${fromVersion} to v${CURRENT_SCHEMA_VERSION}`);
+      if (fromVersion < 4) {
+          // Placeholder for future heavy migrations
+      }
+      await this.storeObject(SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION);
   },
 
   async fetchObject(id: string, defaultValue: any): Promise<any> {
@@ -18,7 +46,10 @@ export const storageService = {
       return new Promise((resolve) => {
           chrome.storage.local.get(id, (result) => {
               if (result && result[id] != null) {
-                  resolve(result[id]);
+                  const val = result[id];
+                  if (typeof defaultValue === "number") resolve(+val);
+                  else if (typeof defaultValue === "boolean" && typeof val === "string") resolve(val === "true");
+                  else resolve(val);
               } else {
                   resolve(defaultValue);
               }
@@ -28,19 +59,28 @@ export const storageService = {
       if (typeof localStorage === 'undefined') return defaultValue;
       const value = localStorage.getItem(id);
       if (value) {
-        try { return JSON.parse(value); } catch (e) { return value; }
+        try {
+          const parsed = JSON.parse(value);
+          if (typeof defaultValue === "number") return +parsed;
+          return parsed;
+        } catch (e) {
+          return value;
+        }
       }
       return defaultValue;
     }
   },
 
   async storeObject(id: string, obj: any): Promise<void> {
+    const value = obj ? (typeof obj === "string" ? obj : JSON.stringify(obj)) : null;
     if (typeof chrome !== "undefined" && chrome.storage) {
-      await chrome.storage.local.set({ [id]: obj });
+      await chrome.storage.local.set({ [id]: value });
     } else {
       if (typeof localStorage === 'undefined') return;
-      localStorage.setItem(id, JSON.stringify(obj));
+      if (value === null) localStorage.removeItem(id);
+      else localStorage.setItem(id, value);
     }
+    for (const listener of changeListeners) await listener(id, obj);
   },
 
   async fetchAllObjects(): Promise<Record<string, any>> {
@@ -68,7 +108,8 @@ export const storageService = {
   },
 
   async generatePlaylistId(): Promise<string> {
-    let count = await this.fetchObject(ID_COUNTER_KEY, 0);
+    const result: any = await this.fetchObject(ID_COUNTER_KEY, 0);
+    let count = result || 0;
     count++;
     await this.storeObject(ID_COUNTER_KEY, count);
     return count.toString();
@@ -76,33 +117,53 @@ export const storageService = {
 
   async savePlaylist(playlist: Playlist): Promise<string> {
     let id = playlist.id;
-    if (!id || id === "") id = await this.generatePlaylistId();
-    const toSave = { ...playlist, id, timestamp: playlist.timestamp || Date.now() };
-    await this.storeObject(PLAYLIST_KEY_PREFIX + id, toSave);
+    if (!playlist.saved) id = await this.generatePlaylistId();
+    playlist = { ...playlist, timestamp: playlist.timestamp || Date.now(), id };
+    await this.storeObject(PLAYLIST_KEY_PREFIX + id, playlistToDto(playlist));
+    notifySavedPlaylistsChanged();
     return id;
   },
 
   async getPlaylist(id: string): Promise<Playlist | null> {
     const item = await this.fetchObject(PLAYLIST_KEY_PREFIX + id, null);
-    return item;
+    if (!item) return null;
+    const playlist: Playlist = typeof item === 'string' ? JSON.parse(item) : item;
+    playlist.saved = true;
+    return playlist;
   },
 
   async getPlaylists(): Promise<Playlist[]> {
     const allItems = await this.fetchAllObjects();
     return Object.keys(allItems)
       .filter((key) => key.startsWith(PLAYLIST_KEY_PREFIX))
-      .map((key) => allItems[key]);
+      .map((key) => {
+        const item = allItems[key];
+        const playlist: Playlist = typeof item === 'string' ? JSON.parse(item) : item;
+        playlist.saved = true;
+        return playlist;
+      });
   },
 
   async removePlaylist(playlist: Playlist): Promise<void> {
-    await this.removeObject(PLAYLIST_KEY_PREFIX + playlist.id);
+    const key = PLAYLIST_KEY_PREFIX + playlist.id;
+    await this.removeObject(key);
+    notifySavedPlaylistsChanged();
   },
 
   async getSettings(): Promise<Settings> {
     const settings = { ...DEFAULT_SETTINGS };
     const all = await this.fetchAllObjects();
     Object.keys(DEFAULT_SETTINGS).forEach(key => {
-        if (all[key] !== undefined) settings[key] = all[key];
+        if (all[key] !== undefined) {
+            const val = all[key];
+            if (typeof DEFAULT_SETTINGS[key] === 'boolean' && typeof val === 'string') {
+                settings[key] = val === 'true';
+            } else if (typeof DEFAULT_SETTINGS[key] === 'number') {
+                settings[key] = +val;
+            } else {
+                try { settings[key] = typeof val === 'string' ? JSON.parse(val) : val; } catch { settings[key] = val; }
+            }
+        }
     });
     return settings;
   },

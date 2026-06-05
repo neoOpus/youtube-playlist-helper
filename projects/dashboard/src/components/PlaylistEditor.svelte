@@ -1,13 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { slide, fade } from "svelte/transition";
+  import { slide } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { storageService, videoService, notificationService } from "@yph/core";
   import type { Playlist, Video } from "@yph/core";
   import { router } from "../stores/router";
-  import { ChevronLeft, Save, Plus, Search, Trash2, LayoutList, ListFilter, Play } from "lucide-svelte";
+  import { ChevronLeft, Save, Plus, Search, LayoutList } from "lucide-svelte";
   import PlaylistVideo from "./PlaylistVideo.svelte";
-  import SimplePagination from "./SimplePagination.svelte";
 
   let { params } = $props();
   let playlist = $state<Playlist | null>(null);
@@ -17,9 +16,6 @@
   let searchQuery = $state("");
   let showBulkAdd = $state(false);
   let bulkInput = $state("");
-
-  let currentPage = $state(1);
-  let pageSize = 20;
 
   onMount(async () => {
       const id = params.id;
@@ -58,17 +54,11 @@
       ? videos.filter(v => (v.title || "").toLowerCase().includes(searchQuery.toLowerCase()))
       : videos
   );
-
-  let paginatedVideos = $derived.by(() => {
-      const start = (currentPage - 1) * pageSize;
-      const end = start + pageSize;
-      return filteredVideos.slice(start, end);
-  });
 </script>
 
 <div class="editor-view">
     {#if loading}
-        <div class="loader">Loading playlist data...</div>
+        <div class="loader">Loading playlist...</div>
     {:else if playlist}
         <header class="editor-header">
             <div class="header-left">
@@ -80,27 +70,27 @@
             </div>
             <div class="header-actions">
                 <button class="outline-btn" onclick={() => showBulkAdd = !showBulkAdd}><Plus size="16" /> Add Videos</button>
-                <button class="primary-btn" onclick={save}><Save size="16" /> Save Changes</button>
+                <button class="primary-btn" onclick={save}><Save size="16" /> Save</button>
             </div>
         </header>
 
         <div class="editor-content">
             {#if showBulkAdd}
                 <div class="bulk-pane surface-2" transition:slide>
-                    <textarea bind:value={bulkInput} placeholder="Paste YouTube URLs or IDs here..."></textarea>
+                    <textarea bind:value={bulkInput} placeholder="Paste YouTube URLs or IDs..."></textarea>
                     <div class="pane-footer">
-                        <button class="primary-btn" onclick={addVideos}>Add to List</button>
+                        <button class="primary-btn" onclick={addVideos}>Add</button>
                     </div>
                 </div>
             {/if}
 
             <div class="search-bar surface-1">
-                <Search size="18" class="text-secondary" />
-                <input type="text" bind:value={searchQuery} placeholder="Search videos in this playlist..." />
+                <Search size="18" class="icon-muted" />
+                <input type="text" bind:value={searchQuery} placeholder="Search in playlist..." />
             </div>
 
             <div class="video-stack">
-                {#each paginatedVideos as video (video.videoId)}
+                {#each filteredVideos as video (video.videoId)}
                     <div animate:flip={{ duration: 200 }}>
                         <PlaylistVideo {video} ondelete={removeVideo} />
                     </div>
@@ -108,15 +98,11 @@
 
                 {#if videos.length === 0}
                     <div class="empty-state surface-1">
-                        <LayoutList size="32" class="text-muted" />
+                        <LayoutList size="32" class="icon-muted" />
                         <p>This playlist is empty.</p>
                     </div>
                 {/if}
             </div>
-
-            {#if filteredVideos.length > pageSize}
-                <SimplePagination totalItems={filteredVideos.length} {pageSize} bind:currentPage />
-            {/if}
         </div>
     {/if}
 </div>
@@ -147,4 +133,5 @@
 
     .loader { padding: 4rem; text-align: center; font-weight: 700; color: var(--primary); }
     .empty-state { padding: 4rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    :global(.icon-muted) { color: var(--text-muted); }
 </style>

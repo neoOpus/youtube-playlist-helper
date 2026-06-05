@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { HelpCircle, Mail, Github, Book } from "lucide-svelte";
+  import { HelpCircle, Mail, Github, Book, Heart, Globe } from "lucide-svelte";
 </script>
 
 <div class="view-container">
@@ -26,8 +26,15 @@
       <div class="support-card surface-1">
           <Mail size="24" class="icon-primary" />
           <h3>Contact</h3>
-          <p>Get in touch for professional support or feedback.</p>
+          <p>Get in touch for support or feedback.</p>
           <a href="mailto:support@yph.com" class="link">Send Email</a>
+      </div>
+
+      <div class="support-card surface-1">
+          <Heart size="24" class="icon-primary" />
+          <h3>Donate</h3>
+          <p>Support the independent development of this tool.</p>
+          <a href="https://paypal.me/neoOpus" target="_blank" class="link">Support Project</a>
       </div>
   </div>
 </div>
