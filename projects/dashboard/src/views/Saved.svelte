@@ -7,6 +7,7 @@
   import PlaylistsFilters from "../components/PlaylistsFilters.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import { router } from "../stores/router";
+  import { Plus } from "lucide-svelte";
 
   let playlists = $state<Playlist[]>([]);
   let filteredPlaylists = $state<Playlist[]>([]);
@@ -30,11 +31,13 @@
 <main class="view-container">
   <header class="page-header">
       <div class="header-info">
-          <h1>Your Playlists</h1>
-          <p class="text-secondary">Organize and manage your YouTube collections.</p>
+          <h1>Playlists</h1>
+          <p class="text-secondary">Organize your YouTube collections.</p>
       </div>
       <div class="header-actions">
-          <button class="primary-btn" onclick={() => router.push('/new')}>Create New</button>
+          <button class="primary-btn" onclick={() => router.push('/new')}>
+              <Plus size="18" /> Create New
+          </button>
       </div>
   </header>
 
@@ -42,7 +45,7 @@
 
   <div class="content-view">
       {#if loading}
-          <div class="loading-state">Loading playlists...</div>
+          <div class="loading-state">Loading collections...</div>
       {:else if filteredPlaylists.length > 0}
           <div class="grid-container">
               {#each filteredPlaylists as pl (pl.id)}
@@ -57,7 +60,7 @@
       {:else}
           <EmptyState
             title="No Playlists Found"
-            message="Try a different search or create a new playlist."
+            message="Start by creating your first collection."
             actionLabel="Create One"
             actionClick={() => router.push('/new')}
           />
@@ -66,6 +69,7 @@
 </main>
 
 <style>
+  .view-container { max-width: 900px; margin: 0 auto; }
   .page-header {
       display: flex;
       justify-content: space-between;
@@ -78,14 +82,14 @@
 
   .grid-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
   }
 
   .loading-state { padding: 4rem; text-align: center; color: var(--text-muted); font-weight: 600; }
 
   .primary-btn {
       background: var(--primary); color: white; border: none; padding: 10px 20px;
-      border-radius: 8px; font-weight: 700; cursor: pointer;
+      border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
   }
 </style>

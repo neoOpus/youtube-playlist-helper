@@ -2,10 +2,10 @@
   import { onMount } from "svelte";
   import { slide } from "svelte/transition";
   import { flip } from "svelte/animate";
-  import { storageService, videoService, notificationService } from "@yph/core";
+  import { storageService, videoService, notificationService, playlistService } from "@yph/core";
   import type { Playlist, Video } from "@yph/core";
   import { router } from "../stores/router";
-  import { ChevronLeft, Save, Plus, Search, LayoutList } from "lucide-svelte";
+  import { ChevronLeft, Save, Plus, Search, LayoutList, CopyCheck } from "lucide-svelte";
   import PlaylistVideo from "./PlaylistVideo.svelte";
 
   let { params } = $props();
@@ -49,6 +49,16 @@
       videos = videos.filter(v => v.videoId !== video.videoId);
   }
 
+  function cleanDuplicates() {
+      const { uniqueVideos, duplicatesCount } = playlistService.removeDuplicates(videos);
+      if (duplicatesCount > 0) {
+          videos = uniqueVideos;
+          notificationService.success(`Removed ${duplicatesCount} duplicates.`);
+      } else {
+          notificationService.info("No duplicates found.");
+      }
+  }
+
   let filteredVideos = $derived(
     searchQuery
       ? videos.filter(v => (v.title || "").toLowerCase().includes(searchQuery.toLowerCase()))
@@ -69,8 +79,15 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="outline-btn" onclick={() => showBulkAdd = !showBulkAdd}><Plus size="16" /> Add Videos</button>
-                <button class="primary-btn" onclick={save}><Save size="16" /> Save</button>
+                <button class="outline-btn" onclick={cleanDuplicates} title="Remove Duplicate Videos">
+                    <CopyCheck size="16" /> Clean
+                </button>
+                <button class="outline-btn" onclick={() => showBulkAdd = !showBulkAdd}>
+                    <Plus size="16" /> Add
+                </button>
+                <button class="primary-btn" onclick={save}>
+                    <Save size="16" /> Save
+                </button>
             </div>
         </header>
 
@@ -118,9 +135,9 @@
     .title-input { background: transparent; border: none; font-size: 1.5rem; font-weight: 800; color: var(--text-main); outline: none; }
     .meta { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
 
-    .header-actions { display: flex; gap: 1rem; }
-    .primary-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .outline-btn { background: transparent; border: 1px solid var(--border-strong); color: var(--text-main); padding: 10px 20px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .header-actions { display: flex; gap: 0.5rem; }
+    .primary-btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .outline-btn { background: transparent; border: 1px solid var(--border-strong); color: var(--text-main); padding: 8px 16px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
     .bulk-pane { padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; }
     textarea { width: 100%; height: 100px; background: var(--bg-app); border: 1px solid var(--border-base); padding: 1rem; color: var(--text-main); resize: none; border-radius: 8px; margin-bottom: 1rem; }

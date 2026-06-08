@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Video } from "@yph/core";
-  import { Trash2, ExternalLink, User } from "lucide-svelte";
+  import { Trash2, ExternalLink, User, Loader2 } from "lucide-svelte";
 
   let {
     video = $bindable(),
@@ -16,12 +16,22 @@
 
 <div class="video-row">
   <div class="thumbnail" onclick={videoClicked} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && videoClicked()}>
-      <img src={video.thumbnailUrl} alt="" loading="lazy" />
+      {#if video.thumbnailUrl}
+        <img src={video.thumbnailUrl} alt="" loading="lazy" />
+      {:else}
+        <div class="thumb-placeholder"><div class="spin-wrap"><Loader2 size="20" /></div></div>
+      {/if}
       <div class="duration">{video.duration || '0:00'}</div>
   </div>
 
   <div class="info" onclick={videoClicked} role="button" tabindex="0" onkeydown={e => e.key === 'Enter' && videoClicked()}>
-      <div class="title">{video.title}</div>
+      <div class="title">
+          {#if video.title === "Loading video..."}
+            <span class="loading-text"><div class="spin-wrap"><Loader2 size="12" /></div> {video.title}</span>
+          {:else}
+            {video.title}
+          {/if}
+      </div>
       <div class="meta">
           <div class="channel"><User size="12" /> {video.channel}</div>
       </div>
@@ -51,6 +61,7 @@
       position: relative; cursor: pointer; flex-shrink: 0; background: #000;
   }
   img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
 
   .duration {
       position: absolute; bottom: 2px; right: 2px;
@@ -60,6 +71,8 @@
 
   .info { flex: 1; min-width: 0; cursor: pointer; }
   .title { font-weight: 600; font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+  .loading-text { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-style: italic; }
+
   .meta { display: flex; align-items: center; gap: 1rem; font-size: 0.75rem; color: var(--text-secondary); }
   .channel { display: flex; align-items: center; gap: 4px; }
 
@@ -70,4 +83,7 @@
   }
   .action-btn:hover { color: var(--text-main); border-color: var(--border-strong); }
   .action-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+  .spin-wrap { display: flex; animation: spin 2s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
